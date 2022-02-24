@@ -1,0 +1,15 @@
+[Unit]
+Description=CHAPPS Greylisting
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=chapps
+ExecStart=/usr/bin/env python3 /usr/local/bin/chapps_greylisting
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=postfix.service

@@ -1,0 +1,12 @@
+HELO localhost
+MAIL FROM: ${sender:="ccullen@easydns.com"}
+RCPT TO: ccullen@easydns.com
+DATA
+
+From: ${sender}
+Subject: ${subject:-"oqp (chapps) test message"}
+To: ${recipient:-"ccullen@easydns.com"}
+
+This is a test message
+
+.

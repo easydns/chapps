@@ -1,0 +1,18 @@
+v0.3:
+	- Sender-domain authorization policy allows an RDBMS to indicate which domains a particular user
+	  is authorized to emit mail on behalf of.
+	- There are more updates to the config file.
+	- There are additions to the database schema which should be compatible with v0.2
+v0.2.1:
+	- Now supports connecting to Redis via Sentinel; provide a space-separated list of host:port info
+	  for `sentinel_servers` in the config, and specify the name of the dataset in `sentinel_dataset`
+	- Some minor changes to the config file have occured; the `sentinel_master` param and the `db` param
+	  have been removed
+v0.2:
+	- PLEASE NOTE: the database schema has changed with this update
+	- DB access encapsulation and outbound-traffic user identification is now independent of any policy or handler
+	- some symbol names have been updated for greater clarity
+	- the documentation has been improved somewhat; more to come
+v0.1:
+	- Outbound Quota and Greylisting policies function, but their feature sets may be incomplete.
+	- Installation procedure just a bit wonky.
