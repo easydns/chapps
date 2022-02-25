@@ -72,14 +72,15 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
                         " LEFT JOIN users AS u ON j.user_id = u.id" )
     quota_map_where = "WHERE u.name IN ({srch})"                    # pragma: no cover
 
-    def _initialize_tables(self):
+    def _initialize_tables(self, *, defquotas=False):
         super()._initialize_tables()
         cur = self.conn.cursor()
         cur.execute( self.quota_table )
         cur.execute( self.join_table )
-        cur.execute( "SELECT COUNT(name) FROM quotas" )
-        if (cur.fetchone()[0] == 0):
-            cur.execute( self.basic_quotas )
+        if defquotas:
+            cur.execute( "SELECT COUNT(name) FROM quotas" )
+            if ( cur.fetchone()[0] == 0 ):
+                cur.execute( self.basic_quotas )
         cur.close()
 
     def quota_for_user(self, user):
@@ -159,7 +160,7 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
                            " LEFT JOIN users AS u ON u.id = j.user_id"
                            " WHERE d.name = '{domain}' AND u.name = '{user}'" )
 
-    def _initialize_tables(self):
+    def _initialize_tables(self, *args, **kwargs):
         super()._initialize_tables()
         cur = self.conn.cursor()
         cur.execute( self.domain_table )

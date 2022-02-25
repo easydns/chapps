@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 import re
 VERSIONFILE = 'chapps/_version.py'
 verstrline = open(VERSIONFILE, 'rt').read()
@@ -18,6 +18,7 @@ setup(
              'INSTALLATION.md',]),
       ('install', ['install/chapps_greylisting.service',
                    'install/chapps_outbound_quota.service',
+                   'install/chapps_outbound_multi.service',
                    'install/install.sh']),
       ('postfix/greylisting',    ['postfix/greylisting/main.cf',
                                   'postfix/greylisting/master.cf']),
@@ -28,8 +29,10 @@ setup(
   ],
   scripts = [
       'services/chapps_outbound_quota.py',
+      'services/chapps_outbound_multi.py',
       'services/chapps_greylisting.py',
       'services/null_filter.py',
+      'install/chapps_database_init.py'
   ],
   version = verstr,
   python_requires='>=3.8',
@@ -40,11 +43,15 @@ setup(
   author = 'Caleb S. Cullen',
   author_email = 'ccullen@easydns.com',
   url = 'https://gitlab.int.easydns.net/ccullen/chapps',
-  # download_url = 'https://gitlab.int.easydns.net/ccullen/chapps/dist/chapps-0.1.tar.gz',
+  download_url = f'https://github.com/easydns/chapps/tree/main/dist/chapps-{verstr}.tar.gz',
   keywords = ['Postfix', 'Policy', 'Daemon'],
   install_requires=[
           'redis',
           'expiring-dict',
+          'dnspython',
+          'mariadb',
+          'pyspf',
+          'python-pidfile',
       ],
   classifiers=[
     'Development Status :: 3 - Alpha',
