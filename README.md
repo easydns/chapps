@@ -367,18 +367,22 @@ deferred unless it is already coming from a recognized source (tuple) when both 
 ## Upcoming features
 
 A mini-roadmap of upcoming changes:
+
 minor:
-  CHAPPS config file INI parsing by ConfigParser will no longer perform interpolation,
+
+  - CHAPPS config file INI parsing by ConfigParser will no longer perform interpolation,
     in order to allow passwords to contain any character
+
 major:
-  CHAPPS services will present an API listener on a configurable half-socket, and be able to perform REST
+
+  - CHAPPS services will present an API listener on a configurable half-socket, and be able to perform REST
     operations against its own config database, as well as perform live queries against the Redis environment
 	in order to report on a user's available quota in real-time, and perform other real-time adjustment
 	functions, such as quota reset, user policy flushing, etc.
-  CHAPPS will also offer a multipolicy-inbound service as described above, with SPF+Greylisting.  It will
+  - CHAPPS will also offer a multipolicy-inbound service as described above, with SPF+Greylisting.  It will
     allow for a per-domain option indicating whether to apply each of greylisting and SPF.
-  It seems inevitable that other features will also be added.  There is some skeletal code in the repo
+  - It seems inevitable that other features will also be added.  There is some skeletal code in the repo
     for building email content filters, which are not the same as policy delegates.
-  Using Redis makes it possible to send pub/sub messages when certain sorts of conditions occur, such
+  - Using Redis makes it possible to send pub/sub messages when certain sorts of conditions occur, such
     as a user making a large number of attempts to send mail in a short time while overquota, or when
 	a user (repeatedly?) attempts to send email as being from a domain that user lacks authorization for.
