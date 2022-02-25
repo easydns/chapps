@@ -44,6 +44,25 @@ down to focus just on that particular service.
 
 ## Installation
 
+Please ensure that MariaDB Connector/C is installed before attempting installation of this package.  The
+Debian packages recommended are:
+  - `mariadb-client`
+  - `libmariadb-dev-compat`
+  - `redis`
+  - `python3-pip`
+The package contains a dependency on the `mariadb` package; it will not install properly without Connector/C
+installed, which is not a Python package.  (Perhaps this dependency should be left out.)
+
+The package may be installed via PyPI, using the following command:
+
+```
+python3 -m pip install chapps
+```
+In such a case, the SystemD service files are installed to a folder called `install` inside the venv directory,
+and Postfix example/testing configs are located in the `postfix` folder.  Scripts and package go to `bin`
+and `lib/.../chapps` as expected.  Use of a venv is recommended, though it may mean some changes are needed to
+the service files as provided.
+
 Installation artifacts are available
 in the `install` directory, including a shell script to copy things to their places, and the SystemD service
 files for starting the outbound quota and greylisting services.  See the [INSTALLATION](INSTALLATION.md) file.
