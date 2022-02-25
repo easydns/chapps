@@ -1,3 +1,7 @@
+v0.3.2:
+	- putting extra artifacts in a chapps dir, w/i venv or /usr/local depending
+v0.3.1:
+	- Updating documentation
 v0.3:
 	- Sender-domain authorization policy allows an RDBMS to indicate which domains a particular user
 	  is authorized to emit mail on behalf of.
