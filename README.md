@@ -19,6 +19,7 @@ the policy server, which will itself use Redis to cache data and keep track of e
 
 In the first iteration, we propose to provide functionality for:
  - outbound quota tracking on a continuous, rolling, per-interval basis;
+ - outbound sender domain authorization
  - inbound email greylisting;
  - inbound SPF checking
 
@@ -46,19 +47,31 @@ down to focus just on that particular service.
 Installation artifacts are available
 in the `install` directory, including a shell script to copy things to their places, and the SystemD service
 files for starting the outbound quota and greylisting services.  See the [INSTALLATION](INSTALLATION.md) file.
+Install scripts were developed in our environment for test-deployment purposes and may be abandoned once the
+package is available via PyPI.
+
+There is also a Python script in the install directory, the purpose of which is to create the database schema
+required by the library.  It does not create the database itself.  Before running this script, ensure that the
+CHAPPS configuration file contains the correct credentials and other control data to be able to connect to the
+database server, and also ensure that the database named in that config has been created on the server.  The
+script will connect to the database and create the tables.  It uses `IF EXISTS` and does not contain any kind
+of data deletion, so it should be safe to use at any time.
 
 ### Redis configuration
 
 Redis is used to store the real-time state of every active user's outbound quota, sender-domain authorization
 status cache, and also to keep track of greylisting status for greylisted emails.  An active user is one who
 has sent email in the last _interval_, that interval defaulting to a day, since most quotas are expressed as
-messages-per-day.  If your Redis deployment is non-standard, or if CHAPPS is sharing a Redis instance with some
-other services, it may be necessary to adjust the Redis-related settings in the config file, to adjust the
-address and/or port to connect to, or what database to use.
+messages-per-day.
+
+If your Redis deployment is on a different server and/or if CHAPPS is sharing a Redis instance with some
+other services it may be necessary to adjust the Redis-related settings in the config file, to adjust the
+address and/or port to connect to, or what database to use.  By default, CHAPPS tries to connect to Redis
+on localhost, using the standard port assignment and db 0.
 
 If Sentinel is in use, populate the Sentinel-oriented configuration elements `sentinel_servers` and
 `sentinel_dataset`.  The servers list should be a space-separated list of each Sentinel server half-socket;
-for example, "10.10.10.10:26379 10.10.10.12:26379".  The dataset name is the one you specified to Sentinel
+for example, "10.1.9.10:26379 10.1.9.12:26379".  The dataset name is the one you specified to Sentinel
 when setting up the Sentinel cluster.  Sentinel's default dataset name is `mymaster`.  We, of course,
 recommend `chapps`, or perhaps `chapps-outbound` at a site with a large volume of email.
 Since SPF doesn't make much use of Redis, the inbound load may be lighter than the outbound load, depending
@@ -67,7 +80,7 @@ on which things happen more at a particular site.
 ## Outbound Services
 
 Policy services can be divided into those which work on outbound mail, and those which work on inbound mail.
-Some, possibly, might be applied to either flow, but nonesuch are part of this project yet.  Outbound items
+Some, possibly, might be applied to either flow, but none such are part of this project yet.  Outbound items
 share some characteristics.
 
 Outbound mail, for our purposes, is assumed to originate with an authenticated user.  That user may authenticate
@@ -92,7 +105,7 @@ that order.  The `client_address` is an extreme fallback because it will always 
 may under some circumstances be empty.
 
 At present, there is little sanitation on this field.  It is never evaluated as code, but it is used directly
-as the attribute name for the value dereference.  If it yields no value, or if it is not specified, CHAPPS
+as the attribute name for the value dereference.  If that yields no value, or if it is not specified, CHAPPS
 looks for `sasl_username` first, then `ccert_subject`, and if there is none, it falls back to `sender`,
 which can also be blank. In
 that extreme case, CHAPPS uses `client_address`.  This will not work very well long-term if a lot of real senders
@@ -105,14 +118,12 @@ secondary error messages.
 CHAPPS currently expects any permitted sender to appear in the `users` table.  Note that the name
 which appears in this table needs to match what will be discovered in the specified key field.  For sites
 which use the user's email address as their login name for email access, this is easy.  For cert issuers,
-it may simplify things to use the email address as the subject of the cert.  This code does not treat
-usernames as if they are email addresses, but that is an underlying assumption which may cause issues
-with edge cases.
+it may simplify things to use the email address as the subject of the cert, but any unique string will work.
 
 ## Outbound Quota Policy Service
 
 The service is designed to run locally side-by-side with the Postfix server, and connect to a Redis instance,
-possibly via Sentinel.  As such it listens on 127.0.0.1, and on port 11511 by default, though both may be adjusted
+possibly via Sentinel.  As such it listens on 127.0.0.1, and on port 10225 by default, though both may be adjusted
 in the config file.  It obtains quota policy data on a per-sender basis, from a relational database, and
 caches that data in Redis for operational use.  Once a user's quota data has been stored, it will be cached for
 a day, so that database accesses may be avoided.
@@ -144,7 +155,7 @@ CREATE TABLE `users` (
   `name` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `quotas` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -153,23 +164,26 @@ CREATE TABLE `quotas` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `quota` (`quota`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `quota_user` (
   `quota_id` bigint(20) NOT NULL,
   `user_id` bigint(20) NOT NULL,
   PRIMARY KEY (`user_id`)
   KEY `fk_quota` (`quota_id`),
-  CONSTRAINT `fk_quota` FOREIGN KEY (`quota_id`) REFERENCES `quotas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  CONSTRAINT `fk_quota_user` FOREIGN KEY (`quota_id`) REFERENCES `quotas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_user_quota` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
-The `quotas` table contains quota-profiles, records with an auto-increment ID,
-and the `name` (a user-readable tag for the quota) and quota-limit (`quota`) of that quota-profile.
+The `users` table contains a record for each authorized user who is allowed to send email.  Users without
+entries will not be able to send email, despite authenticating with Postfix.
 
-The `quota_user` table is meant as a join table on possible external databases.
+The `quotas` table contains quota definitions, the `name` is meant to hold a user-readable tag for the
+quota and max outbound email count (`quota`) of that quota.
+
+The `quota_user` table joins the `users` table with the `quotas` table.
 The `quota_user.user_id` column joins with `users.id` to map usernames onto IDs.  Usernames may be
-email addresses, but they also may not.  How they are obtained is configurable as `user_key`: the specified
+email addresses, but they also may not.  How they are obtained is configurable as `user_key` -- the specified
 field will be extracted from the policy request payload presented by Postfix.
 
 Once the `quotas` table has been populated with the desired quota policies, the `quota_user` table may then
@@ -179,7 +193,7 @@ The application sets cached quota limit data to expire after 24 hours, so it wil
 policy settings, in case they get changed.  In order to flush the quota information, all that is required is
 to delete that user's policy tracking data from Redis.  TODO: A tool will be provided to do this.
 
-**Please note:** Users with no policy entry will not be able to send outbound email.
+**Please note:** Users with no `users` entry will not be able to send outbound email.
 
 ### Quota policy settings (non-database)
 
@@ -238,7 +252,7 @@ CREATE TABLE `domains` (
   `name` varchar(64) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
  CREATE TABLE `domain_user` (
   `domain_id` bigint(20) NOT NULL,
@@ -249,7 +263,7 @@ CREATE TABLE `domains` (
     FOREIGN KEY (`domain_id`) REFERENCES `domains` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_user_domain`
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 As with the quota policy, the logic used is inherently conservative.  If a user has no entry in the `users`
@@ -281,7 +295,7 @@ able to connect to SMTP servers to send mail, but not capable of noting response
 deliveries.  Because a large proportion of spam is (or was) sent this way, the simple act of deferring emails
 from unknown (untrusted) sources eliminates a large amount of spam.
 
-If greylisting is being performed (at all, or for an inbound domain once that feature is available), then
+If greylisting is being performed then
 emails will be greylisted--that is, deferred--when they are associated with source tuples which are not
 recognized.  Tracking data regarding recognized tuples is stored in Redis.  Config data regarding which
 inbound domains request greylisting will be obtained from the database (feature TBD) and cached in Redis.
@@ -347,5 +361,24 @@ By default, CHAPPS SPF policy enforcement service uses *greylisting* for emails 
 `softfail` and `none`/`neutral` responses on their SPF checks.  The plan, as it becomes possible for
 domain admins to control whether greylisting and/or SPF are applied to their inbound email, is to
 greylist even emails which receive `pass` from SPF, meaning that any "deliverable" email will be
-deferred unless it is already coming from a recognized source (tuple).
+deferred unless it is already coming from a recognized source (tuple) when both are enabled.
 (Non-deliverable categories are: `fail`, `temperror`, `permerror`.)
+
+## Upcoming features
+
+A mini-roadmap of upcoming changes:
+minor:
+  CHAPPS config file INI parsing by ConfigParser will no longer perform interpolation,
+    in order to allow passwords to contain any character
+major:
+  CHAPPS services will present an API listener on a configurable half-socket, and be able to perform REST
+    operations against its own config database, as well as perform live queries against the Redis environment
+	in order to report on a user's available quota in real-time, and perform other real-time adjustment
+	functions, such as quota reset, user policy flushing, etc.
+  CHAPPS will also offer a multipolicy-inbound service as described above, with SPF+Greylisting.  It will
+    allow for a per-domain option indicating whether to apply each of greylisting and SPF.
+  It seems inevitable that other features will also be added.  There is some skeletal code in the repo
+    for building email content filters, which are not the same as policy delegates.
+  Using Redis makes it possible to send pub/sub messages when certain sorts of conditions occur, such
+    as a user making a large number of attempts to send mail in a short time while overquota, or when
+	a user (repeatedly?) attempts to send email as being from a domain that user lacks authorization for.
