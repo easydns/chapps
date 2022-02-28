@@ -1,0 +1,18 @@
+[Unit]
+Description={{ service_description }}
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User={{ service_roleaccount | d('chapps') }}
+ExecStart={{ python_invocation }} {{ service_exec_path }}
+{% for sym, val in env_settings | dictsort %}
+Environment="{{ sym }}={{ val }}"
+{% endfor %}
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=postfix.service
