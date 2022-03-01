@@ -1,3 +1,7 @@
+v0.3.6:
+	- bug fixes: due to poor design choice, all policies in a multipolicy handler will end up with the same config,
+	  that being the config for the last configured policy.  As such, earlier ones would send the wrong messages, and
+	  possibly exhibit other problematic issues.  This is fixed.
 v0.3.3-5:
 	- improvements to setuptools install process (pip / setup.py) which should make it possible to format
 	  correct SystemD service description files to run the installed CHAPPS services, even from within their venv
