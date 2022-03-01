@@ -47,6 +47,7 @@ class PostInstallSetup(install):
         template_locations = [ template_loc ]
         if self.in_virtualenv():
             python_invocation = str( service_bin / 'python3' )
+            ( Path( sys.prefix ) / 'etc' ).mkdir( 511, False, True ) # the mode is really a mask
             env_settings['CHAPPS_CONFIG'] = str( Path( sys.prefix ) / 'etc' / 'chapps.ini' )
         else:
             python_invocation = '/usr/bin/env python3'
