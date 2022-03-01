@@ -138,9 +138,10 @@ setup(
     data_files = [
         ('chapps', [ 'README.md',
                      'INSTALLATION.md',]),
-        ('chapps/install', [ 'install/chapps_greylisting.service',
+        ('chapps/install', [ 'install/chapps_grl.service',
                              'install/chapps_oqp.service',
                              'install/chapps_multi.service',
+                             'install/chapps-systemd-service.tmpl',
         ]),
         ('chapps/postfix/greylisting',    ['postfix/greylisting/main.cf',
                                            'postfix/greylisting/master.cf']),

@@ -1,4 +1,4 @@
-v0.3.3:
+v0.3.3-5:
 	- improvements to setuptools install process (pip / setup.py) which should make it possible to format
 	  correct SystemD service description files to run the installed CHAPPS services, even from within their venv
 v0.3.2:
