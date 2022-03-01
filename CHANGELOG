@@ -1,3 +1,6 @@
+v0.3.3:
+	- improvements to setuptools install process (pip / setup.py) which should make it possible to format
+	  correct SystemD service description files to run the installed CHAPPS services, even from within their venv
 v0.3.2:
 	- putting extra artifacts in a chapps dir, w/i venv or /usr/local depending
 v0.3.1:
