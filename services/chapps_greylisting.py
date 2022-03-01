@@ -29,8 +29,8 @@ async def main():
             handle_policy_request = handler.async_policy_handler()
             install_asyncio_signal_handlers( asyncio.get_running_loop() )
             srv = await asyncio.start_server( handle_policy_request,
-                                              handler.config.policy.listen_address,
-                                              handler.config.policy.listen_port,
+                                              handler.listen_address,
+                                              handler.listen_port,
                                               start_serving=False )
             await srv.serve_forever()
     except pidfile.AlreadyRunningError:
