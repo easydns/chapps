@@ -8,6 +8,7 @@ from .spf_policy import SPFEnforcementPolicy
 from .util import AttrDict, PostfixPolicyRequest
 from .outbound import OutboundPPR
 from .tests.conftest import CallableExhausted
+from functools import cached_property
 import logging, chapps.logging
 import asyncio
 
@@ -22,12 +23,20 @@ class RequestHandler():
         self.config = self.policy.config # in case a custom config is in use
         self.pprclass = pprclass
 
+    @cached_property
+    def listen_address(self):
+        return self.policy.params.listen_address
+
+    @cached_property
+    def listen_port(self):
+        return self.policy.params.listen_port
+
     def async_policy_handler(self):
         """Returns a coroutine which handles requests according to the policy"""
         pprclass = self.pprclass
         policy = self.policy
-        accept = self.config.policy.acceptance_message
-        reject = self.config.policy.rejection_message
+        accept = policy.params.acceptance_message
+        reject = policy.params.rejection_message
         encoding = config.chapps.payload_encoding
         logger.debug(f"Policy handler requested for {type(policy).__name__} using PPR class {pprclass.__name__}.")
         async def handle_policy_request(reader, writer) -> None:
@@ -70,7 +79,13 @@ class CascadingPolicyHandler():
         self.pprclass = pprclass
         if not self.policies:
             raise ValueError( "A list of policy objects must be provided." )
-        self.config = self.policies[0].config # all policies have all of the config
+        self.config = self.policies[0].config # all copies of the config are the same
+    @cached_property
+    def listen_address(self):
+        return next( ( getattr(p.params, 'listen_address', None ) for p in self.policies ), None )
+    @cached_property
+    def listen_port(self):
+        return next( ( getattr(p.params, 'listen_port', None ) for p in self.policies ), None )
     ### an asynchronous policy handler which cascades through all the policies; fails stop execution
     def async_policy_handler( self ):
         """Returns a coroutine which handles requests according to the policies, in order"""
@@ -99,10 +114,10 @@ class CascadingPolicyHandler():
                 approval = True
                 for policy in policies:
                     if policy.approve_policy_request( policy_data ):
-                        resp = ( "action=" + policy.config.policy.acceptance_message + "\n\n" )
+                        resp = ( "action=" + policy.params.acceptance_message + "\n\n" )
                         logger.debug( f" .. Policy {type(policy)} accepted with '{resp.strip()}'" )
                     else:
-                        resp = ( "action=" + policy.config.policy.rejection_message + "\n\n" )
+                        resp = ( "action=" + policy.params.rejection_message + "\n\n" )
                         approval = False
                         logger.debug( f" .. Policy {type(policy)} denied with '{resp.strip()}'" )
                     if not approval:
@@ -126,25 +141,21 @@ class OutboundQuotaHandler(RequestHandler):
     def __init__( self, policy=None ):
         p = policy or OutboundQuotaPolicy()
         super().__init__( p, pprclass=OutboundPPR )
-        self.config.policy = self.config.policy_oqp # setup for outbound quota
 
 class GreylistingHandler(RequestHandler):
     def __init__( self, policy=None ):
         p = policy or GreylistingPolicy()
         super().__init__( p )
-        self.config.policy = self.config.policy_grl # setup for greylisting
 
 class SenderDomainAuthHandler(RequestHandler):
     def __init__( self, policy=None ):
         p = policy or SenderDomainAuthPolicy()
         super().__init__( p, pprclass=OutboundPPR )
-        self.config.policy = self.config.policy_sda # setup for sender domain authorization
 
 class SPFEnforcementHandler(RequestHandler):
     def __init__(self, policy=None):
         p = policy or SPFEnforcementPolicy()
         super().__init__( p )
-        self.config.policy = self.config.policy_spf # setup for SPF enforcement
 
     def async_policy_handler(self):
         """Returns a coroutine which handles requests according to the policy"""
