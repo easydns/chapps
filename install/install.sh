@@ -34,7 +34,9 @@ sudo cp ../services/chapps_outbound_multi.py /usr/local/bin/chapps_outbound_mult
 
 ### Install SystemD service profiles
 sudo cp ../install/chapps_oqp.service /usr/lib/systemd/system
-sudo cp ../install/chapps_greylisting.service /usr/lib/systemd/system
+sudo cp ../install/chapps_grl.service /usr/lib/systemd/system
 sudo cp ../install/chapps_multi.service /usr/lib/systemd/system
 
-echo "Please note: no services are enabled; use systemctl enable <service> to enable one ONLY"
+sudo systemctl daemon-reload
+
+echo "Please note: no services are enabled; use systemctl enable <service> to enable compatible services you want to run concurrently."
