@@ -6,7 +6,7 @@ import collections.abc
 import configparser
 from pathlib import Path
 from os import environ as env
-from .util import AttrDict
+from chapps.util import AttrDict
 import logging, chapps.logging
 
 logger = logging.getLogger(__name__)
@@ -106,12 +106,20 @@ class CHAPPSConfig():
         self.configparser["CHAPPS"]["config_file"] = str( config_file )
         self.chapps = AttrDict( self.configparser["CHAPPS"] )
         self.adapter = AttrDict( self.configparser["PolicyConfigAdapter"] )
+        self.actions_spf = AttrDict( self.configparser["PostfixSPFActions"] )
+        self.redis = AttrDict( self.configparser["Redis"] )
+        ### these are somewhat obsolete now
         self.policy_oqp = AttrDict( self.configparser["OutboundQuotaPolicy"] )
         self.policy_sda = AttrDict( self.configparser["SenderDomainAuthPolicy"] )
         self.policy_grl = AttrDict( self.configparser["GreylistingPolicy"] )
         self.policy_spf = AttrDict( self.configparser["SPFEnforcementPolicy"] )
-        self.actions_spf = AttrDict( self.configparser["PostfixSPFActions"] )
-        self.redis = AttrDict( self.configparser["Redis"] )
+
+    def get_block( self, blockname ):
+        try:
+            return AttrDict( self.configparser[ blockname ] )
+        except Exception:
+            pass
+        return None
 
 
 config = CHAPPSConfig()
