@@ -79,6 +79,7 @@ class PostInstallSetup(install):
             manager = dbus.Interface( systemd, 'org.freedesktop.systemd1.Manager' )
             manager.LinkUnitFiles( services_to_enable, False, True )
             manager.Reload()
+        return post_install_setup
 
     def __init__( self, *args, **kwargs ):
         super().__init__( *args, **kwargs )
