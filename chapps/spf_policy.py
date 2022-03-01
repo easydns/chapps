@@ -13,8 +13,6 @@ class SPFEnforcementPolicy(EmailPolicy):
         """At present, there are no extra options for SPF Enforcement policy; perhaps there should be for
            how to treat none_neutral and softfail"""
         super().__init__( cfg )
-        ### do we need a config? do we need the action config, which is what the following hooks up?
-        self.config.policy = self.config.policy_spf # this blockname does not currently match its classname
         self.actions = PostfixSPFActions()
 
     def approve_policy_request(self, ppr):

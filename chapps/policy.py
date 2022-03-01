@@ -30,6 +30,7 @@ class EmailPolicy():
 
     def __init__(self, cfg=None):
         self.config = cfg if cfg else config
+        self.params = config.get_block( self.__class__.__name__ )
         self.sentinel = None
         self.redis = self._redis()            # pass True to get read-only
         self.instance_cache = ExpiringDict(3) # entries expire after 3 seconds
@@ -67,7 +68,6 @@ class GreylistingPolicy(EmailPolicy):
                           approval will be granted automatically
         """
         super().__init__( cfg )
-        self.config.policy = self.config.policy_grl # the blocknames match the classnames, so this could be factored up to the superclass
         self.min_defer = minimum_deferral
         self.cache_ttl = cache_ttl
         self.allow_after = auto_allow_after
@@ -180,15 +180,14 @@ class OutboundQuotaPolicy(EmailPolicy):
         """
         super().__init__( cfg ) # sets attrs 'config' and 'redis'
         self.interval = enforcement_interval if enforcement_interval else seconds_per_day
-        self.config.policy = self.config.policy_oqp
         if min_delta:
             self.min_delta = min_delta
-        elif hasattr(self.config.policy, "min_delta"):
-            self.min_delta = self.config.policy.min_delta
+        elif hasattr(self.params, "min_delta"):
+            self.min_delta = self.params.min_delta
         else:
             self.min_delta = 0
         self.min_delta = float( self.min_delta )
-        self.counting_recipients = self.config.policy.counting_recipients if hasattr(self.config.policy, 'counting_recipients') else False
+        self.counting_recipients = self.params.counting_recipients if hasattr(self.params, 'counting_recipients') else False
 
     @contextmanager
     def _control_data_storage_context(self):
@@ -305,7 +304,7 @@ class OutboundQuotaPolicy(EmailPolicy):
         with self._adapter_handle() as adapter:
             quota = adapter.quota_for_user( user )
         if quota:
-            self._store_control_data( user, quota, self.config.policy.margin )
+            self._store_control_data( user, quota, self.params.margin )
 
     def approve_policy_request(self, ppr):
         """Expects a PostfixPolicyRequest object; returns True if mail sending should be allowed
@@ -386,7 +385,6 @@ class SenderDomainAuthPolicy( EmailPolicy ):
     def __init__( self, cfg=None ):
         """first, optional positional argument: a CHAPPSConfig object to use"""
         super().__init__( cfg ) # sets attrs 'config' and 'redis'
-        self.config.policy = self.config.policy_sda
     ### every subclass has one of these, with a unique name, and fine
     ### but maybe there should also be a generic single entry point
     def sender_domain_key( self, ppr ):
