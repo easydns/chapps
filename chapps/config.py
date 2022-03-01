@@ -95,7 +95,7 @@ class CHAPPSConfig():
     def __init__(self):
         ### Create and initialize the config
         config_file = CHAPPSConfig.what_config_file()
-        self.configparser = configparser.ConfigParser()
+        self.configparser = configparser.ConfigParser( interpolation=None )
         CHAPPSConfig.setup_config( self.configparser )
 
         ### Initialize a config file if none
