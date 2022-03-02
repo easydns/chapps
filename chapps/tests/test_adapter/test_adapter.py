@@ -38,11 +38,25 @@ class Test_PolicyConfigAdapter():
         assert "users"in tables
 
 class Test_MariaDBQuotaAdapter():
-    def test_initialize_tables( self, finalizing_mdbqadapter, database_fixture ):
+    def test_initialize_tables_default( self, finalizing_mdbqadapter, database_fixture ):
         """
         Verify that MDBQA's table initialization works properly
         """
         finalizing_mdbqadapter._initialize_tables()
+
+        cur = database_fixture # adapter_fixture.conn.cursor()
+        cur.execute("SHOW TABLES")
+        tables = [ t[0] for t in cur.fetchall() ]
+        assert "quotas" in tables
+        assert "quota_user" in tables
+        cur.execute("SELECT COUNT(name) FROM quotas")
+        assert cur.fetchone()[0] == 0
+
+    def test_initialize_tables_with_quotas( self, finalizing_mdbqadapter, database_fixture ):
+        """
+        Verify that MDBQA's table initialization works properly
+        """
+        finalizing_mdbqadapter._initialize_tables( defquotas=True )
 
         cur = database_fixture # adapter_fixture.conn.cursor()
         cur.execute("SHOW TABLES")
