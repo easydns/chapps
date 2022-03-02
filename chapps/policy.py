@@ -30,7 +30,7 @@ class EmailPolicy():
 
     def __init__(self, cfg=None):
         self.config = cfg if cfg else config
-        self.params = config.get_block( self.__class__.__name__ )
+        self.params = self.config.get_block( self.__class__.__name__ )
         self.sentinel = None
         self.redis = self._redis()            # pass True to get read-only
         self.instance_cache = ExpiringDict(3) # entries expire after 3 seconds
@@ -178,7 +178,7 @@ class OutboundQuotaPolicy(EmailPolicy):
            named arguments: enforcement_interval will default to seconds per day if not provided
                             min_delta defaults to 5 seconds, to prevent spamming; set to 0 to disable
         """
-        super().__init__( cfg ) # sets attrs 'config' and 'redis'
+        super().__init__( cfg ) # sets attrs 'config', 'params', and 'redis'
         self.interval = enforcement_interval if enforcement_interval else seconds_per_day
         if min_delta:
             self.min_delta = min_delta
