@@ -74,7 +74,7 @@ class Test_Config:
         policy_config = config.policy_oqp
         assert policy_config.listen_address == 'localhost'
         assert policy_config.listen_port == 10225
-        assert policy_config.acceptance_message == 'OK'
+        assert policy_config.acceptance_message == 'DUNNO'
         assert policy_config.rejection_message == 'REJECT Rejected - outbound quota fulfilled'
         assert config.policy_grl.acceptance_message == 'DUNNO'
         assert config.policy_grl.rejection_message == 'DEFER_IF_PERMIT Service temporarily unavailable - greylisted'
@@ -101,7 +101,7 @@ class Test_Config:
         assert chapps_config.config_file == str( Path( chapps_mock_cfg_path ) )
         assert chapps_config.payload_encoding == chapps_mock_config["CHAPPS"]['payload_encoding']
         assert policy_config.rejection_message == '554 Rejected because I said so.'
-        assert policy_config.acceptance_message == 'OK'
+        assert policy_config.acceptance_message == 'DUNNO'
         assert adapter_config.adapter == 'mysql'
         assert adapter_config.db_port == 3306
         assert adapter_config.db_user == 'chapps_test'
