@@ -43,7 +43,7 @@ class CHAPPSConfig():
             'margin': 0.10,
             'counting_recipients': True,
             'rejection_message': 'REJECT Rejected - outbound quota fulfilled',
-            'acceptance_message': 'OK',
+            'acceptance_message': 'DUNNO',
         }
         cp['GreylistingPolicy'] = {
             'listen_address': 'localhost',
