@@ -47,6 +47,9 @@ class RequestHandler():
                 except ConnectionResetError:
                     logger.debug("Postfix said goodbye. Terminating this thread.")
                     return
+                except asyncio.IncompleteReadError as e:
+                    logger.debug( "Postfix hung up before a read could be completed. Terminating this thread." )
+                    return
                 except CallableExhausted as e:
                     raise e
                 except Exception:
@@ -100,6 +103,9 @@ class CascadingPolicyHandler():
                     policy_payload = await reader.readuntil( b'\n\n' )
                 except ConnectionResetError:
                     logger.debug( "Postfix said goodbye. Terminating this thread." )
+                    return
+                except asyncio.IncompleteReadError as e:
+                    logger.debug( "Postfix hung up before a read could be completed. Terminating this thread." )
                     return
                 except CallableExhausted as e:
                     raise e
