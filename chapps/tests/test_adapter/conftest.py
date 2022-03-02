@@ -15,7 +15,7 @@ def _adapter_fixture( fixtype ):
         db_host = 'localhost',
         db_name = 'chapps_test',
         db_user = 'chapps_test',
-        db_pass = 'chapps_test'
+        db_pass = 'screwy%pass${word}'
     )
     return adapter
 

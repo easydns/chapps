@@ -53,7 +53,7 @@ def chapps_sentinel_env(monkeypatch, chapps_sentinel_cfg_path):
 @pytest.fixture(scope="session")
 def chapps_mock_config():
     """Some settings are intentionally left out; their defaults shall prevail"""
-    cp = configparser.ConfigParser()
+    cp = configparser.ConfigParser( interpolation=None )
     cp["CHAPPS"] = {
         'payload_encoding': 'UTF-8',
     }
@@ -61,7 +61,7 @@ def chapps_mock_config():
         'adapter': 'mysql',
         'db_name': 'chapps_test',
         'db_user': 'chapps_test',
-        'db_pass': 'chapps_test',
+        'db_pass': 'screwy%pass${word}',
     }
     cp["OutboundQuotaPolicy"] = {
         'min_delta': 2,
@@ -85,7 +85,7 @@ def chapps_mock_config():
 @pytest.fixture(scope="session")
 def chapps_sentinel_config():
     """Some settings are intentionally left out; their defaults shall prevail"""
-    cp = configparser.ConfigParser()
+    cp = configparser.ConfigParser( interpolation=None )
     cp["CHAPPS"] = {
         'payload_encoding': 'UTF-8',
     }
@@ -93,7 +93,7 @@ def chapps_sentinel_config():
         'adapter': 'mysql',
         'db_name': 'chapps_test',
         'db_user': 'chapps_test',
-        'db_pass': 'chapps_test',
+        'db_pass': 'screwy%pass${word}',
     }
     cp["OutboundQuotaPolicy"] = {
         'min_delta': 2,

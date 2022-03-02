@@ -106,6 +106,7 @@ class Test_Config:
         assert adapter_config.db_port == 3306
         assert adapter_config.db_user == 'chapps_test'
         assert adapter_config.db_name == 'chapps_test'
+        assert adapter_config.db_pass == 'screwy%pass${word}'
         assert policy_config.margin == 50.0
         assert policy_config.counting_recipients == False
         assert config.policy_grl.rejection_message == 'DEFER_IF_PERMIT Service temporarily stupid'
