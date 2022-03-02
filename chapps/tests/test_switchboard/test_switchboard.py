@@ -47,7 +47,7 @@ class Test_OutboundQuotaHandler:
         with pytest.raises( CallableExhausted ):
             _ = await handle_policy_request( mock_reader_ok, mock_writer )
         mock_reader_ok.readuntil.assert_called_with( b'\n\n' )
-        mock_writer.write.assert_called_with( b'action=OK\n\n' )
+        mock_writer.write.assert_called_with( b'action=DUNNO\n\n' )
 
     async def test_handle_policy_rejection(self, caplog, testing_policy, mock_reader_rej, mock_writer):
         """
@@ -59,7 +59,7 @@ class Test_OutboundQuotaHandler:
             _ = await handle_policy_request( mock_reader_rej, mock_writer )
         assert mock_reader_rej.readuntil.call_args.args[0] ==  b'\n\n'
         # mock_writer.write.assert_called_with( b'554 Rejected - outbound quota fulfilled\n\n' )
-        assert mock_writer.write.call_args.args[0][0:11] == b'action=554 ' and mock_writer.write.call_args.args[0][-2:] == b'\n\n'
+        assert ( mock_writer.write.call_args.args[0][0:11] == b'action=554 ' or mock_writer.write.call_args.args[0][0:14] == b'action=REJECT ' ) and mock_writer.write.call_args.args[0][-2:] == b'\n\n'
 
     async def test_default_policy(self, mock_reader_ok, mock_writer):
         """

@@ -2,6 +2,10 @@ v0.3.6:
 	- bug fixes: due to poor design choice, all policies in a multipolicy handler will end up with the same config,
 	  that being the config for the last configured policy.  As such, earlier ones would send the wrong messages, and
 	  possibly exhibit other problematic issues.  This is fixed.
+	- OQP default acceptance response changed from OK to DUNNO
+	- ConfigParser instructed not to perform interpolation on INI file, in order to allow all arbitrary garbage
+	  (for passwords)
+	- handlers now provide property methods to obtain the appropriate listener address and port numbers
 v0.3.3-5:
 	- improvements to setuptools install process (pip / setup.py) which should make it possible to format
 	  correct SystemD service description files to run the installed CHAPPS services, even from within their venv

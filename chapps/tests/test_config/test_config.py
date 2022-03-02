@@ -111,3 +111,13 @@ class Test_Config:
         assert config.policy_grl.rejection_message == 'DEFER_IF_PERMIT Service temporarily stupid'
         assert redis_config.server == '127.0.0.1'
         assert redis_config.port == 6379
+
+    def test_get_block( self,
+                        chapps_mock_env,
+                        chapps_mock_config_file,
+                        chapps_mock_config,
+                        chapps_mock_cfg_path
+    ):
+        config = CHAPPSConfig()
+        policy_grl = config.get_block( "GreylistingPolicy" )
+        assert policy_grl.rejection_message == config.policy_grl.rejection_message

@@ -103,6 +103,12 @@ class Test_GreylistingPolicy_Base():
         client_key_result = policy.client_key( ppr )
         assert client_key_result == f"{GreylistingPolicy.redis_key_prefix}:{ppr.client_address}"
 
+    def test_config_overrides_properly_forwarded(self, caplog, testing_policy_grl):
+        ### sanity check
+        ### this really tests functionality of the superclass, but it is much more complicated to test it there
+        assert testing_policy_grl.config.get_block( "GreylistingPolicy" ).rejection_message == testing_policy_grl.config.policy_grl.rejection_message
+        assert testing_policy_grl.params.rejection_message == testing_policy_grl.config.policy_grl.rejection_message
+
     def test_approve_policy_request(self, caplog, monkeypatch, allowable_ppr):
         """
         GIVEN a positive policy evaluation
