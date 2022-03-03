@@ -1,3 +1,8 @@
+v0.4:
+	- introducing a new script to provide a REST API; INSTALLATION instructions will be modified to discuss and
+	  provide references for proper, highly-available deployment of the REST API, which it is advised be run on
+	  separate servers in order to avoid interfering with email throughput.
+	- PyPI package now provides the [API] extras definition, to install API prerequisites (which are not otherwise needed)
 v0.3.7:
 	- removing static SystemD service profiles from pip package; they remain in the repo, for use via git clone.
 	- correcting fatal bug wherein receiving email with a null sender would cause the application to crash.
