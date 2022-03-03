@@ -2,19 +2,19 @@
 
 Message multiplexing objects and/or routines for CHAPPS
 """
-from .config import config
-from .policy import OutboundQuotaPolicy, GreylistingPolicy, SenderDomainAuthPolicy
-from .spf_policy import SPFEnforcementPolicy
-from .util import AttrDict, PostfixPolicyRequest
-from .outbound import OutboundPPR
-from .tests.conftest import CallableExhausted
+from chapps.config import config # the global instance of the config object
+from chapps.policy import OutboundQuotaPolicy, GreylistingPolicy, SenderDomainAuthPolicy
+from chapps.spf_policy import SPFEnforcementPolicy
+from chapps.util import AttrDict, PostfixPolicyRequest
+from chapps.outbound import OutboundPPR
+from chapps.tests.conftest import CallableExhausted
+from chapps.signals import NullSenderException
 from functools import cached_property
 import logging, chapps.logging
 import asyncio
 
 logger = logging.getLogger(__name__) # pragma: no cover
 logger.setLevel( logging.DEBUG )     # pragma: no cover
-logger.debug( "Request library initialized." )
 
 class RequestHandler():
     """Wrap handling in an object-oriented factory so we can supply a policy"""
@@ -119,13 +119,22 @@ class CascadingPolicyHandler():
                 policy_data = pprclass( policy_payload.decode( encoding ).split( '\n' ) )
                 approval = True
                 for policy in policies:
-                    if policy.approve_policy_request( policy_data ):
-                        resp = ( "action=" + policy.params.acceptance_message + "\n\n" )
-                        logger.debug( f" .. Policy {type(policy)} accepted with '{resp.strip()}'" )
-                    else:
-                        resp = ( "action=" + policy.params.rejection_message + "\n\n" )
-                        approval = False
-                        logger.debug( f" .. Policy {type(policy)} denied with '{resp.strip()}'" )
+                    try:
+                        if policy.approve_policy_request( policy_data ):
+                            resp = ( "action=" + policy.params.acceptance_message + "\n\n" )
+                            logger.debug( f" .. Policy {type(policy)} accepted with '{resp.strip()}'" )
+                        else:
+                            resp = ( "action=" + policy.params.rejection_message + "\n\n" )
+                            approval = False
+                            logger.debug( f" .. Policy {type(policy)} denied with '{resp.strip()}'" )
+                    except NullSenderException:
+                        if policy.params.null_sender_ok:
+                            resp = ( "action=" + policy.params.acceptance_message + "\n\n" )
+                            logger.debug( f" .. Policy {type(policy)} accepted with '{resp.strip()}' on null sender" )
+                        else:
+                            resp = ( "action=" + policy.params.rejection_message + "\n\n" )
+                            approval = False
+                            logger.debug( f" .. Policy {type(policy)} denied with '{resp.strip()}' on null sender" )
                     if not approval:
                         break
                 try:
