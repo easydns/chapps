@@ -1,3 +1,7 @@
+v0.3.7:
+	- removing static SystemD service profiles from pip package; they remain in the repo, for use via git clone.
+	- correcting fatal bug wherein receiving email with a null sender would cause the application to crash.
+	  It is now possible to specify for each policy whether null senders are "ok"; the default is False.
 v0.3.6:
 	- bug fixes: due to poor design choice, all policies in a multipolicy handler will end up with the same config,
 	  that being the config for the last configured policy.  As such, earlier ones would send the wrong messages, and
