@@ -44,17 +44,20 @@ class CHAPPSConfig():
             'counting_recipients': True,
             'rejection_message': 'REJECT Rejected - outbound quota fulfilled',
             'acceptance_message': 'DUNNO',
+            'null_sender_ok': False,
         }
         cp['GreylistingPolicy'] = {
             'listen_address': 'localhost',
             'listen_port': 10226,
             'rejection_message': 'DEFER_IF_PERMIT Service temporarily unavailable - greylisted',
             'acceptance_message': 'DUNNO',
+            'null_sender_ok': False,
         }
         cp['SPFEnforcementPolicy'] = {
             'listen_address': 'localhost',
             'listen_port': 10227,
             'whitelist': [],
+            'null_sender_ok': False,
         }
         cp['PostfixSPFActions'] = {
             'passing': 'prepend',
@@ -69,6 +72,7 @@ class CHAPPSConfig():
             'listen_port': 10225,
             'rejection_message': 'REJECT Rejected - not allowed to send mail from this domain',
             'acceptance_message': 'DUNNO',
+            'null_sender_ok': False,
         }
         cp["Redis"] = {
             'sentinel_servers': '',
