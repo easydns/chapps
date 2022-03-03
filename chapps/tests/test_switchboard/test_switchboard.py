@@ -8,7 +8,7 @@ from chapps.switchboard import RequestHandler, OutboundQuotaHandler, Greylisting
 from chapps.policy import OutboundQuotaPolicy
 from chapps.tests.conftest import CallableExhausted
 from chapps.tests.test_adapter.conftest import base_adapter_fixture, finalizing_pcadapter, database_fixture, populated_database_fixture
-from chapps.tests.test_policy.conftest import clear_redis, clear_redis_grl, clear_redis_sda, testing_policy_sda
+from chapps.tests.test_policy.conftest import clear_redis, clear_redis_grl, clear_redis_sda, testing_policy_sda, null_sender_policy_sda
 
 pytestmark = pytest.mark.order(-2)
 
@@ -184,6 +184,20 @@ class Test_OutboundMultipolicyHandler():
                 handle_policy_request = handler.async_policy_handler()
                 await handle_policy_request( mock_reader_sda_auth, mock_writer )
         mock_apr.assert_called_once()
+
+    async def test_handle_null_sender( self, null_sender_policy_sda, testing_policy, mock_reader_sda_auth, mock_writer ):
+        handler = OutboundMultipolicyHandler( [ null_sender_policy_sda, testing_policy ] )
+        handle_policy_request = handler.async_policy_handler()
+        with pytest.raises( CallableExhausted ):
+            await handle_policy_request( mock_reader_sda_auth, mock_writer )
+        mock_writer.write.assert_called_once() # if it was called, we handled the exception raised by null_sender_policy_sda
+
+    async def test_reject_null_sender( self, null_sender_policy_sda, testing_policy, mock_reader_sda_auth, mock_writer ):
+        handler = OutboundMultipolicyHandler( [ null_sender_policy_sda, testing_policy ] )
+        handle_policy_request = handler.async_policy_handler()
+        with pytest.raises( CallableExhausted ):
+            await handle_policy_request( mock_reader_sda_auth, mock_writer )
+        mock_writer.write.assert_called_with( b'action=REJECT Rejected - not allowed to send mail from this domain\n\n' ) # the SDA rejection message b/c using SDA policy
 
     async def test_unauthed_user_gets_rejected( self, monkeypatch,
                                            clear_redis, clear_redis_sda,

@@ -14,6 +14,7 @@ from chapps.config import CHAPPSConfig
 from chapps.policy import OutboundQuotaPolicy, GreylistingPolicy, SenderDomainAuthPolicy
 from chapps.util import PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
+from chapps.signals import NullSenderException
 
 seconds_per_day = 3600 * 24
 
@@ -27,6 +28,14 @@ def testing_policy(chapps_mock_env, chapps_mock_config_file):
 def testing_policy_sda(chapps_mock_env, chapps_mock_config_file):
     newconfig = CHAPPSConfig()
     policy = SenderDomainAuthPolicy( newconfig )
+    return policy
+
+@fixture
+def null_sender_policy_sda(chapps_mock_env, chapps_mock_config_file, monkeypatch):
+    newconfig = CHAPPSConfig()
+    policy = SenderDomainAuthPolicy( newconfig )
+    apr = Mock( name='approve_policy_request', side_effect=NullSenderException )
+    monkeypatch.setattr( policy, 'approve_policy_request', apr )
     return policy
 
 @fixture
