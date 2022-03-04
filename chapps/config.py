@@ -7,6 +7,7 @@ import configparser
 from pathlib import Path
 from os import environ as env
 from chapps.util import AttrDict
+from chapps._version import __version__
 import logging, chapps.logging
 
 logger = logging.getLogger(__name__)
@@ -108,6 +109,7 @@ class CHAPPSConfig():
         else:
             self.configparser.read( str(config_file) )
         self.configparser["CHAPPS"]["config_file"] = str( config_file )
+        self.configparser["CHAPPS"]["version"] = f"CHAPPS v{__version__}"
         self.chapps = AttrDict( self.configparser["CHAPPS"] )
         self.adapter = AttrDict( self.configparser["PolicyConfigAdapter"] )
         self.actions_spf = AttrDict( self.configparser["PostfixSPFActions"] )
