@@ -69,6 +69,26 @@ class QuotaResp( CHAPPSResponse ):
 class QuotasResp( CHAPPSResponse ):
     response: List[ Quota ]
 
+class IntResp( CHAPPSResponse ):
+    response: int
+
+class TextResp( CHAPPSResponse ):
+    response: str
+
+class ConfigResp( CHAPPSResponse ):
+    response: List[ str ]
+    written: bool
+    write_path: str = None
+
+### the following classes are somewhat speculative for now
+class FloatResp( CHAPPSResponse ):
+    response: float
+
+class ErrorResp( CHAPPSResponse ):
+    response: None
+    error: str
+    message: str
+
 api = FastAPI()
 pca = PolicyConfigAdapter()
 verstr = config.chapps.version
