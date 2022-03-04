@@ -20,7 +20,7 @@ verstr = config.chapps.version
 
 ##### Users
 
-@api.post("/user/", response_model=UserResp)
+@api.post("/user/", response_model=UserResp, status_code=201, responses={400: {"description": "Could not create user"}}, tags=['users'] )
 async def create_user( user: User,
                        quota_id: int = Body( None , gt=0, title='Optionally supply a quota ID to link' ),
                        domain_ids: List[ int ] = Body( None, gt=0, title='Optionally supply a list of domain IDs to link') ):
@@ -72,7 +72,7 @@ async def create_user( user: User,
                 return ErrorResp.send( None, error='integrity', message=str(e) )
     UserResp.send( new_user, **extra_keys )
 
-@api.delete("/user/{user_id}", response_model=DeleteResp)
+@api.delete("/user/{user_id}", response_model=DeleteResp, tags=['users'])
 async def delete_user(
         user_id: int = Path(..., gt=0,
                             title='The ID of the user to delete'
@@ -92,7 +92,7 @@ async def delete_user(
             status = False
     return DeleteResp.send( response, status=status )
 
-@api.get("/user/{user_id}", response_model=UserResp)
+@api.get("/user/{user_id}", response_model=UserResp, tags=['users'])
 async def get_user(user_id: int):
     query = User.select_query( where=[f'id={user_id}'] )
     with pca.adapter_context() as cur:
@@ -104,11 +104,11 @@ async def get_user(user_id: int):
             return UserResp.send( results )
     return ErrorResp.send( None , error='nonexistent', message=f'There is no user with id {user_id}' )
 
-@api.get("/users/", response_model=UsersResp)
+@api.get("/users/", response_model=UsersResp, tags=['users'])
 async def list_all_users(skip: int = 0, limit: int = 1000):
     return await list_users( '%', skip, limit )
 
-@api.get("/users/{pattern}", response_model=UsersResp)
+@api.get("/users/{pattern}", response_model=UsersResp, tags=['users'])
 async def list_users(pattern: str, skip: int = 0, limit: int = 1000):
     sanitized_pattern = pattern
     query = User.select_query( where=[f"name LIKE '%{sanitized_pattern}%'"], window=(skip,limit) )
@@ -117,11 +117,11 @@ async def list_users(pattern: str, skip: int = 0, limit: int = 1000):
         results = User.zip_records( cur.fetchall() )
     return UsersResp.send( results )
 
-@api.get("/user-count/")
+@api.get("/user-count/", tags=['users'])
 async def count_all_users():
     return await count_users( '%' )
 
-@api.get("/user-count/{pattern}")
+@api.get("/user-count/{pattern}", tags=['users'])
 async def count_users( pattern: str ):
     cur = pca.conn.cursor()
     sanitized_pattern = pattern
