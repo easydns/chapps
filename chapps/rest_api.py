@@ -9,60 +9,98 @@ from fastapi import FastAPI, Path, Query, Body
 from pydantic import BaseModel
 import time
 
-class User( BaseModel ):
+class CHAPPSModel( BaseModel ):
     id: int
     name: str
 
+    @classmethod
+    def zip_records( model, records: List[ List ] ):
+        keys = list( model.schema()['properties'].keys() )
+        return [ model( **dict( zip( keys, record ) ) ) for record in records ]
+
+    @classmethod
+    def select_query( model, *, where = [], limit = (0,1000), order = 'id' ):
+        """Build a select suitable for wrapping in a model"""
+        keys = list( model.schema()['properties'].keys() )
+        query = f"SELECT {','.join( keys )} FROM {model.__name__.lower()}s"
+        if where:
+            query += f" WHERE {' AND '.join( where )}"
+        query += f" ORDER BY {order} LIMIT {','.join( [ str(l) for l in limit] )};"
+        return query
+
+class User( CHAPPSModel ):
+    """A model to represent users"""
+
 class Quota( BaseModel ):
-    id: int
-    name: str
+    """A model to represent quotas"""
     quota: int
 
 class Domain( BaseModel ):
-    id: int
-    name: str
+    """A model to represent domains"""
 
-class StdResp( BaseModel ):
+class CHAPPSResponse( BaseModel ):
     version: str
     timestamp: float
     response: object
 
-class UserResp( StdResp ):
-    response: User
+    @classmethod
+    def send( model, response, **kwargs ):
+        """Utility function for encapsulating responses in a standard body"""
+        return model( version=verstr, timestamp=time.time(), response=response, **kwargs )
 
-class UsersResp( StdResp ):
+class UserResp( CHAPPSResponse ):
+    response: User
+    domains: Optional[ List[ Domain ] ] = None
+    quota: Optional[ Quota ] = None
+
+class UsersResp( CHAPPSResponse ):
     response: List[ User ]
+
+class DomainResp( CHAPPSResponse ):
+    response: Domain
+    users: Optional[ List[ Domain ] ] = None
+
+class DomainsResp( CHAPPSResponse ):
+    response: List[ Domain ]
+
+class QuotaResp( CHAPPSResponse ):
+    response: Quota
+
+class QuotasResp( CHAPPSResponse ):
+    response: List[ Quota ]
 
 api = FastAPI()
 pca = PolicyConfigAdapter()
 verstr = config.chapps.version
 
-def json_response( response, **kwargs ):
-    """Utility function for encapsulating responses in a standard body"""
-    return dict( version=verstr, timestamp=time.time(), response=response, **kwargs )
-
 @api.post("/users/", response_model=UserResp)
-async def create_user( user: User, quota_id: int = Body( 0 ) ):
-    results = dict(
-        username=user.name,
-        starting_quota=quota_id,
-        allowed_domains=domain_ids
-    )
-    return results
+async def create_user( user: User, quota_id: int = Body( 0 ), domain_ids: List[ int ] = [] ):
+    queries = [ f"INSERT INTO users( name ) VALUES ('{user.name}');",
+                "SELECT id, name FROM users WHERE id=LAST_INSERT_ID();" ]
+    with pca.adapter_context() as cur:
+        for q in queries:
+            cur.execute( q )
+        result = cur.fetchone()
+    return UserResp.send( User.zip_records( [ result ] )[0] )
 
 @api.get("/users/", response_model=UsersResp)
 async def list_all_users(skip: int = 0, limit: int = 1000):
-    return await list_users( '%', Rskip, limit )
+    return await list_users( '%', skip, limit )
+
+# @api.get("/users/{user_id}", response_model=UserResp)
+# async def get_user(user_id: int):
+#     keys = list( User.schema()['properties'].keys() )
 
 @api.get("/users/{pattern}", response_model=UsersResp)
 async def list_users(pattern: str, skip: int = 0, limit: int = 1000):
-    cur = pca.conn.cursor()
     sanitized_pattern = pattern
-    query = f"SELECT id, name FROM users WHERE name LIKE '%{sanitized_pattern}%' ORDER BY id LIMIT {skip},{limit};"
-    cur.execute( query )
-    results = [  User( id=id, name=name ) for id, name in cur.fetchall() ]
+    query = User.select_query( where=[f"name LIKE '%{sanitized_pattern}%'"], limit=(skip,limit) )
+    keys = list( User.schema()['properties'].keys() )
+    with pca.adapter_context() as cur:
+        cur.execute( query )
+        results = User.zip_records( cur.fetchall() )
     cur.close()
-    return json_response( results )
+    return UsersResp.send( results )
 
 @api.get("/user-count/")
 async def count_all_users():
@@ -78,15 +116,15 @@ async def count_users( pattern: str ):
     cur.close()
     return json_response( results )
 
-@api.get("/domains/")
-async def get_all_domains(skip: int = 0, limit: int = 1000):
-    return await get_domains( '%', skip, limit )
+@api.get("/domains/", response_model=List[ Domain ])
+async def list_all_domains(skip: int = 0, limit: int = 1000):
+    return await list_domains( '%', skip, limit )
 
-@api.get("/domains/{pattern}")
-async def get_domains(pattern: str, skip: int = 0, limit: int = 1000):
+@api.get("/domains/{pattern}", response_model=List[ Domain ])
+async def list_domains(pattern: str, skip: int = 0, limit: int = 1000):
     sanitized_pattern = pattern
-    query = f"SELECT id, name FROM domains WHERE name LIKE '{sanitized_pattern}' ORDER BY id LIMIT {skip},{limit};"
+    query = Domain.select_query( where=[ f"name LIKE '%{sanitized_pattern}%" ] )
     with pca.adapter_context() as cur:
         cur.execute( query )
-        results = [ Domain( id=id, name=name ) for id, name in cur.fetchall() ]
-    return json_response( results )
+        results = Domain.zip_records( cur.fetchall() )
+    return DomainsResp.send( results )
