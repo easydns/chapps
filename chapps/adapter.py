@@ -3,6 +3,7 @@ import mariadb
 # import re ### needed if implementing domain_re_for_user()
 import logging, chapps.logging
 from chapps.config import config
+from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)                              # pragma: no cover
 
@@ -38,6 +39,13 @@ class PolicyConfigAdapter():
         cur.execute( self.user_table )
         cur.close()
 
+    @contextmanager
+    def adapter_context( self ):
+        cur = self.conn.cursor()
+        try:
+            yield cur
+        finally:
+            cur.close()
 
 class MariaDBQuotaAdapter(PolicyConfigAdapter):
     """A class for adapting to MariaDB for quota policy data"""
