@@ -1,3 +1,5 @@
+v0.3.8:
+	- correcting packaging error which prevented installation of dependencies
 v0.3.7:
 	- removing static SystemD service profiles from pip package; they remain in the repo, for use via git clone.
 	- correcting fatal bug wherein receiving email with a null sender would cause the application to crash.
