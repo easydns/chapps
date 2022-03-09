@@ -2,11 +2,14 @@
 import pytest
 import redis
 import time
+import os
+from pathlib import Path
 from pytest import fixture
+# the following hack makes testing work from within Emacs; at some point, it will go away
+os.environ['CHAPPS_CONFIG'] = str(Path(os.getcwd()) / "etc" / "chapps" / "chapps.ini")
 from chapps.policy import GreylistingPolicy
 
 seconds_per_day = 3600 * 24
-
 
 class ErrorAfter(object):
     """Return a callable object which will raise CallableExhausted after a set number of calls"""
