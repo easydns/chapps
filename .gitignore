@@ -18,3 +18,5 @@ zabbix_api_password.*
 vars/local.yml
 .venv/*
 .dir-locals.el
+/etc/
+/chapps.egg-info/
