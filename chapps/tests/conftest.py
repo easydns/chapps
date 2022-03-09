@@ -21,12 +21,6 @@ class ErrorAfter(object):
         self.calls += 1
 
 
-class CallableExhausted(Exception):
-    """Custom exception mainly for escaping infinite loops"""
-
-    pass
-
-
 def _unique_instance(deadbeef="deadbeef"):
     counter = 0
 

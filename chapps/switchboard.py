@@ -7,8 +7,7 @@ from chapps.policy import OutboundQuotaPolicy, GreylistingPolicy, SenderDomainAu
 from chapps.spf_policy import SPFEnforcementPolicy
 from chapps.util import AttrDict, PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
-from chapps.tests.conftest import CallableExhausted
-from chapps.signals import NullSenderException
+from chapps.signals import CHAPPSException, CallableExhausted, NullSenderException
 from functools import cached_property
 import logging, chapps.logging
 import asyncio
@@ -169,6 +168,8 @@ class CascadingPolicyHandler:
                             logger.debug(
                                 f" .. Policy {type(policy)} denied with '{resp.strip()}' on null sender"
                             )
+                    except CHAPPSException:
+                        logger.exception("During policy evaluation:")
                     if not approval:
                         break
                 try:
