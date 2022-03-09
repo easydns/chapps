@@ -3,6 +3,11 @@ v0.4:
 	  provide references for proper, highly-available deployment of the REST API, which it is advised be run on
 	  separate servers in order to avoid interfering with email throughput.
 	- PyPI package now provides the [API] extras definition, to install API prerequisites (which are not otherwise needed)
+v0.3.9:
+	- correcting import of test library feature into main codebase
+	- adding more comprehensive CHAPPSException handling
+v0.3.8:
+	- correcting packaging error which prevented installation of dependencies
 v0.3.7:
 	- removing static SystemD service profiles from pip package; they remain in the repo, for use via git clone.
 	- correcting fatal bug wherein receiving email with a null sender would cause the application to crash.

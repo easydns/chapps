@@ -25,6 +25,10 @@ class CHAPPSException(Exception):
     """Parent class for CHAPPS exceptions"""
 
 
+class CallableExhausted(CHAPPSException):
+    """A special exception for use during testing"""
+
+
 class OutboundPolicyException(CHAPPSException):
     """Exceptions which occur during outbound mail processing"""
 

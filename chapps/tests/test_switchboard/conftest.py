@@ -3,7 +3,8 @@
 from unittest.mock import Mock, AsyncMock
 import pytest
 from chapps.policy import GreylistingPolicy
-from chapps.tests.conftest import ErrorAfter, CallableExhausted, _unique_instance
+from chapps.signals import CallableExhausted
+from chapps.tests.conftest import ErrorAfter,_unique_instance
 from chapps.tests.test_util.conftest import postfix_policy_request_payload
 from chapps.tests.test_config.conftest import (
     chapps_mock_env,

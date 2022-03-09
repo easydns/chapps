@@ -28,7 +28,7 @@ class PolicyConfigAdapter:
         db_name=None,
         db_user=None,
         db_pass=None,
-        autocommit=True
+        autocommit=True,
     ):
         self.host = db_host or config.adapter.db_host or "127.0.0.1"
         self.port = db_port or config.adapter.db_port or 3306
