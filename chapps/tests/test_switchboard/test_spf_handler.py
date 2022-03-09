@@ -6,7 +6,7 @@ import logging
 from unittest.mock import patch
 from chapps.switchboard import SPFEnforcementHandler
 from chapps.spf_policy import SPFEnforcementPolicy
-from chapps.tests.conftest import CallableExhausted
+from chapps.signals import CallableExhausted
 from chapps.tests.test_policy.conftest import (
     auto_spf_query,
     mock_spf_queries,
