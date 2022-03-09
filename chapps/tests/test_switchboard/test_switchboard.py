@@ -12,7 +12,7 @@ from chapps.switchboard import (
     OutboundMultipolicyHandler,
 )
 from chapps.policy import OutboundQuotaPolicy
-from chapps.tests.conftest import CallableExhausted
+from chapps.signals import CallableExhausted
 from chapps.tests.test_adapter.conftest import (
     base_adapter_fixture,
     finalizing_pcadapter,

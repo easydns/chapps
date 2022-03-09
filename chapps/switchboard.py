@@ -7,8 +7,7 @@ from chapps.policy import OutboundQuotaPolicy, GreylistingPolicy, SenderDomainAu
 from chapps.spf_policy import SPFEnforcementPolicy
 from chapps.util import AttrDict, PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
-from chapps.tests.conftest import CallableExhausted
-from chapps.signals import NullSenderException
+from chapps.signals import CHAPPSException, CallableExhausted, NullSenderException
 from functools import cached_property
 import logging, chapps.logging
 import asyncio
@@ -34,18 +33,19 @@ class RequestHandler:
         return self.policy.params.listen_port
 
     def async_policy_handler(self):
-        """Returns a coroutine which handles requests according to the policy"""
+        """Returns a coroutine which handles requests by to the policy"""
         pprclass = self.pprclass
         policy = self.policy
         accept = policy.params.acceptance_message
         reject = policy.params.rejection_message
         encoding = config.chapps.payload_encoding
         logger.debug(
-            f"Policy handler requested for {type(policy).__name__} using PPR class {pprclass.__name__}."
+            f"Policy handler requested for {type(policy).__name__}"
+            f" using PPR class {pprclass.__name__}."
         )
 
         async def handle_policy_request(reader, writer) -> None:
-            """Handles reading and writing the streams around policy approval messages"""
+            """Handles reading and writing the streams around policy messages"""
             while True:
                 try:
                     policy_payload = await reader.readuntil(b"\n\n")
@@ -169,6 +169,8 @@ class CascadingPolicyHandler:
                             logger.debug(
                                 f" .. Policy {type(policy)} denied with '{resp.strip()}' on null sender"
                             )
+                    except CHAPPSException:
+                        logger.exception("During policy evaluation:")
                     if not approval:
                         break
                 try:

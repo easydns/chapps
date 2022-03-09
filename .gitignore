@@ -16,5 +16,5 @@ ops_vault_password.*
 zabbix_api_password
 zabbix_api_password.*
 vars/local.yml
-.chapps-venv/*
-
+.venv/*
+.dir-locals.el
