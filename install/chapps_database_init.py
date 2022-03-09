@@ -6,9 +6,11 @@
 
 from chapps.adapter import MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter
 
+
 def setup_chapps_database():
-    for adapter in [ MariaDBQuotaAdapter(), MariaDBSenderDomainAuthAdapter() ]:
+    for adapter in [MariaDBQuotaAdapter(), MariaDBSenderDomainAuthAdapter()]:
         adapter._initialize_tables()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     setup_chapps_database()

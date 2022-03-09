@@ -12,33 +12,33 @@ from aiosmtpd.controller import Controller
 import logging
 from logging.handlers import SysLogHandler
 
-LISTEN_ADDR = 'localhost'
+LISTEN_ADDR = "localhost"
 LISTEN_PORT = 10025
 TRANSMIT_ADDR = LISTEN_ADDR
 TRANSMIT_PORT = 10026
 
 
-logging.basicConfig( handlers=[
-    SysLogHandler(
-        facility=SysLogHandler.LOG_LOCAL4,
-        address='/dev/log'
-    )
-])
+logging.basicConfig(
+    handlers=[SysLogHandler(facility=SysLogHandler.LOG_LOCAL4, address="/dev/log")]
+)
 
 logger = logging.getLogger(__name__)
-logger.setLevel( logging.DEBUG )
+logger.setLevel(logging.DEBUG)
 
-SMTPServer_HANDLER = functools.partial( SMTPServer, Proxy( TRANSMIT_ADDR, TRANSMIT_PORT ) )
+SMTPServer_HANDLER = functools.partial(SMTPServer, Proxy(TRANSMIT_ADDR, TRANSMIT_PORT))
+
 
 def signal_handler(sig, *args):
-    if sig in { signal.SIGTERM, signal.SIGINT }:
-        logger.debug( f"null-filter exiting on signal {sig}." )
+    if sig in {signal.SIGTERM, signal.SIGINT}:
+        logger.debug(f"null-filter exiting on signal {sig}.")
         raise SystemExit
 
+
 def install_asyncio_signal_handlers(loop):
-    for signame in { 'SIGTERM', 'SIGINT' }:
-        sig = getattr( signal, signame )
-        loop.add_signal_handler( sig, functools.partial( signal_handler, sig ) )
+    for signame in {"SIGTERM", "SIGINT"}:
+        sig = getattr(signal, signame)
+        loop.add_signal_handler(sig, functools.partial(signal_handler, sig))
+
 
 # class NullFilterHandler:
 #     async def handle_RCPT(self, server, session, envelope, address, rcpt_options):
@@ -59,15 +59,18 @@ def install_asyncio_signal_handlers(loop):
 #             logger.exception("Raised trying to send from {envelope.mail_from} to {','.join(envelope.rcpt_tos)}")
 #             return "550 Requested action not taken"
 
+
 async def main():
     """The grand shebang"""
     logger.debug("Starting null-filter...")
     try:
-        with pidfile.PIDFile( '/tmp/null_filter.pid' ):
-            logger.debug('null-filter started.')
+        with pidfile.PIDFile("/tmp/null_filter.pid"):
+            logger.debug("null-filter started.")
             loop = asyncio.get_running_loop()
-            install_asyncio_signal_handlers( loop )
-            srv = await loop.create_server( SMTPServer_HANDLER, LISTEN_ADDR, LISTEN_PORT, start_serving=False )
+            install_asyncio_signal_handlers(loop)
+            srv = await loop.create_server(
+                SMTPServer_HANDLER, LISTEN_ADDR, LISTEN_PORT, start_serving=False
+            )
             await srv.serve_forever()
     except TimeoutError:
         logger.exception("SMTPServer took too long to start.")
@@ -77,8 +80,8 @@ async def main():
         logger.debug("null-filter exiting on signal.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
-        asyncio.run( main() )
+        asyncio.run(main())
     except Exception:
         logger.exception("UNEXPECTED")
