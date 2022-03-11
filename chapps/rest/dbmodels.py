@@ -1,9 +1,16 @@
 """SQLAlchemy ORM Models to correspond to Pydantic models for API"""
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
-from sqlalchemy.orm import declarative_base, relationship, backref
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, select
+from sqlalchemy.orm import declarative_base, relationship, backref, DeclarativeMeta
+
+# declare subclass of the SQLAlchemy DeclarativeMeta class
+# in order to attach custom routines to the ORM objects
+class DB_Customizations(DeclarativeMeta):
+    """Metaclass for adding custom code to ORM models"""
+    def select_by_id(cls, id: int):
+        return select(cls).where(cls.id==id)
 
 # declare DB model base class
-DB_Base = declarative_base()
+DB_Base = declarative_base(metaclass=DB_Customizations)
 """DB_Base serves as the base of all ORM classes"""
 
 quota_user = Table(
