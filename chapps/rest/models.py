@@ -1,4 +1,5 @@
 from chapps.config import config
+from chapps.rest import dbmodels
 from typing import Optional, List
 from pydantic import BaseModel
 from enum import Enum
@@ -8,82 +9,50 @@ verstr = config.chapps.version
 
 
 class APIException(str, Enum):
+    """Not sure if needed, leaving for now"""
+
     nonexistent = "nonexistent"
     integrity = "integrity"
     internal = "internal"
 
 
+# there could be a metaclass which would look for dbmodels classes matching
+# the names of subclasses of CHAPPSModel and automatically hook up their
+# Meta.orm_model data ... if the number of tables starts to grow
 class CHAPPSModel(BaseModel):
+    """Base API data model"""
+
     id: int
     name: str
 
-    @classmethod
-    def keys(model):
-        return list(model.schema()["properties"].keys())
+    class Meta:
+        orm_model = dbmodels.DB_Base
 
-    @classmethod
-    def zip_records(model, records: List[List]):
-        keys = model.keys()
-        return [model(**dict(zip(keys, record))) for record in records]
-
-    @classmethod
-    def select_query(model, *, where=[], window=(0, 1000), order="id"):
-        """Build a select suitable for wrapping in a model"""
-        keys = model.keys()
-        query = f"SELECT {','.join( keys )} FROM {model.__name__.lower()}s"
-        if where:
-            query += f" WHERE {' AND '.join( where )}"
-        query += f" ORDER BY {order} LIMIT {','.join([ str(l) for l in window])};"
-        return query
-
-    @classmethod
-    def count_query(model, *, where=[]):
-        """Build a generalized counting query"""
-        query = f"SELECT COUNT( * ) FROM {model.__name__.lower() }s"
-        if where:
-            query += f" WHERE {' AND '.join( where )}"
-        return query
-
-    @classmethod
-    def joined_select(
-        model, filter_model, *, where: List[str], window=(0, 1000), order="m.id"
-    ):  ### model table: m, join table: j
-        """Build a generalized LEFT JOIN instruction, to say, get all domains for a user"""
-        mm, fm = model.__name__.lower(), filter_model.__name__.lower()
-        mt = mm + "s"
-        mid = mm + "_id"
-        jt = "_".join(sorted([mm, fm]))
-        cols = ",".join([f"m.{col}" for col in model.keys()])
-        query = f"SELECT {cols} FROM {mt} AS m LEFT JOIN {jt} AS j ON j.{mid} = m.id WHERE {' AND '.join( where )} ORDER BY {order} LIMIT {window[0]},{window[1]};"
-        return query
-
-    @classmethod
-    def double_joined_select(
-        model, filter_model, where: List[str], window=(0, 1000), order="m.id"
-    ):  ### model table: m, filter_model table: f, join table: j
-        """Build a generalized LEFT JOIN instruction, to say, get all domains for a user"""
-        mm, fm = model.__name__.lower(), filter_model.__name__.lower()
-        mt = mm + "s"
-        mid = mm + "_id"
-        ft = fm + "s"
-        fid = fm + "_id"
-        jt = "_".join(sorted([mm, fm]))
-        cols = ",".join([f"m.{col}" for col in model.keys()])
-        query = f"SELECT {cols} FROM {mt} AS m LEFT JOIN {jt} AS j ON j.{mid} = m.id LEFT JOIN {ft} AS f ON f.id = j.{fid} WHERE {' AND '.join( where )} ORDER BY {order} LIMIT {window[0]},{window[1]};"
+    def get_model(self, id: int):
+        return self.Meta.orm_model.get_by_id(id)
 
 
 class User(CHAPPSModel):
-    """A model to represent users"""
+    """API model to represent users"""
+
+    class Meta:
+        orm_model = dbmodels.User
 
 
 class Quota(CHAPPSModel):
-    """A model to represent quotas"""
+    """API model to represent quotas"""
 
     quota: int
+
+    class Meta:
+        orm_model = dbmodels.Quota
 
 
 class Domain(CHAPPSModel):
     """A model to represent domains"""
+
+    class Meta:
+        orm_model = dbmodels.Domain
 
 
 class CHAPPSResponse(BaseModel):
