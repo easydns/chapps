@@ -8,7 +8,13 @@ from pathlib import Path
 from os import environ as env
 from chapps.util import AttrDict
 from chapps._version import __version__
-import logging, chapps.logging
+import logging, chapps.logging # chapps.logging to get some settings
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +25,10 @@ class CHAPPSConfig:
     # ultimately, we may need also to allow for a command-line option
     @staticmethod
     def what_config_file():
-        """Determine what config file to read.  This is to allow for easier addition of a command-line option."""
+        """
+        Determine what config file to read.  This is to allow for easier
+           addition of a command-line option.
+        """
         config_file = Path(env.get("CHAPPS_CONFIG", "/etc/chapps/chapps.ini"))
         return config_file
 
