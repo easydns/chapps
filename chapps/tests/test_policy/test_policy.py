@@ -610,11 +610,32 @@ class Test_OutboundQuotaPolicy:
     ### good reason to store a memo of users to load en-masse
 
 
+auto_ppr_param_list = _auto_ppr_param_list(senders=[
+    "ccullen@easydns.com",
+    "mautic+bounce_622b80da90870@easydns.com",
+    "weirdo@twodomains.ca@weird.com",
+    "bareword",
+])
+
 class Test_SenderDomainAuthPolicy:
     def test_sda_fmtkey(self):
         policy = SenderDomainAuthPolicy()
         redis_key = policy._fmtkey("ccullen@easydns.com", "chapps.io")
         assert redis_key == "sda:ccullen@easydns.com:chapps.io"
+
+    @pytest.mark.parametrize(
+        "auto_ppr, expected_result",
+        auto_ppr_param_list,
+        ids=idfn,
+    )
+    def test_get_sender_domain(self, auto_ppr, expected_result):
+        policy = SenderDomainAuthPolicy()
+        if issubclass(expected_result, Exception):
+            with @pytest.raises(expected_result):
+                assert policy._get_sender_domain(auto_ppr)
+        else:
+            result = policy._get_sender_domain(auto_ppr)
+            assert result == expected_result
 
     def test_sender_domain_key(self, allowable_ppr):
         policy = SenderDomainAuthPolicy()
