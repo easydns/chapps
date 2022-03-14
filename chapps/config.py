@@ -43,6 +43,7 @@ class CHAPPSConfig:
             "listen_address": "localhost",
             "listen_port": 10225,
             "margin": 0.10,
+            "min_delta": 5,
             "counting_recipients": True,
             "rejection_message": "REJECT Rejected - outbound quota fulfilled",
             "acceptance_message": "DUNNO",
