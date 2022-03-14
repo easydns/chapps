@@ -2,6 +2,7 @@
 import pytest
 from pytest import fixture
 from unittest.mock import Mock
+from chapps.signals import TooManyAtsException
 from chapps.tests.test_config.conftest import (
     chapps_mock_config,
     chapps_mock_env,
@@ -11,6 +12,7 @@ from chapps.tests.test_config.conftest import (
 from chapps.tests.test_util.conftest import (
     postfix_policy_request_message,
     postfix_policy_request_payload,
+    _postfix_policy_request_message,
 )
 from chapps.tests.test_adapter.conftest import (
     base_adapter_fixture,
@@ -325,8 +327,8 @@ def no_helo_softfail_mf():
 def idfn(val):
     if type(val) == tuple:
         return f"{val[0][0]}-{val[1][0]}"
-    if type(ppr) == PostfixPolicyRequest or type(ppr) == OutboundPPR:
-        return f"{ppr.sender}"
+    if type(val) == PostfixPolicyRequest or type(val) == OutboundPPR:
+        return f"{val.sender}"
 
 
 def _spf_results():
@@ -385,7 +387,8 @@ def _auto_ppr_param_list(*, senders=["ccullen@easydns.com"]):
     ui = _unique_instance("deafbeef")  # returns a callable
 
     def ppr_for(s):
-        return PostfixPolicyRequest(postfix_policy_request_message(s, instance=ui()))
+        pprm = _postfix_policy_request_message()  # returns a callable
+        return PostfixPolicyRequest(pprm(s, instance=ui()))
 
     params = []
     for s in senders:
@@ -395,5 +398,5 @@ def _auto_ppr_param_list(*, senders=["ccullen@easydns.com"]):
         elif ats > 1:
             params.append((ppr_for(s), TooManyAtsException))
         else:
-            params.append((ppr_for(s), ValueError))
+            params.append((ppr_for(s), s))
     return params

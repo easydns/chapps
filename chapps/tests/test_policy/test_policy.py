@@ -22,6 +22,8 @@ from chapps.tests.test_config.conftest import (
     chapps_sentinel_config,
     chapps_sentinel_config_file,
 )
+from chapps.tests.test_policy.conftest import _auto_ppr_param_list, idfn
+from inspect import isclass
 
 seconds_per_day = 3600 * 24
 pytestmark = pytest.mark.order(3)
@@ -630,8 +632,8 @@ class Test_SenderDomainAuthPolicy:
     )
     def test_get_sender_domain(self, auto_ppr, expected_result):
         policy = SenderDomainAuthPolicy()
-        if issubclass(expected_result, Exception):
-            with @pytest.raises(expected_result):
+        if isclass(expected_result) and issubclass(expected_result, Exception):
+            with pytest.raises(expected_result):
                 assert policy._get_sender_domain(auto_ppr)
         else:
             result = policy._get_sender_domain(auto_ppr)
