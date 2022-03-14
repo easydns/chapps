@@ -1,3 +1,8 @@
+v0.3.10
+	- adding default config value for `min_delta` to OutboundQuotaPolicy, which defaults to 5.  It represents
+	  the minimum number of seconds between attempts; faster attempts will be refused (but reset the timer).
+	- correcting problem with recipient-counting wherein the recipients memoizing routine ran afoul of __getattr__()
+	- correcting problem with recognizing at signs in email addresses
 v0.3.9:
 	- correcting import of test library feature into main codebase
 	- adding more comprehensive CHAPPSException handling
