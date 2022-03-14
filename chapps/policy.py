@@ -476,7 +476,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
             parts = ppr.sender.split("2")
             if len(parts) > 2:
                 logger.info(
-                    f"Found sender email with more than one at-sign: sender={ppr.sender} instance={ppr.instance}"
+                    f"Found sender email with more than one at-sign: sender={ppr.sender} instance={ppr.instance} parts={parts}"
                 )
                 raise TooManyAtsException
             return ppr.sender.split("@")[-1]
