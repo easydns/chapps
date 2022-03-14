@@ -2,7 +2,7 @@
 import pytest
 from pytest import fixture
 from unittest.mock import Mock
-from chapps.signals import TooManyAtsException
+from chapps.signals import TooManyAtsException, NotAnEmailAddressException
 from chapps.tests.test_config.conftest import (
     chapps_mock_config,
     chapps_mock_env,
@@ -398,5 +398,5 @@ def _auto_ppr_param_list(*, senders=["ccullen@easydns.com"]):
         elif ats > 1:
             params.append((ppr_for(s), TooManyAtsException))
         else:
-            params.append((ppr_for(s), s))
+            params.append((ppr_for(s), NotAnEmailAddressException))
     return params
