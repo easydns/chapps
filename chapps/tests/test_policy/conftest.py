@@ -325,6 +325,8 @@ def no_helo_softfail_mf():
 def idfn(val):
     if type(val) == tuple:
         return f"{val[0][0]}-{val[1][0]}"
+    if type(ppr) == PostfixPolicyRequest or type(ppr) == OutboundPPR:
+        return f"{ppr.sender}"
 
 
 def _spf_results():
@@ -368,3 +370,30 @@ def _auto_query_param_list(helo_list=["fail"]):
         for outer_key, first in spf_results.items()
     ]
     return result
+
+
+def _auto_ppr_param_list(*, senders=["ccullen@easydns.com"]):
+    """
+    Return tuples of sender and expected result,
+    generally the sender domain
+    """
+
+    def count_ats(s):
+        """Count the @s in a string"""
+        return 0 if len(s) == 0 else len([c for c in s if c == "@"])
+
+    ui = _unique_instance("deafbeef")  # returns a callable
+
+    def ppr_for(s):
+        return PostfixPolicyRequest(postfix_policy_request_message(s, instance=ui()))
+
+    params = []
+    for s in senders:
+        ats = count_ats(s)
+        if ats == 1:
+            params.append((ppr_for(s), s[s.index("@") + 1 :]))
+        elif ats > 1:
+            params.append((ppr_for(s), TooManyAtsException))
+        else:
+            params.append((ppr_for(s), ValueError))
+    return params
