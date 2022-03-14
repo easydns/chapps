@@ -10,7 +10,11 @@ import logging, chapps.logging
 from expiring_dict import ExpiringDict
 from chapps.config import config
 from chapps.adapter import MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter
-from chapps.signals import TooManyAtsException, NullSenderException
+from chapps.signals import (
+    TooManyAtsException,
+    NullSenderException,
+    NotAnEmailAddressException,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -220,10 +224,10 @@ class OutboundQuotaPolicy(EmailPolicy):
         self.interval = (
             enforcement_interval if enforcement_interval else seconds_per_day
         )
-        if min_delta:
-            self.min_delta = min_delta
-        elif hasattr(self.params, "min_delta"):
+        if hasattr(self.params, "min_delta"):
             self.min_delta = self.params.min_delta
+        elif min_delta:
+            self.min_delta = min_delta
         else:
             self.min_delta = 0
         self.min_delta = float(self.min_delta)
@@ -456,33 +460,42 @@ class OutboundQuotaPolicy(EmailPolicy):
 class SenderDomainAuthPolicy(EmailPolicy):
     """A class for encapsulation of explicit policy regarding what authenticated users are allowed to send from what domains.  Right now we match on the entire string after the @ """
 
-    ### every subclass of EmailPolicy must set a key prefix
+    # every subclass of EmailPolicy must set a key prefix
     redis_key_prefix = "sda"
-    ### initialization is when we plug in the config
+    # initialization is when we plug in the config
     def __init__(self, cfg=None):
         """first, optional positional argument: a CHAPPSConfig object to use"""
         super().__init__(cfg)  # sets attrs 'config' and 'redis'
 
-    ### every subclass has one of these, with a unique name, and fine
-    ### but maybe there should also be a generic single entry point
+    # every subclass has one of these, with a unique name, and fine
+    # but maybe there should also be a generic single entry point
     def sender_domain_key(self, ppr):
         """Create a Redis key for each valid user->domain mapping, for speed"""
         return self._fmtkey(ppr.user, self._get_sender_domain(ppr))
 
-    ### How shall the policy determine the sender domain?  We choose simplicity to start
+    # determine the domain of the sender address, if any
     @functools.lru_cache(maxsize=2)
     def _get_sender_domain(self, ppr):
         if ppr.sender:
-            parts = ppr.sender.split("2")
+            parts = ppr.sender.split("@")
             if len(parts) > 2:
                 logger.info(
-                    f"Found sender email with more than one at-sign: sender={ppr.sender} instance={ppr.instance} parts={parts}"
+                    "Found sender email with more than one at-sign: "
+                    f"sender={ppr.sender} instance={ppr.instance} "
+                    f"parts={parts!r}"
                 )
-                raise TooManyAtsException
-            return ppr.sender.split("@")[-1]
+                raise TooManyAtsException(f"{ppr.sender}=>{parts!r}")
+            elif len(parts) == 1:
+                logger.info(
+                    "Found sender string without at-sign: "
+                    f"sender={ppr.sender} instance={ppr.instance} "
+                    f"parts={parts!r}"
+                )
+                raise NotAnEmailAddressException
+            return parts[-1]
         raise NullSenderException
 
-    ### We will need to be able to access policy data in the RDBMS, MariaDB for now
+    # We will need to be able to access policy data in the RDBMS
     def _detect_control_data(self, ppr):
         """Look for SDA control data for a user"""
         key = self.sender_domain_key(ppr)
@@ -494,12 +507,12 @@ class SenderDomainAuthPolicy(EmailPolicy):
         return res
 
     _get_control_data = _detect_control_data  ### maintaining parallelism w/ OQP
-    ### We will need to be able to store data in Redis
+    # We will need to be able to store data in Redis
     def _store_control_data(self, ppr, allowed):
         with self._control_data_storage_context() as dsc:
             dsc(ppr.user, self._get_sender_domain(ppr), allowed)
 
-    ### We will need a Redis storage context manager in order to mimic the structure of OQP
+    # We will need a Redis storage context manager in order to mimic the structure of OQP
     @contextmanager
     def _control_data_storage_context(self, expire_time=seconds_per_day):
         pipe = self.redis.pipeline()
@@ -514,7 +527,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
             pipe.execute()
             pipe.reset()
 
-    ### We will need a database adapter context manager
+    # We will need a database adapter context manager
     @contextmanager
     def _adapter_handle(
         self
@@ -531,7 +544,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
         finally:
             adapter.conn.close()
 
-    ### How to obtain control data
+    # How to obtain control data
     def acquire_policy_for(self, ppr):
         with self._adapter_handle() as adapter:
             allowed = adapter.check_domain_for_user(
@@ -541,9 +554,12 @@ class SenderDomainAuthPolicy(EmailPolicy):
             self._store_control_data(ppr, 1 if allowed else 0)
         return allowed
 
-    ### This is the main purpose of the class, to answer this question
+    # This is the main purpose of the class, to answer this question
     def approve_policy_request(self, ppr):
-        """Given a PPR, say whether this user is allowed to send as the apparent sender domain"""
+        """
+        Given a PPR, say whether this user is allowed to send as the
+        apparent sender domain
+        """
         result = self.instance_cache.get(
             ppr.instance, None
         )  # instances sometimes repeat
