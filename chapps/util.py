@@ -56,7 +56,8 @@ class PostfixPolicyRequest(Mapping):
     # means we cannot test existence of attrs by getattr or self.<attr>
     def __getattr__(self, attr, dfl=None):
         """Overload in order to search for missing attributes in the payload"""
-        # TODO: restore the logic below
+        if attr[0] == "_":  # leading underscores do not occur in the payload
+            return None
         line = next(
             (l for l in self._payload if attr == l.split("=")[0]),
             None
