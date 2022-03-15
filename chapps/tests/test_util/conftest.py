@@ -20,6 +20,9 @@ def postfix_sasl_username():
 
 @pytest.fixture
 def postfix_policy_request_payload():
+    return _postfix_policy_request_payload()
+
+def _postfix_policy_request_payload():
     def _pprp(email="ccullen@easydns.com", recipients=None, instance=None, **kwargs):
         namespace = dict(
             sender=email,
@@ -81,9 +84,13 @@ server_port=54321
 
 @pytest.fixture
 def postfix_policy_request_message(postfix_policy_request_payload):
-    def _ppr(email=None, recipients=None, **kwargs):
+    return _postfix_policy_request_message(postfix_policy_request_payload)
+
+def _postfix_policy_request_message(postfix_policy_request_payload=None):
+    pprp = postfix_policy_request_payload or _postfix_policy_request_payload()
+    def _ppr(email=None, recipients=None, instance=None, **kwargs):
         return (
-            postfix_policy_request_payload(email, recipients, **kwargs)
+            pprp(email, recipients, **kwargs)
             .decode("utf-8")
             .split("\n")
         )
