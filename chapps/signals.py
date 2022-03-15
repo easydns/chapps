@@ -33,6 +33,10 @@ class OutboundPolicyException(CHAPPSException):
     """Exceptions which occur during outbound mail processing"""
 
 
+class NotAnEmailAddressException(CHAPPSException):
+    """The string in question is not an email address"""
+
+
 class TooManyAtsException(CHAPPSException):
     """An email address had too many at-signs in it"""
 
