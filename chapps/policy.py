@@ -385,33 +385,39 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     def _get_delta(self, ppr, attempts):
         """
-        This routine gets the number of seconds between this attempt and the previous.
-        It takes into account whether we are counting each recipient, and parses the
-        attempt record accordingly -- when counting recipients, the record is a string
-        consisting of the timestamp and the recipient serial number separated by a colon,
-        in order to ensure that each recipient is listed as an attempt in the log.
+        This routine gets the number of seconds between this attempt and the
+        previous.  It takes into account whether we are counting each
+        recipient, and parses the attempt record accordingly -- when counting
+        recipients, the record is a string consisting of the timestamp and the
+        recipient serial number separated by a colon, in order to ensure that
+        each recipient is listed as an attempt in the log.
         """
-        ### might need this:
-        # if len(attempts) < 2:
-        #     return -1.0
+        if len(attempts) < 2:
+            return float('inf')
         delta_index = [-1, -2]
         if self.counting_recipients:
+            # skip back all but one recipient
             recipients_offset = 0 - len(ppr.recipients)
             delta_index = [d + recipients_offset for d in delta_index]
+        logger.debug(
+            f"Looking at time-delta for {ppr}: indices {delta_index!r}"
+        )
         timestamps = [
             float(t.decode("utf-8").split(":")[0])
             if ":" in t.decode("utf-8")
             else float(t.decode("utf-8"))
-            for t in [attempts[i] for i in delta_index]
+            for t in [attempts[i] for i in delta_index if i < len(attempts)]
         ]
-        logger.debug(
-            f"delta indices: {delta_index}; attempts: {[attempts[i] for i in delta_index]}; timestamps: {timestamps}"
-        )
-        return timestamps[0] - timestamps[1]
+        if len(timestamps) == 2:
+            logger.debug(
+                f"attempts: {[attempts[i] for i in delta_index]}; timestamps: {timestamps!r}"
+            )
+            return timestamps[0] - timestamps[1]
+        return float('inf')  # return a large value
 
     def _evaluate_policy_request(self, ppr):
-        """This actually checks to see if it's okay to send the email.
-           The calling routine memoizes the result on the basis of the 'instance' value.
+        """
+        This actually checks to see if it's okay to send the email.
         """
         instance, user = ppr.instance, ppr.user
         try:  # this may raise TypeError if the user is unknown
