@@ -23,7 +23,23 @@ class Test_OutboundPPR:
             with pytest.raises(AuthenticationFailureException):
                 assert testing_userppr.user
 
+    def test_get_user_memoization(self, monkeypatch, chapps_mock_env, chapps_mock_cfg_path, mocking_userppr):
+        assert chapps_mock_env == chapps_mock_cfg_path
+        assert str(CHAPPSConfig.what_config_file()) == chapps_mock_cfg_path
+        assert not mocking_userppr._config.require_user_key
+        # the foregoing assertions establish that the user-key is not
+        # required, therefore a longer search path should be followed
+        with monkeypatch.context() as m:
+            m.setattr(mocking_userppr, "sasl_username", None)
+            assert type(mocking_userppr) == OutboundPPR
+            # because the memoized routine from the previous test
+            # has only the one entry, it will raise ValueError when
+            # it cannot find the user key
+            with pytest.raises(ValueError):
+                assert mocking_userppr.user
+
     def test_user_default_no_sasl(self, monkeypatch, chapps_mock_env, chapps_mock_cfg_path, mocking_userppr):
+        OutboundPPR.clear_memoized_routines()  # reset memoization
         assert chapps_mock_env == chapps_mock_cfg_path
         assert str(CHAPPSConfig.what_config_file()) == chapps_mock_cfg_path
         assert not mocking_userppr._config.require_user_key
