@@ -16,6 +16,12 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
         self.config = cfg or config
         self.config = self.config.chapps
 
+    def __str__(self):
+        try:
+            return f"OutboundPPR({self.user}:{self.instance} as {self.sender}, #recip={len(self.recipients)})"
+        except Exception:
+            return f"OutboundPPR(:{self.instance}) is missing sender and/or user_key"
+
     ### create a property handler for "user"
     @property
     def user(self):
