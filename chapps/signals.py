@@ -39,5 +39,13 @@ class TooManyAtsException(CHAPPSException):
     """An email address had too many at-signs in it"""
 
 
+class ConfigurationError(CHAPPSException):
+    """There was an error in the setting of configuration elements"""
+
+
 class NullSenderException(OutboundPolicyException):
     """No sender address exists in the current policy request"""
+
+
+class AuthenticationFailureException(OutboundPolicyException):
+    """lack of user_key being treated as authentication failure"""

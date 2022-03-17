@@ -27,9 +27,11 @@ class CHAPPSConfig:
         """Setup default config pattern on the parser passed in"""
         cp["CHAPPS"] = {
             "payload_encoding": "utf-8",
-            "listen_address": "localhost",  # should be real IP for API to work properly
-            "listen_port": 11511,  # for API listener (TODO: implement API)
+            "listen_address": "localhost",  # should be real IP
+            "listen_port": 11511,           # for API listener
             "user_key": "sasl_username",
+            "require_user_key": True,
+            "no_user_key_response": "REJECT Rejected - Authentication failed",
         }
         cp["PolicyConfigAdapter"] = {
             "adapter": "mariadb",
