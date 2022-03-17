@@ -13,8 +13,12 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
     # Initialize with optional config, in order to allow site-specific user-search path
     def __init__(self, payload, *, cfg=None):
         super().__init__(payload)
-        self.config = cfg or config
-        self.config = self.config.chapps
+        self._config = cfg or config
+        self._config = self._config.chapps
+
+    @classmethod
+    def clear_memoized_routines(cls):
+        cls.memoized_routines.clear()
 
     def __str__(self):
         try:
@@ -29,7 +33,7 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
             try:
                 self._user = self._get_user()
             except ValueError as e:
-                if self.config.require_user_key:
+                if self._config.require_user_key:
                     raise AuthenticationFailureException()
                 else:
                     raise e
@@ -41,16 +45,17 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
         """Obtain the user value, and memoize the procedure"""
         # see if we already have a procedure from some previous iteration
         get_user = self.__class__.memoized_routines.get("get_user", None)
-        config = self.config
+        cfg = self._config
         # if there is no procedure, we build one
         if not get_user:
-            if config.require_user_key:
-                if not config.user_key:
+            if cfg.require_user_key:
+                logger.debug(f"configfile={cfg.config_file}, cfg.require_user_key={cfg.require_user_key}")
+                if not cfg.user_key:
                     raise ConfigurationError(
                         ("If require_user_key is True, "
                          "then user_key must be set.")
                     )
-                qk_list = [config.user_key]
+                qk_list = [cfg.user_key]
             else:
                 qk_list = [
                     "sasl_username",
@@ -58,7 +63,7 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
                     "sender",
                     "client_address"
                 ]
-                qk = config.user_key
+                qk = cfg.user_key
                 if qk and qk != qk_list[0]:
                     qk_list = [qk, *qk_list]
 
