@@ -155,16 +155,22 @@ Current versions of the software allow the config file to specify what
 element of that delegation request payload to use, defaulting to
 `sasl_username`.  This is because our customers use a password auth
 process, so the `sasl_username` directly corresponds to the entity
-which is paying for the email quota.  For a similar reason,
-`ccert_subject` is used as a backup, after `sasl_username`.  If
-neither is populated, `sender` and `client_address` are checked in
-that order.  The `client_address` is an extreme fallback because it
-will always have a value, while `sender` may under some circumstances
-be empty.
+which is paying for the email quota.  In
+certain circumstances (when authentication fails), the `sasl_username`
+field is blank.  Since v0.3.11, when we find it
+blank we attribute that to authentication failure, and
+we provide some extra config elements to control this behavior.
 
-At present, there is little sanitation on this field.  It is never
-evaluated as code, but it is used directly as the attribute name for
-the value dereference.  If that yields no value, or if it is not
+If the config key `require_user_key` is set to **True**, then only
+that key will be checked for contents to identify the user, and if
+it is empty, an `AuthenticationFailedException` will be raised,
+which will cause the `no_user_key_response` to be sent back via
+Postfix.  If `require_user_key` is **False**, then a series of fields
+will be searched as outlined below.
+
+At present, there is little sanitation on the `user_key` field.  It is
+never evaluated as code, but it is used directly as the attribute name
+for the value dereference.  If that yields no value, or if it is not
 specified, CHAPPS looks for `sasl_username` first, then
 `ccert_subject`, and if there is none, it falls back to `sender`,
 which can also be blank. In that extreme case, CHAPPS uses
