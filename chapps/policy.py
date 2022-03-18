@@ -270,20 +270,21 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     def _get_control_data(self, ppr):
         """
-        This is the routine which keeps track of emails in Redis.
-        It combines all of its requests into a single pipelined (atomic) transaction.
-        When counting recipients, the record is a string
-          consisting of the timestamp and the recipient serial number separated by a colon,
-          in order to ensure that each recipient is listed as an attempt in the log.
-        The score is always the floating-point return value of time.time()
+        This is the routine which keeps track of emails in Redis.  It
+        combines all of its requests into a single pipelined (atomic)
+        transaction.  When counting recipients, the record is a string
+        consisting of the timestamp and the recipient serial number
+        separated by a colon, in order to ensure that each recipient
+        is listed as an attempt in the log.  The score is always the
+        floating-point return value of time.time()
         """
-        ### cache the current(ish) time
+        # cache the current(ish) time
         time_now = time.time()
         time_now_s = str(time_now)
 
         user = ppr.user
 
-        ### create a dict for Redis.zadd()
+        # create a dict for Redis.zadd()
         if self.counting_recipients:
             tries_dict = {
                 (time_now_s + f":{i:05d}"): time_now
@@ -291,31 +292,35 @@ class OutboundQuotaPolicy(EmailPolicy):
             }
         else:
             tries_dict = {time_now_s: time_now}
-        ### set up the Redis keys
+        # set up the Redis keys
         tries_key = self._fmtkey(user, "attempts")
         limit_key = self._fmtkey(user, "limit")
         margin_key = self._fmtkey(user, "margin")
-        ### Create a Redis pipeline to atomize a set of instructions
+        # Create a Redis pipeline to atomize a set of instructions
         pipe = self.redis.pipeline()
-        ##### Clear the list down to just the last interval seconds, generally a day
+        # Clear the list down to just the last interval seconds, generally a day
         pipe.zremrangebyscore(tries_key, 0, time_now - float(self.interval))
-        ##### Add this/these try(es)
+        # Add this/these try(es)
         pipe.zadd(tries_key, tries_dict)
-        ##### Get control data: the limit, the margin, the attempts list
+        # Get control data: the limit, the margin, the attempts list
         pipe.get(limit_key)
         pipe.get(margin_key)
         pipe.zrange(tries_key, 0, -1)
-        ##### Set expires on all this stuff so that if they don't send email for a day, their data won't still be sitting around takin' up space; these return nil values so we have to ignore them when we get the results
+        # Set expires on all this stuff so that if they don't send
+        # email for a day, their data won't still be sitting around
+        # takin' up space; these return nil values so we have to
+        # ignore them when we get the results
         pipe.expire(tries_key, self.interval)
         pipe.expire(limit_key, self.interval)
         pipe.expire(margin_key, self.interval)
-        ### Do the thing!
+        # Do the thing!
         results = pipe.execute()
-        ### The non-retrieval operations still have return values, so we ignore them
+        # The non-retrieval operations still have return values, so we ignore them
         removed, _, limit, margin, attempts, _, _, _ = results
-        ### Always polite to reset your pipe
+        # Always polite to reset your pipe
         pipe.reset()
-        ### Attempt typecasting on the margin number, which is allowed to be either int or float
+        # Attempt typecasting on the margin number, which is allowed
+        # to be either int or float
         try:
             m = int(margin)
         except:
@@ -323,7 +328,9 @@ class OutboundQuotaPolicy(EmailPolicy):
                 m = float(margin)
             except:
                 m = 0
-        ### If no limit is defined, that means there is no quota profile for the user, and we just return None here
+        # If no limit is defined, that means there is no quota profile
+        # for the user, and we just return None here; we must test against
+        # None because it might be 0
         return (int(limit) if limit is not None else None, m, attempts)
 
     def _store_control_data(self, user, quota, margin=0):
@@ -347,14 +354,17 @@ class OutboundQuotaPolicy(EmailPolicy):
         try:
             res = self.redis.get(key)
         except redis.exceptions.ResponseError:  # pragma: no cover
-            ### sometimes a key which should not exist still shows up, and accessing them causes this error
-            ### we choose to pretend nothing happened and just delete the key
+            # sometimes a key which should not exist still shows up,
+            # and accessing them causes this error.  we choose to
+            # pretend nothing happened and just delete the key
             self.redis.delete(key)
         return res
 
     def acquire_policy_for(self, user):
-        """Go get the policy for a sender from the relational database or other policy source via adapter.
-           If the margin needs to be altered on a per-sender basis, this is the place to adjust that.
+        """Go get the policy for a sender from the relational database or
+           other policy source via adapter.  If the margin needs to be
+           altered on a per-sender basis, this is the place to adjust
+           that.
         """
         with self._adapter_handle() as adapter:
             quota = adapter.quota_for_user(user)
@@ -362,10 +372,13 @@ class OutboundQuotaPolicy(EmailPolicy):
             self._store_control_data(user, quota, self.params.margin)
 
     def approve_policy_request(self, ppr):
-        """Expects a PostfixPolicyRequest object; returns True if mail sending should be allowed
-           This routine implements memoization in order to overcome the Postfix double-checking weirdness.
-           Since it seems like the object only lives for the duration of the query, it doesn't get us
-           very far.  The Postfix docs say it will hold open and re-use the connection, but it does not seem to.
+        """Expects a PostfixPolicyRequest object; returns True if mail sending
+           should be allowed This routine implements memoization in
+           order to overcome the Postfix double-checking weirdness.
+           Since it seems like the object only lives for the duration
+           of the query, it doesn't get us very far.  The Postfix docs
+           say it will hold open and re-use the connection, but it
+           does not seem to.
         """
         user = ppr.user
         instance = ppr.instance
@@ -417,7 +430,7 @@ class OutboundQuotaPolicy(EmailPolicy):
         try:  # this may raise TypeError if the user is unknown
             limit, margin, attempts = self._get_control_data(ppr)
         except Exception:  # pragma: no cover
-            logger.exception("Raised in _evaluate_policy_request; UNEXPECTED")
+            logger.exception("UNEXPECTED")
             logger.debug(
                 f"Returning denial indicator for {instance} (unexpected exception)."
             )
