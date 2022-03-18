@@ -89,7 +89,6 @@ class User(DB_Base):
         Quota,
         secondary=quota_user,   # using m2m mainly for optimization
         backref="users",        # wants to be efficient and non-eager
-        lazy='noload',          # not loading the collection ever
         passive_deletes=True,   # prevent loading during deletion
         single_parent=True,     # only one association to quota
         uselist=False,          # one quota per user
