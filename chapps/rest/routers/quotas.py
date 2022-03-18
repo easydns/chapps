@@ -12,7 +12,7 @@ from chapps.rest.models import (
     DeleteResp,
     ErrorResp,
 )
-from chapps.rest.routers.common import list_query_params
+from chapps.rest.routers.common import list_query_params, get_item_by_id
 import logging, chapps.logging
 
 logger = logging.getLogger(__name__)
@@ -40,14 +40,10 @@ async def list_quotas(lparms: dict = Depends(list_query_params)):
     )
 
 
-@api.get("/{quota_id}")
-async def get_quota(quota_id: int):
-    with Session(sql_engine) as session:
-        try:
-            stmt = Quota.select_by_id(quota_id)
-            q = session.scalar(stmt)
-            if q:
-                return QuotaResp.send(Quota.wrap(q))
-        except Exception:
-            logger.exception("get_quota:")
-    raise HTTPException(status_code=404, detail=f"There is no quota with id {quota_id}")
+api.get("/{item_id}")(
+    get_item_by_id(
+        Quota,
+        engine=sql_engine,
+        response_model=QuotaResp,
+    )
+)
