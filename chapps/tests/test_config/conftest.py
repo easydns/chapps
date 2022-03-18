@@ -61,7 +61,10 @@ def chapps_sentinel_env(monkeypatch, chapps_sentinel_cfg_path):
 def chapps_mock_config():
     """Some settings are intentionally left out; their defaults shall prevail"""
     cp = configparser.ConfigParser(interpolation=None)
-    cp["CHAPPS"] = {"payload_encoding": "UTF-8"}
+    cp["CHAPPS"] = {
+        "payload_encoding": "UTF-8",
+        "require_user_key": False,
+    }
     cp["PolicyConfigAdapter"] = {
         "adapter": "mysql",
         "db_name": "chapps_test",

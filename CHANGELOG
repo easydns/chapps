@@ -1,3 +1,9 @@
+v0.3.11
+	- modifying logic around user-key extraction, and adding new settings:
+	  require_user_key (boolean), and no_user_key_response (Postfix
+	  response string).  See README for more information.
+	- adding some logic to guard against IndexError conditions when
+	  calculating time-delta from the attempts list
 v0.3.10
 	- adding default config value for `min_delta` to OutboundQuotaPolicy, which defaults to 5.  It represents
 	  the minimum number of seconds between attempts; faster attempts will be refused (but reset the timer).
