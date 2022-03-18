@@ -19,7 +19,7 @@ from chapps.rest.models import (
     DeleteResp,
     ErrorResp,
 )
-from chapps.rest.routers import users, domains
+from chapps.rest.routers import users, domains, quotas
 from typing import Optional, List
 from fastapi import FastAPI, Path, Query, Body
 from pydantic import BaseModel
@@ -33,3 +33,4 @@ api = FastAPI()
 verstr = config.chapps.version
 api.include_router(users.api)
 api.include_router(domains.api)
+api.include_router(quotas.api)

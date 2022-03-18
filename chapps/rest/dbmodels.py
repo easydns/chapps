@@ -98,7 +98,8 @@ class User(DB_Base):
     domains = relationship(
         Domain,
         secondary=domain_user,  # really m2m
-        backref="users",        # reverse associate
+        backref=backref(        # reverse associate
+            "users", order_by='User.id'),
         order_by=Domain.id,     # order by id
         passive_deletes=True,   # protect domains
     )

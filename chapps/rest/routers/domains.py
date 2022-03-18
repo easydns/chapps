@@ -31,7 +31,7 @@ def get_domain(domain_id: int):
             stmt = Domain.select_by_id(domain_id)
             d = session.scalar(stmt)
             if d:
-                return DomainResp.send(Domain.wrap(d))
+                return DomainResp.send(Domain.wrap(d), users=User.wrap(d.users))
         except Exception:
             logger.exception("get_domain:")
     raise HTTPException(
