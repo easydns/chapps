@@ -38,39 +38,34 @@ async def delete_user(
     return DeleteResp.send(response, status=status)
 
 
-@api.get("/by-id/{user_id}")
-async def get_user(user_id: int):
-    with Session(sql_engine) as session:
-        try:
-            mod = User.Meta.orm_model
-            stmt = select(mod).where(mod.id==id)
-            u = session.scalar(stmt)
-            logger.debug(f"Got user: {u!r} for stmt: {stmt} against {sql_engine}")
-            if u:
-                return UserResp(u, quota=u.quota, domains=u.domains)
-        except Exception as e:
-            logger.exception("get_user:")
-    raise HTTPException(
-        status_code=404,
-        detail=f"There is no user with id {user_id}")
-
-
-
-@api.get("/users/")
-async def list_all_users(skip: int = 0, limit: int = 1000):
-    return await list_users("%", skip, limit)
-
-
-@api.get("/users/{pattern}")
-async def list_users(pattern: str, skip: int = 0, limit: int = 1000):
-    sanitized_pattern = pattern
+@api.get("/")
+async def list_all_users(skip: int = 0, limit: int = 1000, q: str = None):
     query = User.select_query(
-        where=[f"name LIKE '%{sanitized_pattern}%'"], window=(skip, limit)
+        where=[f"name LIKE '%(pattern)s'"], window=(skip, limit)
     )
     with pca.adapter_context() as cur:
         cur.execute(query)
         results = User.zip_records(cur.fetchall())
     return UsersResp.send(results)
+
+
+@api.get("/{user_id}")
+async def get_user(user_id: int):
+    with Session(sql_engine) as session:
+        try:
+            stmt = User.Meta.orm_model.select_by_id(user_id)
+            u = session.scalar(stmt)
+            logger.debug(
+                f"Got user: {u!r} for stmt: {stmt} against {sql_engine}"
+            )
+            if u:
+                return UserResp(response=u, quota=u.quota, domains=u.domains)
+        except Exception:
+            logger.exception("get_user:")
+    raise HTTPException(
+        status_code=404,
+        detail=f"There is no user with id {user_id}")
+
 
 
 @api.get("/user-count/")
