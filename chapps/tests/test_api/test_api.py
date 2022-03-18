@@ -1,12 +1,6 @@
 """Tests of the REST API.  Not called test_rest obvs"""
 from fastapi.testclient import TestClient
 from unittest.mock import Mock
-from chapps.tests.test_config.conftest import (
-    chapps_mock_cfg_path,
-    chapps_mock_config,
-    chapps_mock_config_file,
-    chapps_mock_env,
-)
 import chapps.config
 import time
 
