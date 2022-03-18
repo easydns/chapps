@@ -1,8 +1,6 @@
 """Tests of the REST API.  Not called test_rest obvs"""
-from fastapi.testclient import TestClient
-from unittest.mock import Mock
+import pytest
 import chapps.config
-import time
 
 
 class Test_Users_API:
@@ -10,27 +8,30 @@ class Test_Users_API:
 
     def test_get_user(
             self,
-            monkeypatch,
-            chapps_mock_env,
-            chapps_mock_config_file
+            fixed_time,
+            testing_api_client,
     ):
-        cfg = chapps.config.CHAPPSConfig()
-        assert cfg.chapps.config_file == str(chapps_mock_config_file)
-        with monkeypatch.context() as m:
-            m.setattr(chapps.config, "config", cfg)
-            m.setattr(time, "time", Mock(return_value=1647625876.036144))
-            from chapps.rest.api import api
+        response = testing_api_client.get("/users/1")
+        assert response.status_code == 200
+        assert response.json() == {
+            "domains": [
+                {"id": 1, "name": "chapps.io"},
+                {"id": 2, "name": "easydns.com"},
+            ],
+            "quota": {"id": 1, "name": "10eph", "quota": 240},
+            "response": {"id": 1, "name": "ccullen@easydns.com"},
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
 
-            client = TestClient(api)
-            response = client.get("/users/1")
-            assert response.status_code == 200
-            assert response.json() == {
-                "domains": [
-                    {"id": 1, "name": "chapps.io"},
-                    {"id": 2, "name": "easydns.com"},
-                ],
-                "quota": {"id": 1, "name": "10eph", "quota": 240},
-                "response": {"id": 1, "name": "ccullen@easydns.com"},
-                "timestamp": 1647625876.036144,
-                "version": "CHAPPS v0.4",
-            }
+class Test_Quotas_API:
+    """Tests of the Quota CRUD API"""
+
+    def test_get_quota(
+            self,
+            fixed_time,
+            testing_api_client,
+    ):
+        response = testing_api_client.get("/domains/1")
+        assert response.status_code == 200
+        assert response.json() == {}
