@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 api = APIRouter(
-    prefix="/users",
-    tags=["users"],
-    responses={404: {"description": "Resource not found."}},
+    prefix="/users", tags=["users"], responses={404: {"description": "User not found."}}
 )
 
 
