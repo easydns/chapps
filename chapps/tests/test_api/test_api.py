@@ -50,3 +50,16 @@ class Test_Quotas_API:
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
+
+    def test_list_quotas(self, fixed_time, testing_api_client):
+        response = testing_api_client.get("/quotas/")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                {"id": 1, "name": "10eph", "quota": 240},
+                {"id": 2, "name": "50eph", "quota": 1200},
+                {"id": 3, "name": "200eph", "quota": 4800},
+            ],
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }

@@ -23,6 +23,22 @@ api = APIRouter(
     responses={404: {"description": "Quota not found."}},
 )
 
+
+@api.get("/")
+def list_quotas(skip: int = 0, limit: int = 1000, q: str = None):
+    with Session(sql_engine) as session:
+        try:
+            stmt = Quota.select_by_pattern(q or '%')
+            qs = [Quota.wrap(q) for q in session.scalars(stmt)]
+            if qs:
+                return QuotasResp.send(qs)
+        except Exception:
+            logger.exception("list_quotas:")
+    raise HTTPException(
+        status_code=404, detail=f"No quotas found with names matching {q}"
+    )
+
+
 @api.get("/{quota_id}")
 def get_quota(quota_id: int):
     with Session(sql_engine) as session:
@@ -33,6 +49,4 @@ def get_quota(quota_id: int):
                 return QuotaResp.send(Quota.wrap(q))
         except Exception:
             logger.exception("get_quota:")
-    raise HTTPException(
-        status_code=404, detail=f"There is no quota with id {quota_id}"
-    )
+    raise HTTPException(status_code=404, detail=f"There is no quota with id {quota_id}")

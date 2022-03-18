@@ -2,6 +2,7 @@ from chapps.config import config
 from chapps.rest import dbmodels
 from typing import Optional, List
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 from enum import Enum
 import time
 
@@ -16,10 +17,16 @@ class APIException(str, Enum):
     internal = "internal"
 
 
+# a metaclass for passing calls through to the orm_model
+class CHAPPSMetaModel(ModelMetaclass):
+    def __getattr__(cls, var):
+        orm_method = getattr(cls.Meta.orm_model, var, None)
+        return orm_method or super().__getattr__(var)
+
 # there could be a metaclass which would look for dbmodels classes matching
 # the names of subclasses of CHAPPSModel and automatically hook up their
 # Meta.orm_model data ... if the number of tables starts to grow
-class CHAPPSModel(BaseModel):
+class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
     """Base API data model"""
 
     id: int
@@ -29,29 +36,21 @@ class CHAPPSModel(BaseModel):
         orm_model = dbmodels.DB_Base
 
     @classmethod
-    def select_by_id(cls, id: int):
-        return cls.Meta.orm_model.select_by_id(id)
-
-    @classmethod
     def wrap(cls, orm_instance):
         """create a pydantic model from an ORM model"""
         if not orm_instance:  # could be None or []
             return orm_instance
 
-        def wrapper(oi):
-            return cls(
-                **{
-                    col: getattr(oi, col)
-                    for col in cls.schema()["properties"].keys()
-                }
-            )
         if issubclass(orm_instance.__class__, list):
-            return [wrapper(oi) for oi in orm_instance]
-        return wrapper(orm_instance)
+            return [cls.from_orm(oi) for oi in orm_instance]
+        return cls.from_orm(orm_instance)
 
 
 class User(CHAPPSModel):
     """API model to represent users"""
+
+    class Config:
+        orm_mode = True
 
     class Meta:
         orm_model = dbmodels.User
@@ -62,12 +61,18 @@ class Quota(CHAPPSModel):
 
     quota: int
 
+    class Config:
+        orm_mode = True
+
     class Meta:
         orm_model = dbmodels.Quota
 
 
 class Domain(CHAPPSModel):
     """A model to represent domains"""
+
+    class Config:
+        orm_mode = True
 
     class Meta:
         orm_model = dbmodels.Domain
