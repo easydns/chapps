@@ -28,8 +28,26 @@ class CHAPPSModel(BaseModel):
     class Meta:
         orm_model = dbmodels.DB_Base
 
-    def get_model(self, id: int):
-        return self.Meta.orm_model.get_by_id(id)
+    @classmethod
+    def select_by_id(cls, id: int):
+        return cls.Meta.orm_model.select_by_id(id)
+
+    @classmethod
+    def wrap(cls, orm_instance):
+        """create a pydantic model from an ORM model"""
+        if not orm_instance:  # could be None or []
+            return orm_instance
+
+        def wrapper(oi):
+            return cls(
+                **{
+                    col: getattr(oi, col)
+                    for col in cls.schema()["properties"].keys()
+                }
+            )
+        if issubclass(orm_instance.__class__, list):
+            return [wrapper(oi) for oi in orm_instance]
+        return wrapper(orm_instance)
 
 
 class User(CHAPPSModel):
