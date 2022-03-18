@@ -1,5 +1,5 @@
 from typing import Optional, List
-from fastapi import APIRouter, Body, Path, HTTPException
+from fastapi import APIRouter, Body, Path, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from chapps.rest.dbsession import sql_engine
@@ -12,6 +12,7 @@ from chapps.rest.models import (
     DeleteResp,
     ErrorResp,
 )
+from chapps.rest.routers.common import list_query_params
 import logging, chapps.logging
 
 logger = logging.getLogger(__name__)
@@ -25,10 +26,10 @@ api = APIRouter(
 
 
 @api.get("/")
-def list_quotas(skip: int = 0, limit: int = 1000, q: str = None):
+async def list_quotas(lparms: dict = Depends(list_query_params)):
     with Session(sql_engine) as session:
         try:
-            stmt = Quota.select_by_pattern(q or '%')
+            stmt = Quota.select_by_pattern(lparms.get('q', None) or '%').offset(lparms.get('skip')).limit(lparms.get('limit'))
             qs = [Quota.wrap(q) for q in session.scalars(stmt)]
             if qs:
                 return QuotasResp.send(qs)
