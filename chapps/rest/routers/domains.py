@@ -25,7 +25,7 @@ api = APIRouter(
 
 
 @api.get("/{domain_id}")
-def get_domain(domain_id: int):
+async def get_domain(domain_id: int):
     with Session(sql_engine) as session:
         try:
             stmt = Domain.select_by_id(domain_id)

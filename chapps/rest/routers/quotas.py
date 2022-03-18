@@ -40,7 +40,7 @@ def list_quotas(skip: int = 0, limit: int = 1000, q: str = None):
 
 
 @api.get("/{quota_id}")
-def get_quota(quota_id: int):
+async def get_quota(quota_id: int):
     with Session(sql_engine) as session:
         try:
             stmt = Quota.select_by_id(quota_id)
