@@ -30,7 +30,11 @@ class Test_Domains_API:
         assert response.json() == {
             "response": {"id": 1, "name": "chapps.io"},
             "timestamp": fixed_time,
-            "users": None,
+            "users": [
+                {"id": 1, "name": "ccullen@easydns.com"},
+                {"id": 2, "name": "somebody@chapps.io"},
+                {"id": 3, "name": "bigsender@chapps.io"},
+            ],
             "version": "CHAPPS v0.4",
         }
 
@@ -41,4 +45,8 @@ class Test_Quotas_API:
     def test_get_quota(self, fixed_time, testing_api_client):
         response = testing_api_client.get("/quotas/1")
         assert response.status_code == 200
-        assert response.json() == {}
+        assert response.json() == {
+            "response": {"id": 1, "name": "10eph", "quota": 240},
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
