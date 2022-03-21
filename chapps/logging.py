@@ -2,9 +2,13 @@
 import logging
 from logging.handlers import SysLogHandler
 
+DEFAULT_LEVEL = logging.DEBUG
+
 
 class LogSetup:  # pragma: no cover
-    ROOT_LOG_FORMAT = "CHAPPS:%(levelname)s %(filename)s@%(lineno)s: %(message)s"
+    ROOT_LOG_FORMAT = (
+        "CHAPPS:%(levelname)s %(filename)s@%(lineno)s: %(message)s"
+    )
     MAIN_LOG_FORMAT = "CHAPPS:%(levelname)s %(name)s@%(funcName)s: %(message)s"
 
     def __init__(self):
@@ -12,7 +16,9 @@ class LogSetup:  # pragma: no cover
             logging.basicConfig(
                 format=self.ROOT_LOG_FORMAT,
                 handlers=[
-                    SysLogHandler(facility=SysLogHandler.LOG_LOCAL0, address="/dev/log")
+                    SysLogHandler(
+                        facility=SysLogHandler.LOG_LOCAL0, address="/dev/log"
+                    )
                 ],
             )
 
