@@ -4,33 +4,31 @@
 # coordinated by gunicorn (see FastAPI deployment docs)
 
 from chapps.config import config
-from chapps.rest.models import (
-    User,
-    Quota,
-    Domain,
-    UserResp,
-    UsersResp,
-    DomainResp,
-    DomainsResp,
-    QuotaResp,
-    QuotasResp,
-    IntResp,
-    ConfigResp,
-    DeleteResp,
-    ErrorResp,
-)
 from chapps.rest.routers import users, domains, quotas
-from typing import Optional, List
-from fastapi import FastAPI, Path, Query, Body
-from pydantic import BaseModel
-import time
-import logging, chapps.logging
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+import logging
+import chapps.logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 api = FastAPI()
 verstr = config.chapps.version
 api.include_router(users.api)
 api.include_router(domains.api)
 api.include_router(quotas.api)
+
+
+@api.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+    exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
+    body = await request.json()
+    logging.error(f"{body!r}: {exc_str}")
+    content = {"status_code": 10422, "message": exc_str, "data": None}
+    return JSONResponse(
+        content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+    )
