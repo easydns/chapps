@@ -23,6 +23,7 @@ class CHAPPSMetaModel(ModelMetaclass):
         orm_method = getattr(cls.Meta.orm_model, var, None)
         return orm_method or super().__getattr__(var)
 
+
 # there could be a metaclass which would look for dbmodels classes matching
 # the names of subclasses of CHAPPSModel and automatically hook up their
 # Meta.orm_model data ... if the number of tables starts to grow
@@ -40,10 +41,11 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
         """create a pydantic model from an ORM model"""
         if not orm_instance:  # could be None or []
             return orm_instance
-
-        if issubclass(orm_instance.__class__, list):
-            return [cls.from_orm(oi) for oi in orm_instance]
-        return cls.from_orm(orm_instance)
+        try:
+            orm_iter = iter(orm_instance)
+            return [cls.from_orm(oi) for oi in orm_iter]
+        except TypeError:
+            return cls.from_orm(orm_instance)
 
 
 class User(CHAPPSModel):
@@ -86,7 +88,9 @@ class CHAPPSResponse(BaseModel):
     @classmethod
     def send(model, response, **kwargs):
         """Utility function for encapsulating responses in a standard body"""
-        return model(version=verstr, timestamp=time.time(), response=response, **kwargs)
+        return model(
+            version=verstr, timestamp=time.time(), response=response, **kwargs
+        )
 
 
 class UserResp(CHAPPSResponse):
