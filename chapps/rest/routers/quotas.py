@@ -16,6 +16,7 @@ from chapps.rest.routers.common import (
     list_query_params,
     get_item_by_id,
     list_items,
+    create_item,
 )
 import logging
 import chapps.logging
@@ -36,3 +37,15 @@ api.get("/")(list_items(Quota, engine=sql_engine, response_model=QuotasResp))
 api.get("/{item_id}")(
     get_item_by_id(Quota, engine=sql_engine, response_model=QuotaResp)
 )
+
+api.post("/", status_code=201)(
+    create_item(
+        Quota,
+        engine=sql_engine,
+        response_model=QuotaResp,
+        params=dict(name=str, quota=int),
+    )
+)
+
+# @api.post("/")
+# async def create_quota(name: str=Body(...), limit: int=Body(...)):

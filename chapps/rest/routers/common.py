@@ -1,8 +1,9 @@
 """Common code between routers; mainly dependencies"""
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from fastapi import Depends
+from fastapi import Depends, Body
 from functools import wraps
+import inspect
 import logging
 import chapps.logging
 
@@ -103,3 +104,34 @@ def list_items(cls, *, engine, response_model):
             return response_model.send(items)
 
     return list_i
+
+
+def create_item(cls, *, engine, response_model, params=dict(name=str)):
+    """
+    Build a route to create items.
+    """
+
+    @db_interaction(engine=engine)
+    async def create_i(*pargs, **args):
+        """
+        the args are k-v pairs, the keys are column names
+        we sort out the annotations for FastAPI after
+        """
+        om = cls.Meta.orm_model
+        item = om(**args)
+        session.add(item)
+        session.commit()
+        return response_model.send(cls.wrap(item))
+
+    routeparams = [  # assemble signature for FastAPI
+        inspect.Parameter(
+            name=param,
+            kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            default=Body(...),
+            annotation=type_,
+        )
+        for param, type_ in params.items()
+    ]
+    create_i.__signature__ = inspect.Signature(routeparams)
+    create_i.__annotations__ = params
+    return create_i
