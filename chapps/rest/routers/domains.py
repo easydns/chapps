@@ -12,10 +12,12 @@ from chapps.rest.models import (
     DeleteResp,
     ErrorResp,
 )
-import logging, chapps.logging
+from .common import get_item_by_id, list_items
+import logging
+import chapps.logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 api = APIRouter(
     prefix="/domains",
@@ -24,16 +26,11 @@ api = APIRouter(
 )
 
 
-@api.get("/{domain_id}")
-async def get_domain(domain_id: int):
-    with Session(sql_engine) as session:
-        try:
-            stmt = Domain.select_by_id(domain_id)
-            d = session.scalar(stmt)
-            if d:
-                return DomainResp.send(Domain.wrap(d), users=User.wrap(d.users))
-        except Exception:
-            logger.exception("get_domain:")
-    raise HTTPException(
-        status_code=404, detail=f"There is no domain with id {domain_id}"
+api.get("/{item_id}")(
+    get_item_by_id(
+        Domain,
+        engine=sql_engine,
+        response_model=DomainResp,
+        assoc=dict(users=User),
     )
+)
