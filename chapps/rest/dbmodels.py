@@ -4,12 +4,13 @@ from sqlalchemy.orm import (
     declarative_base,
     relationship,
     backref,
-    DeclarativeMeta
+    DeclarativeMeta,
 )
-import logging,chapps.logging
+import logging
+import chapps.logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 
 # declare subclass of the SQLAlchemy DeclarativeMeta class
@@ -21,8 +22,10 @@ class DB_Customizations(DeclarativeMeta):
         return select(cls).where(cls.id == id)
 
     def select_by_pattern(cls, q: str):
-        logger.debug(f"select_by_pattern called for {cls} for pattern {q}")
         return select(cls).where(cls.name.like(q))
+
+    def windowed_list(cls, q: str = "%", skip: int = 0, limit: int = 1000):
+        return cls.select_by_pattern(q).offset(skip).limit(limit)
 
 
 # declare DB model base class
