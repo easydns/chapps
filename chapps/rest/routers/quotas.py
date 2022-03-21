@@ -13,10 +13,11 @@ from chapps.rest.models import (
     ErrorResp,
 )
 from chapps.rest.routers.common import list_query_params, get_item_by_id
-import logging, chapps.logging
+import logging
+import chapps.logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 api = APIRouter(
     prefix="/quotas",
@@ -29,7 +30,11 @@ api = APIRouter(
 async def list_quotas(lparms: dict = Depends(list_query_params)):
     with Session(sql_engine) as session:
         try:
-            stmt = Quota.select_by_pattern(lparms.get('q', None) or '%').offset(lparms.get('skip')).limit(lparms.get('limit'))
+            stmt = (
+                Quota.select_by_pattern(lparms.get("q", None) or "%")
+                .offset(lparms.get("skip"))
+                .limit(lparms.get("limit"))
+            )
             qs = [Quota.wrap(q) for q in session.scalars(stmt)]
             if qs:
                 return QuotasResp.send(qs)
@@ -41,9 +46,5 @@ async def list_quotas(lparms: dict = Depends(list_query_params)):
 
 
 api.get("/{item_id}")(
-    get_item_by_id(
-        Quota,
-        engine=sql_engine,
-        response_model=QuotaResp,
-    )
+    get_item_by_id(Quota, engine=sql_engine, response_model=QuotaResp)
 )
