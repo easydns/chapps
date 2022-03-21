@@ -39,7 +39,7 @@ async def list_quotas(lparms: dict = Depends(list_query_params)):
                 .offset(lparms.get("skip"))
                 .limit(lparms.get("limit"))
             )
-            qs = [Quota.wrap(q) for q in session.scalars(stmt)]
+            qs = Quota.wrap(session.scalars(stmt))
             if qs:
                 return QuotasResp.send(qs)
         except Exception:

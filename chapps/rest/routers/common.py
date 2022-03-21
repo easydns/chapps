@@ -65,7 +65,7 @@ def list_items(cls, *, engine, response_model):
         with Session(engine) as session:
             try:
                 stmt = cls.windowed_list(**qparams)
-                items = session.scalars(stmt)
+                items = cls.wrap(session.scalars(stmt))
                 if items:
                     return response_model.send(items)
             except Exception:
