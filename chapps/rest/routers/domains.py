@@ -25,6 +25,7 @@ api = APIRouter(
     responses={404: {"description": "Domain not found."}},
 )
 
+api.get("/")(list_items(Domain, engine=sql_engine, response_model=DomainsResp))
 
 api.get("/{item_id}")(
     get_item_by_id(
