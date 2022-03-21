@@ -2,6 +2,7 @@
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from fastapi import Depends
+from functools import wraps
 import logging
 import chapps.logging
 
@@ -17,6 +18,36 @@ async def list_query_params(
     return dict(q=q, skip=skip, limit=limit)
 
 
+def db_interaction(
+    *,
+    engine,
+    exception_message: str = (
+        "{route_coroutine.__name__}"
+        "({cls.__name__}, a={args!r},"
+        " kw={kwargs!r})"
+    ),
+    empty_set_message: str = (
+        "Unable to find a matching " "{cls.__name__.lower())}"
+    ),
+):
+    def interaction_wrapper(route_coroutine):
+        @wraps(route_coroutine)
+        async def wrapped_interaction(*args, **kwargs):
+            with Session(engine) as session:
+                route_coroutine.__globals__["session"] = session
+                try:
+                    return await route_coroutine(*args, **kwargs)
+                except Exception:
+                    logger.exception(exception_message.format(**locals()))
+            raise HTTPException(
+                status_code=404, detail=empty_set_message.format(**locals())
+            )
+
+        return wrapped_interaction  # a coroutine
+
+    return interaction_wrapper  # a regular function
+
+
 def get_item_by_id(cls, *, engine, response_model, assoc: dict = {}):
     """
     Build a route to get an item by ID:
@@ -27,28 +58,25 @@ def get_item_by_id(cls, *, engine, response_model, assoc: dict = {}):
     onto the data model for the associated objects
     """
 
+    @db_interaction(
+        engine=engine,
+        exception_message="get_by_id({cls.__name__}, {item_id}):",
+        empty_set_message=(
+            "There is no {cls.__name__.lower()} " "with id {item_id}"
+        ),
+    )
     async def get_by_id(item_id: int):
-        with Session(engine) as session:
-            try:
-                stmt = cls.select_by_id(item_id)
-                item = session.scalar(stmt)
-                if item:
-                    if assoc:
-                        extra_args = {
-                            key: model.wrap(getattr(item, key))
-                            for key, model in assoc.items()
-                        }
-                        return response_model.send(
-                            cls.wrap(item), **extra_args
-                        )
-                    else:
-                        return response_model.send(cls.wrap(item))
-            except Exception:
-                logger.exception(f"get_by_id({cls.__name__}, {item_id}):")
-        raise HTTPException(
-            status_code=404,
-            detail=f"There is no {cls.__name__.lower()} with id {item_id}",
-        )
+        stmt = cls.select_by_id(item_id)
+        item = session.scalar(stmt)
+        if item:
+            if assoc:
+                extra_args = {
+                    key: model.wrap(getattr(item, key))
+                    for key, model in assoc.items()
+                }
+                return response_model.send(cls.wrap(item), **extra_args)
+            else:
+                return response_model.send(cls.wrap(item))
 
     return get_by_id
 
@@ -61,18 +89,17 @@ def list_items(cls, *, engine, response_model):
     since that is what the dependency will yield.
     """
 
+    @db_interaction(
+        engine=engine,
+        exception_message="list_i({cls.__name__}, {qparams!r}):",
+        empty_set_message=(
+            "No {cls.__name__.lower()} records matched '%{qparams['q']}%'"
+        ),
+    )
     async def list_i(qparams: dict = Depends(list_query_params)):
-        with Session(engine) as session:
-            try:
-                stmt = cls.windowed_list(**qparams)
-                items = cls.wrap(session.scalars(stmt))
-                if items:
-                    return response_model.send(items)
-            except Exception:
-                logger.exception(f"list_i({cls.__name__}, {qparams!r}):")
-        raise HTTPException(
-            status_code=404,
-            detail=f"No {cls.__name__.lower()} records matched '%{qparams['q']}%'",
-        )
+        stmt = cls.windowed_list(**qparams)
+        items = cls.wrap(session.scalars(stmt))
+        if items:
+            return response_model.send(items)
 
     return list_i
