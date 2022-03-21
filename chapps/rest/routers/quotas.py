@@ -30,23 +30,7 @@ api = APIRouter(
 )
 
 
-@api.get("/")
-async def list_quotas(lparms: dict = Depends(list_query_params)):
-    with Session(sql_engine) as session:
-        try:
-            stmt = (
-                Quota.select_by_pattern(lparms.get("q", None) or "%")
-                .offset(lparms.get("skip"))
-                .limit(lparms.get("limit"))
-            )
-            qs = Quota.wrap(session.scalars(stmt))
-            if qs:
-                return QuotasResp.send(qs)
-        except Exception:
-            logger.exception("list_quotas:")
-    raise HTTPException(
-        status_code=404, detail=f"No quotas found with names matching {q}"
-    )
+api.get("/")(list_items(Quota, engine=sql_engine, response_model=QuotasResp))
 
 
 api.get("/{item_id}")(

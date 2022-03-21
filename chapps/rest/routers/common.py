@@ -1,7 +1,7 @@
 """Common code between routers; mainly dependencies"""
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from sqlalchemy.engine.base import Engine
+from fastapi import Depends
 import logging
 import chapps.logging
 
@@ -61,7 +61,7 @@ def list_items(cls, *, engine, response_model):
     since that is what the dependency will yield.
     """
 
-    async def list_i(qparams: dict = {}):
+    async def list_i(qparams: dict = Depends(list_query_params)):
         with Session(engine) as session:
             try:
                 stmt = cls.windowed_list(**qparams)
