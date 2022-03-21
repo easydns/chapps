@@ -12,7 +12,11 @@ from chapps.rest.models import (
     DeleteResp,
     ErrorResp,
 )
-from chapps.rest.routers.common import list_query_params, get_item_by_id
+from chapps.rest.routers.common import (
+    list_query_params,
+    get_item_by_id,
+    list_items,
+)
 import logging
 import chapps.logging
 
