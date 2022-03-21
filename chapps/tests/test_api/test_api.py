@@ -20,6 +20,19 @@ class Test_Users_API:
             "version": "CHAPPS v0.4",
         }
 
+    def test_list_users(self, fixed_time, testing_api_client):
+        response = testing_api_client.get("/users/")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                {"id": 1, "name": "ccullen@easydns.com"},
+                {"id": 2, "name": "somebody@chapps.io"},
+                {"id": 3, "name": "bigsender@chapps.io"},
+            ],
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
 
 class Test_Domains_API:
     """Tests of the Domain CRUD API"""

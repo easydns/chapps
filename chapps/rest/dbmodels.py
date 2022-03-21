@@ -25,7 +25,9 @@ class DB_Customizations(DeclarativeMeta):
         return select(cls).where(cls.name.like(q))
 
     def windowed_list(cls, q: str = "%", skip: int = 0, limit: int = 1000):
-        return cls.select_by_pattern(q).offset(skip).limit(limit)
+        return (
+            cls.select_by_pattern(q).offset(skip).limit(limit).order_by(cls.id)
+        )
 
 
 # declare DB model base class

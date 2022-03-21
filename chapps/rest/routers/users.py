@@ -50,15 +50,7 @@ async def delete_user(
     return DeleteResp.send(response, status=status)
 
 
-@api.get("/")
-async def list_all_users(skip: int = 0, limit: int = 1000, q: str = None):
-    query = User.select_query(
-        where=[f"name LIKE '%(pattern)s'"], window=(skip, limit)
-    )
-    with pca.adapter_context() as cur:
-        cur.execute(query)
-        results = User.zip_records(cur.fetchall())
-    return UsersResp.send(results)
+api.get("/")(list_items(User, engine=sql_engine, response_model=UsersResp))
 
 
 api.get("/{item_id}")(
