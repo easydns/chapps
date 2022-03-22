@@ -1,5 +1,6 @@
 """Tests of the REST API.  Not called test_rest obvs"""
 import pytest
+import pudb
 import chapps.config
 
 
@@ -9,6 +10,7 @@ class Test_Users_API:
     def test_get_user(
         self, fixed_time, testing_api_client, populated_database_fixture
     ):
+        pudb.set_trace()
         response = testing_api_client.get("/users/1")
         assert response.status_code == 200
         assert response.json() == {

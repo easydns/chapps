@@ -1,7 +1,8 @@
 """Common code between routers; mainly dependencies"""
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from fastapi import Depends, Body, HTTPException
+from sqlalchemy.exc import IntegrityError
+from fastapi import status, Depends, Body, HTTPException
 from functools import wraps
 import inspect
 import logging
@@ -37,7 +38,7 @@ def db_interaction(  # a decorator with parameters
     """
 
     def interaction_wrapper(route_coroutine):
-        logger.debug(f"Class is {cls.__name__}")
+        logger.debug(f"Wrapping {route_coroutine.__name__} for {cls.__name__}")
 
         exc = exception_message.format(
             route_name=route_coroutine.__name__, model=cls.__name__.lower()
@@ -123,16 +124,47 @@ def create_item(
         the args are k-v pairs, the keys are column names
         we sort out the annotations for FastAPI after
         """
-        om = cls.Meta.orm_model
-        if assoc:
-            extras = {
-                arg: args.pop(arg)
-                for arg in (a[1] for a in assoc)
-                if arg in args
-            }
-        item = om(**args)
-        session.add(item)
-        session.commit()
+        extras = {}
+        # if assoc:
+        #     extras = {
+        #         a.name: (
+        #             a.join_table,
+        #             a.source_id,
+        #             a.model_id,
+        #             args.pop(a.name),
+        #         )
+        #         for a in assoc
+        #         if a.name in args
+        #     }
+        item = cls.Meta.orm_model(**args)
+        try:
+            session.add(item)
+            session.commit()
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Unique key conflict.",
+            )
+        # if assoc:
+        #     for k, (t, s_id, m_id, v) in extras:
+        #         try:
+        #             i = iter(v)
+        #             ins = [{s_id: item.id, m_id: val} for val in i]
+        #         except TypeError:
+        #             ins = [{s_id: item.id, m_id: v}]
+        #         try:
+        #             session.execute(t.insert(), ins)
+        #             session.commit()
+        #         except IntegrityError:
+        #             raise HTTPException(
+        #                 status_code=status.HTTP_409_CONFLICT,
+        #                 detail=(
+        #                     "Unable to create requested association."
+        #                     "  Please check associate object IDs and"
+        #                     " try again."
+        #                 ),
+        #             )
+
         return response_model.send(cls.wrap(item))
 
     routeparams = [  # assemble signature for FastAPI
@@ -144,18 +176,18 @@ def create_item(
         )
         for param, type_ in params.items()
     ]
-    if assoc:
-        routeparams.extend(
-            [
-                inspect.Parameter(
-                    name=a.name,
-                    kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                    default=Body(None),
-                    annotation=a.type_,
-                )
-                for a in assoc
-            ]
-        )
+    # if assoc:
+    #     routeparams.extend(
+    #         [
+    #             inspect.Parameter(
+    #                 name=a.name,
+    #                 kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+    #                 default=Body(None),
+    #                 annotation=a.type_,
+    #             )
+    #             for a in assoc
+    #         ]
+    #     )
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
     return create_i
