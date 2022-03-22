@@ -5,6 +5,7 @@ from fastapi import Depends, Body, HTTPException
 from functools import wraps
 import inspect
 import logging
+from chapps.rest.dbsession import sql_engine
 import chapps.logging
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ async def list_query_params(
 def db_interaction(  # a decorator with parameters
     *,
     cls,
-    engine,
+    engine=sql_engine,
     exception_message: str = ("{route_name}:{model}"),
     empty_set_message: str = ("Unable to find a matching {model}"),
 ):
@@ -36,7 +37,7 @@ def db_interaction(  # a decorator with parameters
     """
 
     def interaction_wrapper(route_coroutine):
-        logger.debug("Class is {cls.__name__}")
+        logger.debug(f"Class is {cls.__name__}")
 
         exc = exception_message.format(
             route_name=route_coroutine.__name__, model=cls.__name__.lower()
@@ -60,7 +61,7 @@ def db_interaction(  # a decorator with parameters
     return interaction_wrapper  # a regular function
 
 
-def get_item_by_id(cls, *, engine, response_model, assoc=None):
+def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
     """
     Build a route to get an item by ID:
     first argument is the main datamodel for the request
@@ -86,7 +87,7 @@ def get_item_by_id(cls, *, engine, response_model, assoc=None):
     return get_by_id
 
 
-def list_items(cls, *, engine, response_model):
+def list_items(cls, *, response_model, engine=sql_engine):
     """
     Build a route to list items.
     The factory just needs the control data -- the engine, the response model
@@ -105,7 +106,12 @@ def list_items(cls, *, engine, response_model):
 
 
 def create_item(
-    cls, *, engine, response_model, params=dict(name=str), assoc=None
+    cls,
+    *,
+    response_model,
+    params=dict(name=str),
+    assoc=None,
+    engine=sql_engine,
 ):
     """
     Build a route to create items.
@@ -118,6 +124,12 @@ def create_item(
         we sort out the annotations for FastAPI after
         """
         om = cls.Meta.orm_model
+        if assoc:
+            extras = {
+                arg: args.pop(arg)
+                for arg in (a[1] for a in assoc)
+                if arg in args
+            }
         item = om(**args)
         session.add(item)
         session.commit()
@@ -132,6 +144,18 @@ def create_item(
         )
         for param, type_ in params.items()
     ]
+    if assoc:
+        routeparams.extend(
+            [
+                inspect.Parameter(
+                    name=a.name,
+                    kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=Body(None),
+                    annotation=a.type_,
+                )
+                for a in assoc
+            ]
+        )
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
     return create_i
