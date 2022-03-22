@@ -1,7 +1,7 @@
 """Common code between routers; mainly dependencies"""
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from fastapi import Depends, Body
+from fastapi import Depends, Body, HTTPException
 from functools import wraps
 import inspect
 import logging
@@ -19,19 +19,32 @@ async def list_query_params(
     return dict(q=q, skip=skip, limit=limit)
 
 
-def db_interaction(
+def db_interaction(  # a decorator with parameters
     *,
+    cls,
     engine,
-    exception_message: str = (
-        "{route_coroutine.__name__}"
-        "({cls.__name__}, a={args!r},"
-        " kw={kwargs!r})"
-    ),
-    empty_set_message: str = (
-        "Unable to find a matching " "{cls.__name__.lower())}"
-    ),
+    exception_message: str = ("{route_name}:{model}"),
+    empty_set_message: str = ("Unable to find a matching {model}"),
 ):
+    """
+    the db_interaction decorator requires a couple of parameters,
+    and provides optional arguments to override the messages for
+    either of two eventualities:
+    1. any exception occurs; the argument list is automatically appended
+    2. the set of return values (from an access operation) is empty, OR
+       a delete operation could not find any objects to delete
+    """
+
     def interaction_wrapper(route_coroutine):
+        logger.debug("Class is {cls.__name__}")
+
+        exc = exception_message.format(
+            route_name=route_coroutine.__name__, model=cls.__name__.lower()
+        )
+        empty = empty_set_message.format(
+            route_name=route_coroutine.__name__, model=cls.__name__.lower()
+        )
+
         @wraps(route_coroutine)
         async def wrapped_interaction(*args, **kwargs):
             with Session(engine) as session:
@@ -39,17 +52,15 @@ def db_interaction(
                 try:
                     return await route_coroutine(*args, **kwargs)
                 except Exception:
-                    logger.exception(exception_message.format(**locals()))
-            raise HTTPException(
-                status_code=404, detail=empty_set_message.format(**locals())
-            )
+                    logger.exception(exc + f"({args!r},{kwargs!r})")
+            raise HTTPException(status_code=404, detail=empty)
 
         return wrapped_interaction  # a coroutine
 
     return interaction_wrapper  # a regular function
 
 
-def get_item_by_id(cls, *, engine, response_model, assoc: dict = {}):
+def get_item_by_id(cls, *, engine, response_model, assoc=None):
     """
     Build a route to get an item by ID:
     first argument is the main datamodel for the request
@@ -59,21 +70,14 @@ def get_item_by_id(cls, *, engine, response_model, assoc: dict = {}):
     onto the data model for the associated objects
     """
 
-    @db_interaction(
-        engine=engine,
-        exception_message="get_by_id({cls.__name__}, {item_id}):",
-        empty_set_message=(
-            "There is no {cls.__name__.lower()} " "with id {item_id}"
-        ),
-    )
+    @db_interaction(cls=cls, engine=engine)
     async def get_by_id(item_id: int):
         stmt = cls.select_by_id(item_id)
         item = session.scalar(stmt)
         if item:
             if assoc:
                 extra_args = {
-                    key: model.wrap(getattr(item, key))
-                    for key, model in assoc.items()
+                    key: model.wrap(getattr(item, key)) for model, key in assoc
                 }
                 return response_model.send(cls.wrap(item), **extra_args)
             else:
@@ -90,13 +94,7 @@ def list_items(cls, *, engine, response_model):
     since that is what the dependency will yield.
     """
 
-    @db_interaction(
-        engine=engine,
-        exception_message="list_i({cls.__name__}, {qparams!r}):",
-        empty_set_message=(
-            "No {cls.__name__.lower()} records matched '%{qparams['q']}%'"
-        ),
-    )
+    @db_interaction(cls=cls, engine=engine)
     async def list_i(qparams: dict = Depends(list_query_params)):
         stmt = cls.windowed_list(**qparams)
         items = cls.wrap(session.scalars(stmt))
@@ -106,12 +104,14 @@ def list_items(cls, *, engine, response_model):
     return list_i
 
 
-def create_item(cls, *, engine, response_model, params=dict(name=str)):
+def create_item(
+    cls, *, engine, response_model, params=dict(name=str), assoc=None
+):
     """
     Build a route to create items.
     """
 
-    @db_interaction(engine=engine)
+    @db_interaction(cls=cls, engine=engine)
     async def create_i(*pargs, **args):
         """
         the args are k-v pairs, the keys are column names

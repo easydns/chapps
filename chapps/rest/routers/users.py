@@ -58,7 +58,7 @@ api.get("/{item_id}")(
         User,
         engine=sql_engine,
         response_model=UserResp,
-        assoc=dict(quota=Quota, domains=Domain),
+        assoc=[(Quota, "quota"), (Domain, "domains")],
     )
 )
 

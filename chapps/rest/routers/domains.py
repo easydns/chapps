@@ -12,7 +12,7 @@ from chapps.rest.models import (
     DeleteResp,
     ErrorResp,
 )
-from .common import get_item_by_id, list_items
+from .common import get_item_by_id, list_items, create_item
 import logging
 import chapps.logging
 
@@ -32,6 +32,16 @@ api.get("/{item_id}")(
         Domain,
         engine=sql_engine,
         response_model=DomainResp,
-        assoc=dict(users=User),
+        assoc=[(User, "users")],
+    )
+)
+
+api.post("/")(
+    create_item(
+        Domain,
+        engine=sql_engine,
+        response_model=DomainResp,
+        params=dict(name=str),
+        assoc=[(User, List[int])],
     )
 )
