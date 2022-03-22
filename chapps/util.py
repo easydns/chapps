@@ -19,7 +19,9 @@ class AttrDict:
 
     boolean_pattern = re.compile("^[Tt]rue|[Ff]alse$")
 
-    def __init__(self, data={}):
+    def __init__(self, data=None, **kwargs):
+        if not data:
+            data = kwargs
         for k, v in data.items():
             if k[0:2] != "__":
                 val = v
@@ -34,6 +36,8 @@ class AttrDict:
                             val = (
                                 m.span(0)[1] == 4
                             )  # if the match is 4 chars long, it is True
+                except TypeError:
+                    pass
                 setattr(self, k, val)
 
 
@@ -59,8 +63,7 @@ class PostfixPolicyRequest(Mapping):
         if attr[0] == "_":  # leading underscores do not occur in the payload
             return None
         line = next(
-            (l for l in self._payload if attr == l.split("=")[0]),
-            None
+            (l for l in self._payload if attr == l.split("=")[0]), None
         )
         if line:
             key, value = line.split("=")
@@ -83,8 +86,7 @@ class PostfixPolicyRequest(Mapping):
         """Return an iterable representing the mapping"""
         if not getattr(self, "_mapping", None):
             self._mapping = {
-                k: v for k, v in
-                [l.split("=") for l in self._payload]
+                k: v for k, v in [l.split("=") for l in self._payload]
             }
             # Since we end up parsing the entire payload
             # optimize it for future random access
