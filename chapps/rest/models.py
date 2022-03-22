@@ -37,6 +37,10 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
         orm_model = dbmodels.DB_Base
 
     @classmethod
+    def _o(cls):
+        return cls.Meta.orm_model
+
+    @classmethod
     def wrap(cls, orm_instance):
         """create a pydantic model from an ORM model"""
         if not orm_instance:  # could be None or []
@@ -105,7 +109,7 @@ class UsersResp(CHAPPSResponse):
 
 class DomainResp(CHAPPSResponse):
     response: Domain
-    users: Optional[List[Domain]] = None
+    users: Optional[List[User]] = None
 
 
 class DomainsResp(CHAPPSResponse):
