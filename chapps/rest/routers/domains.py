@@ -1,17 +1,7 @@
-from typing import Optional, List
-from fastapi import APIRouter, Body, Path, HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from chapps.rest.dbsession import sql_engine
-from chapps.rest.models import (
-    User,
-    Quota,
-    Domain,
-    DomainResp,
-    DomainsResp,
-    DeleteResp,
-    ErrorResp,
-)
+from typing import List
+from fastapi import APIRouter  # , Body, Path, HTTPException
+from chapps.util import AttrDict
+from chapps.rest.models import User, Domain, DomainResp, DomainsResp
 from .common import get_item_by_id, list_items, create_item
 import logging
 import chapps.logging
@@ -25,23 +15,23 @@ api = APIRouter(
     responses={404: {"description": "Domain not found."}},
 )
 
-api.get("/")(list_items(Domain, engine=sql_engine, response_model=DomainsResp))
+api.get("/")(list_items(Domain, response_model=DomainsResp))
 
 api.get("/{item_id}")(
-    get_item_by_id(
-        Domain,
-        engine=sql_engine,
-        response_model=DomainResp,
-        assoc=[(User, "users")],
-    )
+    get_item_by_id(Domain, response_model=DomainResp, assoc=[(User, "users")])
 )
 
 api.post("/")(
     create_item(
-        Domain,
-        engine=sql_engine,
+        Domain,  # default params argument will suffice
         response_model=DomainResp,
-        params=dict(name=str),
-        assoc=[(User, List[int])],
+        assoc=[
+            AttrDict(
+                model=User,
+                name="users",
+                type_=List[int],
+                join_table=User.metadata.tables["domain_user"],
+            )
+        ],
     )
 )
