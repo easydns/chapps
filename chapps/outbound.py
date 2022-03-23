@@ -26,6 +26,21 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
         except Exception:
             return f"OutboundPPR(:{self.instance}) is missing sender and/or user_key"
 
+    def _maillog_repr(self):
+        try:
+            return (f"i={self.instance} "
+                    f"user={self.user} "
+                    f"sender={self.sender or 'None'} "
+                    f"client_address={self.client_address} "
+                    f"recipient={self.recipient}")
+        except Exception:
+            return (f"i={self.instance} "
+                    f"sasl_username={self.sasl_username or 'None'} "
+                    f"ccert_subject={self.ccert_subject or 'None'} "
+                    f"sender={self.sender or 'None'} "
+                    f"client_address={self.client_address} "
+                    f"recipient={self.recipient}")
+
     ### create a property handler for "user"
     @property
     def user(self):
