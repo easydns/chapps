@@ -561,6 +561,7 @@ class Test_OutboundQuotaPolicy:
         assert not policy.approve_policy_request(groupsend_ppr)
         assert any("too many attempts" in rec.message for rec in caplog.records)
 
+    @pytest.mark.xfail
     def test_deny_rapid_attempts(self, allowable_ppr, rapid_attempts, populate_redis):
         """
         Verify that attempts which come too fast will be rejected.
