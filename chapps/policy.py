@@ -6,7 +6,7 @@ import time
 from contextlib import contextmanager
 import functools
 import redis
-import logging, chapps.logging
+import logging
 from expiring_dict import ExpiringDict
 from chapps.config import config
 from chapps.adapter import MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter
@@ -17,7 +17,6 @@ from chapps.signals import (
 )
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 seconds_per_day = 3600 * 24
 SENTINEL_TIMEOUT = 0.1
 

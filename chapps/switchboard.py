@@ -14,11 +14,10 @@ from chapps.signals import (
     AuthenticationFailureException,
 )
 from functools import cached_property
-import logging, chapps.logging
+import logging
 import asyncio
 
 logger = logging.getLogger(__name__)  # pragma: no cover
-logger.setLevel(logging.DEBUG)  # pragma: no cover
 
 
 class RequestHandler:

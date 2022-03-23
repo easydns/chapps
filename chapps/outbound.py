@@ -2,10 +2,9 @@
 from chapps.util import PostfixPolicyRequest
 from chapps.config import config
 from chapps.signals import ConfigurationError, AuthenticationFailureException
-import logging, chapps.logging
+import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-ability

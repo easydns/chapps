@@ -7,10 +7,9 @@ from chapps.switchboard import OutboundMultipolicyHandler
 from chapps.config import config
 from chapps.signals import SignalHandlerFactory
 from pathlib import Path
-import logging, chapps.logging
+import logging
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger("chapps."+__name__)
 APPNAME = "CHAPPS Outbound Multi"
 
 

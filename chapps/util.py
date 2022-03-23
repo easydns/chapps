@@ -4,10 +4,9 @@ These are the utility classes for CHAPPS
 """
 from collections.abc import Mapping
 import re
-import logging, chapps.logging
+import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class AttrDict:

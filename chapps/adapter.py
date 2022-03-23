@@ -2,7 +2,7 @@
 import mariadb
 
 # import re ### needed if implementing domain_re_for_user()
-import logging, chapps.logging
+import logging
 from chapps.config import config
 
 logger = logging.getLogger(__name__)  # pragma: no cover
