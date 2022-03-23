@@ -1,6 +1,6 @@
 """Signal handlers for CHAPPS"""
 import signal, asyncio
-import logging, chapps.logging
+import logging
 from chapps.config import config
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ class SignalHandlerFactory:  # pragma: no cover
 
         def signal_handler_closure(sig, frame=None):
             if sig in {signal.SIGTERM, sig.SIGINT}:
-                logger.debug(f"CHAPPS exiting on {signal.Signals(sig)} ({sig}).")
+                logger.info(f"CHAPPS exiting on {signal.Signals(sig)} ({sig}).")
                 raise SystemExit
 
         return signal_handler_closure
