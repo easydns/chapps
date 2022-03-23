@@ -215,7 +215,7 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     redis_key_prefix = "oqp"
 
-    def __init__(self, cfg=None, *, enforcement_interval=None, min_delta=5):
+    def __init__(self, cfg=None, *, enforcement_interval=None, min_delta=0):
         """first, optional positional argument: a CHAPPSConfig object to use
            named arguments: enforcement_interval will default to seconds per day if not provided
                             min_delta defaults to 5 seconds, to prevent spamming; set to 0 to disable
