@@ -22,12 +22,6 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
 
     def __str__(self):
         try:
-            return f"OutboundPPR({self.user}:{self.instance} as {self.sender}, #recip={len(self.recipients)})"
-        except Exception:
-            return f"OutboundPPR(:{self.instance}) is missing sender and/or user_key"
-
-    def _maillog_repr(self):
-        try:
             return (f"i={self.instance} "
                     f"user={self.user} "
                     f"sender={self.sender or 'None'} "
