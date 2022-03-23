@@ -21,7 +21,7 @@ class LogSetup:  # pragma: no cover
     def __init__(self):
         if not logging.getLogger(None).hasHandlers():
             logging.basicConfig(
-                handlers=[debug_handler, maillog_handler]
+                handlers=[self.syslog_handler, self.maillog_handler]
             )
 
 
