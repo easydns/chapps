@@ -1,3 +1,6 @@
+v0.3.12
+	- making OQP throttling disabled by default; it needs some work
+	- adding log handler to send messages to the mail log
 v0.3.11
 	- modifying logic around user-key extraction, and adding new settings:
 	  require_user_key (boolean), and no_user_key_response (Postfix
