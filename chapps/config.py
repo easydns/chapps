@@ -7,7 +7,7 @@ import configparser
 from pathlib import Path
 from os import environ as env
 from chapps.util import AttrDict
-import logging, chapps.logging
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,11 @@ class CHAPPSConfig:
 
     @staticmethod
     def write_config(cp, fn):
-        """write config in cp to file named fn, if no such file exists; returns a Path object pointing at the config file"""
+        """
+        write config in cp to file named fn,
+        if no such file exists; returns a Path
+        object pointing at the config file
+        """
         config_file = Path(fn)
         if not config_file.parent.exists():
             try:
