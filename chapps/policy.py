@@ -287,7 +287,7 @@ class OutboundQuotaPolicy(EmailPolicy):
         if self.counting_recipients:
             tries_dict = {
                 (time_now_s + f":{i:05d}"): time_now
-                for i, r in enumerate(ppr.recipient.split(","))
+                for i, r in enumerate(ppr.recipients)
             }
         else:
             tries_dict = {time_now_s: time_now}
@@ -392,22 +392,35 @@ class OutboundQuotaPolicy(EmailPolicy):
         recipient serial number separated by a colon, in order to ensure that
         each recipient is listed as an attempt in the log.
         """
-        if len(attempts) < 2:
-            return float('inf')
         delta_index = [-1, -2]
-        if self.counting_recipients:
+        if not self.counting_recipients:
+            if len(attempts) < 2:
+                return float('inf')
+        elif len(attempts) > len(ppr.recipients):
             # skip back all but one recipient
             recipients_offset = 0 - len(ppr.recipients)
             delta_index = [d + recipients_offset for d in delta_index]
+        else:
+            logger.debug()
+            return float('inf')  # automatically wins
         logger.debug(
             f"Looking at time-delta for {ppr}: indices {delta_index!r}"
         )
-        timestamps = [
-            float(t.decode("utf-8").split(":")[0])
-            if ":" in t.decode("utf-8")
-            else float(t.decode("utf-8"))
-            for t in [attempts[i] for i in delta_index if i < len(attempts)]
-        ]
+        try:
+            timestamps = [
+                float(t.decode("utf-8").split(":")[0])
+                if ":" in t.decode("utf-8")
+                else float(t.decode("utf-8"))
+                for t in [attempts[i] for i in delta_index if i < len(attempts)]
+            ]
+        except IndexError:
+            msg = (f"Recipients={-recipients_offset}"
+                   f" delta_indices={delta_index!r}"
+                   f" Attempts: (#{len(attempts)})")
+            if len(attempts) < 10:
+                msg += f" {attempts!r}"
+            logger.exception(msg)
+            return float('inf')
         if len(timestamps) == 2:
             logger.debug(
                 f"attempts: {[attempts[i] for i in delta_index]}; timestamps: {timestamps!r}"
