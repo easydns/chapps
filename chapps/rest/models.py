@@ -17,6 +17,46 @@ class APIException(str, Enum):
     internal = "internal"
 
 
+class JoinAssoc:
+    """
+    A class for representing joins via jointable
+    There is probably some way to use SQLA for this
+    but I am using it wrongly, to avoid loading associations
+    just in order to link them to other objects
+    via a join table
+    """
+
+    def __init__(
+        self,
+        source_model,
+        source_id: str,
+        *,
+        assoc_name: str,
+        assoc_type,
+        assoc_model,
+        assoc_id: str,
+        table,
+    ):
+        self.source_model = source_model
+        self.source_id = source_id
+        self.assoc_name = assoc_name
+        self.assoc_type = assoc_type
+        self.assoc_model = assoc_model
+        self.assoc_id = assoc_id
+        self.table = table
+
+    def insert(self):
+        return self.table.insert()
+
+    def values(self, item, assoc):
+        try:
+            i = iter(assoc)
+            ins = [{self.source_id: item.id, self.assoc_id: val} for val in i]
+        except TypeError:
+            ins = [{self.source_id: item.id, self.assoc_id: assoc}]
+        return ins
+
+
 # a metaclass for passing calls through to the orm_model
 class CHAPPSMetaModel(ModelMetaclass):
     def __getattr__(cls, var):
@@ -47,6 +87,12 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
         except TypeError:
             return cls.from_orm(orm_instance)
 
+    @classmethod
+    def join_assoc(cls, **kwargs):
+        # if it became necessary to track some other arbitrary id-column name
+        # we could accomplish that with a metaclass, and then just set it
+        # in each subclass
+        return JoinAssoc(cls, cls.__name__.lower()+"_id", **kwargs)
 
 class User(CHAPPSModel):
     """API model to represent users"""
