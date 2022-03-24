@@ -14,9 +14,7 @@ logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 
 async def list_query_params(
-    skip: Optional[int] = 0,
-    limit: Optional[int] = 1000,
-    q: Optional[str] = "%",
+    skip: Optional[int] = 0, limit: Optional[int] = 1000, q: Optional[str] = "%"
 ):
     return dict(q=q, skip=skip, limit=limit)
 
@@ -106,18 +104,11 @@ def list_items(cls, *, response_model, engine=sql_engine):
     return list_i
 
 
-def create_item(
-    cls,
-    *,
-    response_model,
-    params=dict(name=str),
-    assoc=None,
-    engine=sql_engine,
-):
+def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engine):
     """
     Build a route to create items.
     """
-
+    params = params or dict(name=str)
     @db_interaction(cls=cls, engine=engine)
     async def create_i(*pargs, **args):
         """
@@ -125,47 +116,46 @@ def create_item(
         we sort out the annotations for FastAPI after
         """
         extras = {}
-        # if assoc:
-        #     extras = {
-        #         a.name: (
-        #             a.join_table,
-        #             a.source_id,
-        #             a.model_id,
-        #             args.pop(a.name),
-        #         )
-        #         for a in assoc
-        #         if a.name in args
-        #     }
+        assoc_ret = {}
+        if assoc:
+            extras = {
+                a.assoc_name: (
+                    a,
+                    args.pop(a.assoc_name),
+                )
+                for a in assoc
+                if a.assoc_name in args
+            }
         item = cls.Meta.orm_model(**args)
         try:
             session.add(item)
             session.commit()
         except IntegrityError:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Unique key conflict.",
+                status_code=status.HTTP_409_CONFLICT, detail="Unique key conflict."
             )
-        # if assoc:
-        #     for k, (t, s_id, m_id, v) in extras:
-        #         try:
-        #             i = iter(v)
-        #             ins = [{s_id: item.id, m_id: val} for val in i]
-        #         except TypeError:
-        #             ins = [{s_id: item.id, m_id: v}]
-        #         try:
-        #             session.execute(t.insert(), ins)
-        #             session.commit()
-        #         except IntegrityError:
-        #             raise HTTPException(
-        #                 status_code=status.HTTP_409_CONFLICT,
-        #                 detail=(
-        #                     "Unable to create requested association."
-        #                     "  Please check associate object IDs and"
-        #                     " try again."
-        #                 ),
-        #             )
+        except Exception:
+            logger.exception("create_i: ")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if extras:
+            for assoc_name, (assc, vals) in extras.items():
+                if not vals:  # no empty inserts
+                    continue
+                try:
+                    session.execute(assc.insert(), assc.values(item, vals))
+                    session.commit()
+                    assoc_ret[assoc_name] = assc.assoc_model.wrap(getattr(item, assoc_name))
+                except IntegrityError:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=(
+                            "Unable to create requested association to"
+                            "{assc.assoc_model.__name__.lower()} entries."
+                            "  Please check object ids and try again."
+                        )
+                    )
 
-        return response_model.send(cls.wrap(item))
+        return response_model.send(cls.wrap(item), **assoc_ret)
 
     routeparams = [  # assemble signature for FastAPI
         inspect.Parameter(
@@ -176,18 +166,19 @@ def create_item(
         )
         for param, type_ in params.items()
     ]
-    # if assoc:
-    #     routeparams.extend(
-    #         [
-    #             inspect.Parameter(
-    #                 name=a.name,
-    #                 kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-    #                 default=Body(None),
-    #                 annotation=a.type_,
-    #             )
-    #             for a in assoc
-    #         ]
-    #     )
+    logger.debug(f"Got routeparams: {routeparams!r}")
+    if assoc:
+        routeparams.extend(
+            [
+                inspect.Parameter(
+                    name=a.assoc_name,
+                    kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=Body(None),
+                    annotation=a.assoc_type,
+                )
+                for a in assoc
+            ]
+        )
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
     return create_i
