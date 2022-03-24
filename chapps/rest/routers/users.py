@@ -1,18 +1,8 @@
-from typing import Optional, List
-from fastapi import APIRouter, Body, Path, HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from typing import List
+from fastapi import status, APIRouter, Path
 from ..dbsession import sql_engine
-from ..models import (
-    User,
-    Quota,
-    Domain,
-    UserResp,
-    UsersResp,
-    DeleteResp,
-    ErrorResp,
-)
-from .common import get_item_by_id, list_items, list_query_params
+from ..models import User, Quota, Domain, UserResp, UsersResp, DeleteResp
+from .common import get_item_by_id, list_items, create_item
 import logging
 import chapps.logging
 
@@ -20,27 +10,40 @@ logger = logging.getLogger(__name__)
 logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 api = APIRouter(
-    prefix="/users",
-    tags=["users"],
-    responses={404: {"description": "User not found."}},
+    prefix="/users", tags=["users"], responses={404: {"description": "User not found."}}
 )
 
 
-@api.post(
+api.post(
     "/",
     status_code=201,
-    responses={400: {"description": "Could not create user"}},
+    response_model=UserResp,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Could not create user."},
+        status.HTTP_409_CONFLICT: {"description": "Unique key error."},
+    },
+)(
+    create_item(
+        User,
+        response_model=UserResp,
+        assoc=[
+            User.join_assoc(
+                assoc_name="quota",
+                assoc_type=int,
+                assoc_model=Quota,
+                assoc_id="quota_id",
+                table=User.Meta.orm_model.metadata.tables["quota_user"],
+            ),
+            User.join_assoc(
+                assoc_name="domains",
+                assoc_type=List[int],
+                assoc_model=Domain,
+                assoc_id="domain_id",
+                table=User.Meta.orm_model.metadata.tables["domain_user"],
+            ),
+        ],
+    )
 )
-async def create_user(
-    user: User,
-    quota_id: int = Body(
-        None, gt=0, title="Optionally supply a quota ID to link"
-    ),
-    domain_ids: List[int] = Body(
-        None, gt=0, title="Optionally supply a list of domain IDs to link"
-    ),
-):
-    return UserResp.send(new_user, **extra_keys)
 
 
 @api.delete("/{user_id}", response_model=DeleteResp)

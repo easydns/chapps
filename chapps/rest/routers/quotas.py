@@ -1,12 +1,6 @@
-from typing import Optional, List
-from fastapi import APIRouter, Body, Path, HTTPException, Depends
+from fastapi import APIRouter, status
 from chapps.rest.models import Quota, QuotaResp, QuotasResp
-from chapps.rest.routers.common import (
-    list_query_params,
-    get_item_by_id,
-    list_items,
-    create_item,
-)
+from .common import get_item_by_id, list_items, create_item
 import logging
 import chapps.logging
 
@@ -20,20 +14,19 @@ api = APIRouter(
 )
 
 
-api.get("/", response_model=QuotasResp)(
-    list_items(Quota, response_model=QuotasResp)
-)
+api.get("/", response_model=QuotasResp)(list_items(Quota, response_model=QuotasResp))
 
 
 api.get("/{item_id}", response_model=QuotaResp)(
     get_item_by_id(Quota, response_model=QuotaResp)
 )
 
-api.post("/", status_code=201, response_model=QuotaResp)(
-    create_item(
-        Quota, response_model=QuotaResp, params=dict(name=str, quota=int)
-    )
-)
+api.post(
+    "/",
+    status_code=201,
+    response_model=QuotaResp,
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Unique key error."}},
+)(create_item(Quota, response_model=QuotaResp, params=dict(name=str, quota=int)))
 
 logger.debug("Created Quota::create_i")
 # @api.post("/")
