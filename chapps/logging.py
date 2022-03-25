@@ -3,6 +3,7 @@ import logging
 from logging.handlers import SysLogHandler
 
 DEFAULT_LEVEL = logging.DEBUG
+DEFAULT_FACILITY = SysLogHandler.LOG_LOCAL0
 
 
 class LogSetup:  # pragma: no cover
@@ -11,9 +12,7 @@ class LogSetup:  # pragma: no cover
     )
     maillog_formatter = logging.Formatter("CHAPPS:%(levelname)s %(message)s")
 
-    syslog_handler = SysLogHandler(
-        facility=SysLogHandler.LOG_LOCAL0, address="/dev/log"
-    )
+    syslog_handler = SysLogHandler(facility=DEFAULT_FACILITY, address="/dev/log")
     syslog_handler.setLevel(DEFAULT_LEVEL)
     syslog_handler.setFormatter(maillog_formatter)  # or debug_formatter
 
