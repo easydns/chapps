@@ -39,13 +39,18 @@ at its default config path, `/etc/chapps/chapps.ini`, or the value of
 the environment variable `CHAPPS_CONFIG` if it is set.  Note that
 default settings for all available submodules will be produced.  At
 the time of writing, each script runs its own type of policy handler,
-so only the settings for that policy will be needed, plus the general
-CHAPPS settings and the Redis settings.  Policies have separate
-listening addresses and ports, so that they may run simultaneously on
-the same server.
+so only the settings for the policies of that handler will be needed,
+plus the general CHAPPS settings and the Redis settings.
+
+Policies may each specify separate listening addresses and ports, so
+that they may run simultaneously on the same server.  For multi-policy
+handlers, the first handler specified will be the one whose network
+settings are used.  It is recommended to configure those elements only
+on that policy, or to keep them in sync on all policies which are
+handled together.
 
 (The global CHAPPS listener config will be used in the future to
-provide an API for other components to query CHAPPS on the status of
+configure an API for other components to query CHAPPS on the status of
 quotas, etc.)
 
 Example Postfix configs are included in the `postfix` directory,
@@ -54,6 +59,10 @@ services will be implemented in a very similar way in `main.cf`,
 probably in combination with other policies.  The examples provided
 are the same configs used for testing, and are necessarily stripped
 down to focus just on that particular service.
+
+An example **rsyslog** config is also included; modification is
+encouraged.  If you wish to keep the debug logs in their special
+destination, ensure that you create a log-rotation profile for it.
 
 ## Installation
 
@@ -68,27 +77,36 @@ package; it will not install properly without Connector/C installed,
 which is not a Python package.  (Perhaps this dependency should be
 left out.)
 
+It is highly recommended to install CHAPPS into a venv.  You may need
+to install the system package `python3-venv` in order for this to
+work:
+```
+python3 -m venv chapps-venv
+. chapps-venv/bin/activate
+```
+
 The package may be installed via PyPI, using the following command:
 
 ```
 python3 -m pip install chapps
 ```
 
-In such a case, the SystemD service files are installed to a folder
-called `install` inside the venv directory, and Postfix
-example/testing configs are located in the `postfix` folder.  Scripts
+With a venv, the SystemD service files are installed to a folder
+called `chapps/install` inside the venv directory, and Postfix
+example/testing configs are located in the `chapps/postfix` folder.  Scripts
 and package go to `bin` and `lib/.../chapps` as expected.  Use of a
-venv is recommended, though it may mean some changes are needed to the
-service files as provided.
+venv is recommended, as the SystemD service description files provided
+are formatted during the install process to launch the services correctly
+within their venv.
 
-Installation artifacts are available in the `install` directory,
-including a shell script to copy things to their places, and the
-SystemD service files for starting the outbound quota and greylisting
-services.  See the [INSTALLATION](INSTALLATION.md) file.  Install
-scripts were developed in our environment for test-deployment purposes
-and may be abandoned once the package is available via PyPI.
+Without a venv, they go to various system locations,
+with the ancillary `chapps` directory usually showing up at
+`/usr/local/chapps`.  YMMV.  A venv will keep things organized.
 
-There is also a Python script in the install directory, the purpose of
+For more information about installing, see the
+[INSTALLATION](INSTALLATION.md) file.
+
+There is a Python script in the install directory, the purpose of
 which is to create the database schema required by the library.  It
 does not create the database itself.  Before running this script,
 ensure that the CHAPPS configuration file contains the correct
