@@ -32,9 +32,39 @@ The test suite has several more dependencies.  In order to run tests, or otherwi
 CHAPPS tools are generally meant to run as a service (daemon), and thus managed by SystemD or supervisord.
 Since I am working in a Debian environment, with SystemD, that is what I am aiming to support first.
 
-Right now, I am going to provide SystemD profiles which can be copied to the appropriate location on your
-system; for me that location is `/usr/lib/systemd/system`
+It is **highly recommended** to __install CHAPPS via PyPI into a venv__, and use it from there.  When installed
+this way, CHAPPS automatically formats SystemD configuration files which will invoke the scripts properly
+so that there is no confusion about how to launch a service which needs to run in a venv.
 
+For example, in a shell, do this:
+```
+/home/chapps# python3 -m venv venv
+/home/chapps# . venv/bin/activate
+/home/chapps# pip install chapps
+```
+or `python -m pip install chapps` if you're feeling canonical; once the venv is activated they amount to the same thing.
+
+>>>Please note that your system may require various system (APT/yum, etc) packages installed before CHAPPS can install properly.  They are documented at the top of this file.
+
+After installation, there will be a `chapps` directory under the venv
+where installation artifacts and example Postfix configs may be found,
+along with a copy of these instructions and the README.  In the
+`<venv>/chapps/install` directory, then, you will find the SystemD
+profiles and the example **rsyslog** config.  Copy the **rsyslog**
+config to `/etc/rsyslog.d` (or whatever location is appropriate), edit
+it to your liking, and restart **rsyslog**.  On Ubuntu, it may be
+necessary to prepend the name with a number, such as `30-chapps.conf`,
+in order to get it to run before all the default log routes are
+defined.
+
+As for the SystemD profiles, you may choose to copy them to the system
+location, but my recommendtation is to *link* them, using `systemctl
+[link|enable] <path>` or the Ansible (et al.) equivalent, to cause
+SystemD to make a link from its control directories to these profiles,
+which makes administration, uninstallation, upgrading, etc. so much
+easier.
+
+If you're copying the files:
 Once the SystemD profiles are in place, let SystemD know about them by running:
 ```
 systemctl daemon-reload
@@ -49,7 +79,10 @@ In order to start the service immediately, without rebooting, use:
 systemctl start <service>
 ```
 
-In bullet points:
+### To Sum Up
+#### (or: Getting the dumb thing to run)
+
+In bullet points, there are the prerequisites:
 - the library (and its dependencies) must be in the Python search path
 - the script must be executable, and its path must be correct in the SystemD profile
 - the SystemD profile needs to go into a place where SystemD will find it and act on it
@@ -60,6 +93,12 @@ In bullet points:
 Optionally:
 - modify your Postfix service profile to add a `Requires=` line to ensure that the policy service is running
   before Postfix starts; we use RequiredBy= so this isn't strictly necessary.
+
+## Unrecommended: Global install via shell script
+
+The rest of the instructions are left below in hopes they will be helpful to people who are trying to install with a script, into global system directories.  This really is not a very good idea, and is unlikely to go well, and also is likely to make upgrading really difficult
+
+Proceed at your own risk.
 
 ## Using the Install script -- only for git checkouts
 

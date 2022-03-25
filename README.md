@@ -126,6 +126,28 @@ with a large volume of email.  Since SPF doesn't make much use of
 Redis, the inbound load may be lighter than the outbound load,
 depending on which things happen more at a particular site.
 
+### Logging
+
+At this time, CHAPPS uses **syslog**, and transmits logs on the
+`local0` facility.  CHAPPS sends a fair amount of debug information at
+the DEBUG level.  Right now, the application's facility and level may
+not be adjusted via the config file; later this may be implemented.
+For the time being, it seems sufficient to control logging via the
+**rsyslog** configuration used to control log entries on `local0`.
+
+The example provided (in the `install` directory) sends all logs to a
+special log (the path needs to exist and belong to the syslog user,
+whether that be `syslog` (as on Ubuntu) or `root` under Debian).  As
+long as the path exists and is writable by **rsyslog**, it will create
+the log.  The example also sends logs at INFO level or above to
+`/var/log/mail.log`, which generally is the destination that
+**rsyslog** uses for mail-related logs.
+
+Of course, site operators are encouraged to alter this example config
+to their needs.  For those who wish to monkeypatch facility and level,
+it is set in one place, at the top of `chapps.logging`.
+
+
 ## Outbound Services
 
 Policy services can be divided into those which work on outbound mail,
@@ -505,6 +527,7 @@ A mini-roadmap of upcoming changes:
 minor:
 
   - SDA Redis keys will have tunable expiry times
+  - Look into specifying log facility and level in the config file
 
 major:
 
