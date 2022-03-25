@@ -125,6 +125,18 @@ class Test_Domains_API:
             "version": "CHAPPS v0.4",
         }
 
+    @pytest.mark.timeout(2)
+    def test_delete_domain(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.delete("/domains/", json={1})
+        assert response.status_code == 200
+        assert response.json() == {
+            "status": True,
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
 
 class Test_Quotas_API:
     """Tests of the Quota CRUD API"""
