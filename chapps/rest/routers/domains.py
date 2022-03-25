@@ -2,7 +2,7 @@ from typing import List
 from starlette import status
 from fastapi import APIRouter  # , Body, Path, HTTPException
 from chapps.util import AttrDict
-from chapps.rest.models import User, Domain, DomainResp, DomainsResp
+from chapps.rest.models import User, Domain, DomainResp, DomainsResp, DeleteResp
 from .common import get_item_by_id, list_items, create_item
 import logging
 import chapps.logging
@@ -46,3 +46,16 @@ api.post(
         ],
     )
 )
+
+api.delete(
+    "/",
+    status_code=200,
+    response_model=DeleteResp,
+    responses={
+        status.HTTP_202_ACCEPTED: {"description": "Items will be deleted."},
+        status.HTTP_204_NO_CONTENT: {"description": "No item to delete."},
+        status.HTTP_409_CONFLICT: {"description": "Database integrity conflict."},
+    },
+)(
+    delete_item(Domain)
+)  # params=dict(ids=List[int]) by default
