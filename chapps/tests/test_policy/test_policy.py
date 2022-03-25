@@ -561,6 +561,7 @@ class Test_OutboundQuotaPolicy:
         assert not policy.approve_policy_request(groupsend_ppr)
         assert any("too many attempts" in rec.message for rec in caplog.records)
 
+    @pytest.mark.skip  # no longer the default; modified in parallel branch
     def test_deny_rapid_attempts(self, allowable_ppr, rapid_attempts, populate_redis):
         """
         Verify that attempts which come too fast will be rejected.
@@ -612,12 +613,15 @@ class Test_OutboundQuotaPolicy:
     ### good reason to store a memo of users to load en-masse
 
 
-auto_ppr_param_list = _auto_ppr_param_list(senders=[
-    "ccullen@easydns.com",
-    "mautic+bounce_622b80da90870@easydns.com",
-    "weirdo@twodomains.ca@weird.com",
-    "bareword",
-])
+auto_ppr_param_list = _auto_ppr_param_list(
+    senders=[
+        "ccullen@easydns.com",
+        "mautic+bounce_622b80da90870@easydns.com",
+        "weirdo@twodomains.ca@weird.com",
+        "bareword",
+    ]
+)
+
 
 class Test_SenderDomainAuthPolicy:
     def test_sda_fmtkey(self):
@@ -625,11 +629,7 @@ class Test_SenderDomainAuthPolicy:
         redis_key = policy._fmtkey("ccullen@easydns.com", "chapps.io")
         assert redis_key == "sda:ccullen@easydns.com:chapps.io"
 
-    @pytest.mark.parametrize(
-        "auto_ppr, expected_result",
-        auto_ppr_param_list,
-        ids=idfn,
-    )
+    @pytest.mark.parametrize("auto_ppr, expected_result", auto_ppr_param_list, ids=idfn)
     def test_get_sender_domain(self, auto_ppr, expected_result):
         policy = SenderDomainAuthPolicy()
         if isclass(expected_result) and issubclass(expected_result, Exception):
