@@ -1,11 +1,16 @@
 """SQLAlchemy ORM Models to correspond to Pydantic models for API"""
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, select
-from sqlalchemy.orm import (
-    declarative_base,
-    relationship,
-    backref,
-    DeclarativeMeta,
+from typing import List
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    Table,
+    select,
+    tuple_,
+    delete,
 )
+from sqlalchemy.orm import declarative_base, relationship, backref, DeclarativeMeta
 import logging
 import chapps.logging
 
@@ -25,9 +30,10 @@ class DB_Customizations(DeclarativeMeta):
         return select(cls).where(cls.name.like(q))
 
     def windowed_list(cls, q: str = "%", skip: int = 0, limit: int = 1000):
-        return (
-            cls.select_by_pattern(q).offset(skip).limit(limit).order_by(cls.id)
-        )
+        return cls.select_by_pattern(q).offset(skip).limit(limit).order_by(cls.id)
+
+    def remove(cls, ids: List[int]):
+        return delete(cls).where(tuple_(cls.id).in_([tuple(i) for i in ids]))
 
 
 # declare DB model base class
