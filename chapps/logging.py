@@ -3,27 +3,25 @@ import logging
 from logging.handlers import SysLogHandler
 
 DEFAULT_LEVEL = logging.DEBUG
-MAILLOG_LEVEL = logging.INFO
+DEFAULT_FACILITY = SysLogHandler.LOG_LOCAL0
 
 
 class LogSetup:  # pragma: no cover
-    syslog_formatter = logging.Formatter("CHAPPS:%(levelname)s %(filename)s@%(lineno)s: %(message)s")
+    debug_formatter = logging.Formatter(
+        "CHAPPS:%(levelname)s %(filename)s@%(lineno)s: %(message)s"
+    )
     maillog_formatter = logging.Formatter("CHAPPS:%(levelname)s %(message)s")
 
-    syslog_handler = SysLogHandler(facility=SysLogHandler.LOG_LOCAL0, address="/dev/log")
+    syslog_handler = SysLogHandler(facility=DEFAULT_FACILITY, address="/dev/log")
     syslog_handler.setLevel(DEFAULT_LEVEL)
-    syslog_handler.setFormatter(syslog_formatter)
-
-    maillog_handler = SysLogHandler(facility=SysLogHandler.LOG_MAIL, address="/dev/log")
-    maillog_handler.setLevel(MAILLOG_LEVEL)
-    maillog_handler.setFormatter(maillog_formatter)
+    syslog_handler.setFormatter(maillog_formatter)  # or debug_formatter
 
     def __init__(self):
         if not logging.getLogger(None).hasHandlers():
-            logging.basicConfig(
-                handlers=[self.syslog_handler, self.maillog_handler]
-            )
+            logging.basicConfig(handlers=[self.syslog_handler])
 
 
-logsetup = LogSetup()  # pragma: no cover
+logsetup = LogSetup()
 logger = logging.getLogger("chapps")
+# without this, the library may not emit logs from a script
+logger.setLevel(DEFAULT_LEVEL)
