@@ -92,7 +92,8 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
         # if it became necessary to track some other arbitrary id-column name
         # we could accomplish that with a metaclass, and then just set it
         # in each subclass
-        return JoinAssoc(cls, cls.__name__.lower()+"_id", **kwargs)
+        return JoinAssoc(cls, cls.__name__.lower() + "_id", **kwargs)
+
 
 class User(CHAPPSModel):
     """API model to represent users"""
@@ -129,14 +130,12 @@ class Domain(CHAPPSModel):
 class CHAPPSResponse(BaseModel):
     version: str
     timestamp: float
-    response: object
+    response: Optional[object] = None
 
     @classmethod
     def send(model, response, **kwargs):
         """Utility function for encapsulating responses in a standard body"""
-        return model(
-            version=verstr, timestamp=time.time(), response=response, **kwargs
-        )
+        return model(version=verstr, timestamp=time.time(), response=response, **kwargs)
 
 
 class UserResp(CHAPPSResponse):
@@ -181,7 +180,7 @@ class ConfigResp(CHAPPSResponse):
 
 
 class DeleteResp(TextResp):
-    status: bool
+    response: "deleted"
 
 
 ### the following classes are somewhat speculative for now
