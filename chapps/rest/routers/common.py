@@ -72,6 +72,10 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
 
     @db_interaction(cls=cls, engine=engine)
     async def get_by_id(item_id: int):
+        f"""
+        Retrieve {cls.__name__} records by ID,
+        with any associated records
+        """
         stmt = cls.select_by_id(item_id)
         item = session.scalar(stmt)
         if item:
@@ -96,6 +100,7 @@ def list_items(cls, *, response_model, engine=sql_engine):
 
     @db_interaction(cls=cls, engine=engine)
     async def list_i(qparams: dict = Depends(list_query_params)):
+        f"""List {cls.__name__}s"""
         stmt = cls.windowed_list(**qparams)
         items = cls.wrap(session.scalars(stmt))
         if items:
@@ -104,25 +109,37 @@ def list_items(cls, *, response_model, engine=sql_engine):
     return list_i
 
 
+def delete_item(cls, *, response_model=DeleteResp, params=None, engine=sql_engine):
+    f"""Delete {cls.__name__}"""
+    params = params or dict(ids=List[int])
+
+    @db_interaction(cls=cls, engine=engine)
+    async def delete_i(*pargs, **args):
+        f"""Delete {cls.__name__}"""
+        try:
+            session.execute(cls.remove(args["ids"]))
+        except IntegrityError:
+            logger.exception("trying to delete {cls.__name__} with {args!r}")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Database integrity conflict.",
+            )
+
+
 def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engine):
     """
     Build a route to create items.
     """
     params = params or dict(name=str)
+
     @db_interaction(cls=cls, engine=engine)
     async def create_i(*pargs, **args):
-        """
-        the args are k-v pairs, the keys are column names
-        we sort out the annotations for FastAPI after
-        """
+        f"""Create {cls.__name__}"""
         extras = {}
         assoc_ret = {}
         if assoc:
             extras = {
-                a.assoc_name: (
-                    a,
-                    args.pop(a.assoc_name),
-                )
+                a.assoc_name: (a, args.pop(a.assoc_name))
                 for a in assoc
                 if a.assoc_name in args
             }
@@ -144,7 +161,9 @@ def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engi
                 try:
                     session.execute(assc.insert(), assc.values(item, vals))
                     session.commit()
-                    assoc_ret[assoc_name] = assc.assoc_model.wrap(getattr(item, assoc_name))
+                    assoc_ret[assoc_name] = assc.assoc_model.wrap(
+                        getattr(item, assoc_name)
+                    )
                 except IntegrityError:
                     raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
@@ -152,7 +171,7 @@ def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engi
                             "Unable to create requested association to"
                             "{assc.assoc_model.__name__.lower()} entries."
                             "  Please check object ids and try again."
-                        )
+                        ),
                     )
 
         return response_model.send(cls.wrap(item), **assoc_ret)
