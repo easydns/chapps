@@ -49,7 +49,6 @@ api.post(
 
 api.delete(
     "/",
-    status_code=200,
     response_model=DeleteResp,
     responses={
         status.HTTP_202_ACCEPTED: {"description": "Items will be deleted."},
