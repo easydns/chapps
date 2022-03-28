@@ -100,6 +100,7 @@ class User(CHAPPSModel):
 
     class Config:
         orm_mode = True
+        schema_extra = dict(example=dict(name=("[user.identifier@]domain.name")))
 
     class Meta:
         orm_model = dbmodels.User
@@ -112,6 +113,7 @@ class Quota(CHAPPSModel):
 
     class Config:
         orm_mode = True
+        schema_extra = dict(example=dict(name="fiftyPerHour", quota=1200))
 
     class Meta:
         orm_model = dbmodels.Quota
@@ -122,6 +124,7 @@ class Domain(CHAPPSModel):
 
     class Config:
         orm_mode = True
+        schema_extra = dict(example=dict(name="[sub.]domain.tld"))
 
     class Meta:
         orm_model = dbmodels.Domain
@@ -131,6 +134,9 @@ class CHAPPSResponse(BaseModel):
     version: str
     timestamp: float
     response: object
+
+    class Config:
+        schema_extra = dict(version="CHAPPS v0.4", timestamp=time.time())
 
     @classmethod
     def send(model, response=None, **kwargs):

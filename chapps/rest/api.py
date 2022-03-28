@@ -4,17 +4,66 @@
 # coordinated by gunicorn (see FastAPI deployment docs)
 
 from chapps.config import config
+from chapps._version import __version__
 from chapps.rest.routers import users, domains, quotas
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 import logging
 import chapps.logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
-api = FastAPI()
+restpath = Path(__file__).resolve().parent
+rest_readme = restpath / "README.md"
+desc = rest_readme.open("rt").read()
+
+tags_metadata = [
+    dict(
+        name="users",
+        description=(
+            "CRUD operations involving users.  Update a user "
+            "to assign a new quota.  Some special routes are "
+            "planned for adding/removing just some domains without "
+            "having to handle the entire set of associations."
+        ),
+    ),
+    dict(
+        name="domains",
+        description=(
+            "CRUD operations for domains.  When creating a domain, "
+            "it is possible to specify a list of user-ids to "
+            "associate.  Some special routes are planned for managing"
+            " user associations (add/remove arbitrary) without having"
+            " to handle the entire set of associations."
+        ),
+    ),
+    dict(
+        name="quotas",
+        description=(
+            "CRUD operations for quotas.  Since there are very "
+            "few quotas compared to the number of users, there is "
+            "no support planned for managing users from their "
+            "associated quotas.  To change a quota for a user, "
+            "update the user."
+        ),
+    ),
+]
+
+api = FastAPI(
+    title="CHAPPS REST API",
+    description=desc,
+    version=__version__,
+    contact=dict(
+        name="Caleb S. Cullen",
+        url="https://github.com/easydns/chapps",
+        email="ccullen@easydns.com",
+    ),
+    license_info=dict(name="MIT License", url="https://mit-license.org/"),
+    openapi_tags=tags_metadata,
+)
 verstr = config.chapps.version
 api.include_router(users.api)
 api.include_router(domains.api)
@@ -22,9 +71,7 @@ api.include_router(quotas.api)
 
 
 @api.exception_handler(RequestValidationError)
-async def validation_exception_handler(
-    request: Request, exc: RequestValidationError
-):
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
     exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
     body = await request.json()
     logging.error(f"{body!r}: {exc_str}")
