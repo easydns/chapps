@@ -127,6 +127,7 @@ def delete_item(cls, *, response_model=DeleteResp, params=None, engine=sql_engin
         f"""Delete {cls.__name__}"""
         try:
             session.execute(cls.remove(item_ids))
+            session.commit()
         except IntegrityError:
             logger.exception("trying to delete {model_name(cls)} with {args!r}")
             raise HTTPException(
