@@ -144,6 +144,8 @@ class Test_Domains_API:
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
+        response = testing_api_client.get("/domains/1")
+        assert response.status_code == 404
 
 
 class Test_Quotas_API:
