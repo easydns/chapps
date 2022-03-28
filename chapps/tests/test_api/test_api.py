@@ -146,6 +146,15 @@ class Test_Domains_API:
         }
         response = testing_api_client.get("/domains/1")
         assert response.status_code == 404
+        response = testing_api_client.get("/users/1")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {"id": 1, "name": "ccullen@easydns.com"},
+            "domains": [],
+            "quota": {"id": 1, "name": "10eph", "quota": 240},
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
 
 
 class Test_Quotas_API:
