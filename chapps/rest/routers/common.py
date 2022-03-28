@@ -7,6 +7,7 @@ from functools import wraps
 import inspect
 import logging
 from chapps.rest.dbsession import sql_engine
+from chapps.rest.models import DeleteResp
 import chapps.logging
 
 logger = logging.getLogger(__name__)
@@ -35,22 +36,24 @@ def db_interaction(  # a decorator with parameters
        a delete operation could not find any objects to delete
     """
 
-    def interaction_wrapper(route_coroutine):
-        logger.debug(f"Wrapping {route_coroutine.__name__} for {cls.__name__}")
+    def interaction_wrapper(rt_coro):
+        logger.debug(f"Wrapping {rt_coro.__name__} for {cls.__name__}")
 
         exc = exception_message.format(
-            route_name=route_coroutine.__name__, model=cls.__name__.lower()
+            route_name=rt_coro.__name__, model=cls.__name__.lower()
         )
         empty = empty_set_message.format(
-            route_name=route_coroutine.__name__, model=cls.__name__.lower()
+            route_name=rt_coro.__name__, model=cls.__name__.lower()
         )
 
-        @wraps(route_coroutine)
+        @wraps(rt_coro)
         async def wrapped_interaction(*args, **kwargs):
             with Session(engine) as session:
-                route_coroutine.__globals__["session"] = session
+                rt_coro.__globals__["session"] = session
+                rt_coro.__globals__["model_name"] = cls.__name__.lower()
+
                 try:
-                    return await route_coroutine(*args, **kwargs)
+                    return await rt_coro(*args, **kwargs)
                 except Exception:
                     logger.exception(exc + f"({args!r},{kwargs!r})")
             raise HTTPException(status_code=404, detail=empty)
@@ -58,6 +61,10 @@ def db_interaction(  # a decorator with parameters
         return wrapped_interaction  # a coroutine
 
     return interaction_wrapper  # a regular function
+
+
+def model_name(cls):
+    return cls.__name__.lower()
 
 
 def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
@@ -71,7 +78,7 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
     """
 
     @db_interaction(cls=cls, engine=engine)
-    async def get_by_id(item_id: int):
+    async def get_i(item_id: int):
         f"""
         Retrieve {cls.__name__} records by ID,
         with any associated records
@@ -87,7 +94,8 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
             else:
                 return response_model.send(cls.wrap(item))
 
-    return get_by_id
+    # get_i.__name__ = f"get_{model_name(cls)}"
+    return get_i
 
 
 def list_items(cls, *, response_model, engine=sql_engine):
@@ -106,6 +114,7 @@ def list_items(cls, *, response_model, engine=sql_engine):
         if items:
             return response_model.send(items)
 
+    # list_i.__name__ = f"list_{model_name(cls)}"
     return list_i
 
 
@@ -114,16 +123,19 @@ def delete_item(cls, *, response_model=DeleteResp, params=None, engine=sql_engin
     params = params or dict(ids=List[int])
 
     @db_interaction(cls=cls, engine=engine)
-    async def delete_i(*pargs, **args):
+    async def delete_i(item_id: List[int]):
         f"""Delete {cls.__name__}"""
         try:
             session.execute(cls.remove(args["ids"]))
         except IntegrityError:
-            logger.exception("trying to delete {cls.__name__} with {args!r}")
+            logger.exception("trying to delete {model_name(cls)} with {args!r}")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Database integrity conflict.",
             )
+
+    # delete_i.__name__ = f"delete_{model_name(cls)}"
+    return delete_i
 
 
 def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engine):
@@ -131,6 +143,7 @@ def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engi
     Build a route to create items.
     """
     params = params or dict(name=str)
+    fname = f"create_{model_name(cls)}"
 
     @db_interaction(cls=cls, engine=engine)
     async def create_i(*pargs, **args):
@@ -152,7 +165,7 @@ def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engi
                 status_code=status.HTTP_409_CONFLICT, detail="Unique key conflict."
             )
         except Exception:
-            logger.exception("create_i: ")
+            logger.exception(f"{fname}: {args!r}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
         if extras:
             for assoc_name, (assc, vals) in extras.items():
@@ -200,4 +213,5 @@ def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engi
         )
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
+    # create_i.__name__ = fname
     return create_i

@@ -129,7 +129,7 @@ class Test_Domains_API:
     def test_delete_domain(
         self, fixed_time, testing_api_client, populated_database_fixture
     ):
-        response = testing_api_client.delete("/domains/", json={1})
+        response = testing_api_client.delete("/domains/", json=1)
         assert response.status_code == 200
         assert response.json() == {
             "status": True,
