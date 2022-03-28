@@ -32,8 +32,8 @@ class DB_Customizations(DeclarativeMeta):
     def windowed_list(cls, q: str = "%", skip: int = 0, limit: int = 1000):
         return cls.select_by_pattern(q).offset(skip).limit(limit).order_by(cls.id)
 
-    def remove(cls, ids: List[int]):
-        return delete(cls).where(tuple_(cls.id).in_([tuple(i) for i in ids]))
+    def remove(cls, ids: List[int]):  # (i,) creates a tuple w/ 1 element
+        return delete(cls).where(tuple_(cls.id).in_([(i,) for i in ids]))
 
 
 # declare DB model base class
