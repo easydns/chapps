@@ -16,9 +16,9 @@ api = APIRouter(
     responses={status.HTTP_404_NOT_FOUND: {"description": "Domain not found."}},
 )
 
-api.get("/")(list_items(Domain, response_model=DomainsResp))
+api.get("/", response_model=DomainsResp)(list_items(Domain, response_model=DomainsResp))
 
-api.get("/{item_id}")(
+api.get("/{item_id}", response_model=DomainResp)(
     get_item_by_id(Domain, response_model=DomainResp, assoc=[(User, "users")])
 )
 
@@ -47,15 +47,15 @@ api.post(
     )
 )
 
-# api.delete(
-#     "/",
-#     status_code=200,
-#     response_model=DeleteResp,
-#     responses={
-#         status.HTTP_202_ACCEPTED: {"description": "Items will be deleted."},
-#         status.HTTP_204_NO_CONTENT: {"description": "No item to delete."},
-#         status.HTTP_409_CONFLICT: {"description": "Database integrity conflict."},
-#     },
-# )(
-#     delete_item(Domain)
-# )  # params=dict(ids=List[int]) by default
+api.delete(
+    "/",
+    status_code=200,
+    response_model=DeleteResp,
+    responses={
+        status.HTTP_202_ACCEPTED: {"description": "Items will be deleted."},
+        status.HTTP_204_NO_CONTENT: {"description": "No item to delete."},
+        status.HTTP_409_CONFLICT: {"description": "Database integrity conflict."},
+    },
+)(
+    delete_item(Domain)
+)  # params=dict(ids=List[int]) by default
