@@ -133,9 +133,12 @@ class CHAPPSResponse(BaseModel):
     response: object
 
     @classmethod
-    def send(model, response, **kwargs):
+    def send(model, response=None, **kwargs):
         """Utility function for encapsulating responses in a standard body"""
-        return model(version=verstr, timestamp=time.time(), response=response, **kwargs)
+        mkwargs = dict(version=verstr, timestamp=time.time())
+        if response:
+            mkwargs["response"] = response
+        return model(**mkwargs, **kwargs)
 
 
 class UserResp(CHAPPSResponse):
@@ -180,7 +183,7 @@ class ConfigResp(CHAPPSResponse):
 
 
 class DeleteResp(TextResp):
-    response: "deleted"
+    response: str = "deleted"
 
 
 ### the following classes are somewhat speculative for now
