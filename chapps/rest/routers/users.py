@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import status, APIRouter, Path
 from ..dbsession import sql_engine
-from ..models import User, Quota, Domain, UserResp, UsersResp, DeleteResp
+from ..models import User, Quota, Domain, UserResp, UsersResp, DeleteResp, IntResp
 from .common import get_item_by_id, list_items, create_item, delete_item
 import logging
 import chapps.logging
@@ -59,17 +59,18 @@ api.get("/{item_id}", response_model=UserResp)(
 )
 
 
-@api.get("/user-count/")
+@api.get("/count/", response_model=IntResp)
 async def count_all_users():
     return await count_users("%")
 
 
-@api.get("/user-count/{pattern}")
+@api.get("/count/{pattern}", response_model=IntResp)
 async def count_users(pattern: str):
     cur = pca.conn.cursor()
     sanitized_pattern = pattern
-    query = f"SELECT COUNT( * ) FROM users WHERE name LIKE '%{sanitized_pattern}%';"
-    cur.execute(query)
+    query = f"SELECT COUNT( * ) FROM users WHERE name LIKE ?"
+    logger.debug(f"Attempting to count users like {pattern} with query {query}")
+    cur.execute(query, (f"%{pattern}%",))
     results = cur.fetchone()[0]
     cur.close()
     return IntResp.send(results)
