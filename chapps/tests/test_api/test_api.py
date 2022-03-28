@@ -73,6 +73,20 @@ class Test_Users_API:
             "version": "CHAPPS v0.4",
         }
 
+    @pytest.mark.timeout(2)
+    def test_delete_user(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.delete("/users/", json=[1])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "deleted",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.get("/users/1")
+        assert response.status_code == 404
+
 
 class Test_Domains_API:
     """Tests of the Domain CRUD API"""
@@ -195,3 +209,17 @@ class Test_Quotas_API:
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
+
+    @pytest.mark.timeout(2)
+    def test_delete_quota(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.delete("/quotas/", json=[3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "deleted",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.get("/quotas/3")
+        assert response.status_code == 404
