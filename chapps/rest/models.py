@@ -130,7 +130,7 @@ class Domain(CHAPPSModel):
 class CHAPPSResponse(BaseModel):
     version: str
     timestamp: float
-    response: Optional[object] = None
+    response: object
 
     @classmethod
     def send(model, response, **kwargs):
