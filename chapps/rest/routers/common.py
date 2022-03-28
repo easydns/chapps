@@ -94,7 +94,7 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
             else:
                 return response_model.send(cls.wrap(item))
 
-    # get_i.__name__ = f"get_{model_name(cls)}"
+    get_i.__name__ = f"get_{model_name(cls)}"
     return get_i
 
 
@@ -114,7 +114,7 @@ def list_items(cls, *, response_model, engine=sql_engine):
         if items:
             return response_model.send(items)
 
-    # list_i.__name__ = f"list_{model_name(cls)}"
+    list_i.__name__ = f"list_{model_name(cls)}"
     return list_i
 
 
@@ -123,18 +123,19 @@ def delete_item(cls, *, response_model=DeleteResp, params=None, engine=sql_engin
     params = params or dict(ids=List[int])
 
     @db_interaction(cls=cls, engine=engine)
-    async def delete_i(item_id: List[int]):
+    async def delete_i(item_ids: List[int]):
         f"""Delete {cls.__name__}"""
         try:
-            session.execute(cls.remove(args["ids"]))
+            session.execute(cls.remove(item_ids))
         except IntegrityError:
             logger.exception("trying to delete {model_name(cls)} with {args!r}")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Database integrity conflict.",
             )
+        return response_model.send()
 
-    # delete_i.__name__ = f"delete_{model_name(cls)}"
+    delete_i.__name__ = f"delete_{model_name(cls)}"
     return delete_i
 
 
@@ -213,5 +214,5 @@ def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engi
         )
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
-    # create_i.__name__ = fname
+    create_i.__name__ = fname
     return create_i
