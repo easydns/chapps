@@ -2,7 +2,7 @@ from typing import List
 from fastapi import status, APIRouter, Path
 from ..dbsession import sql_engine
 from ..models import User, Quota, Domain, UserResp, UsersResp, DeleteResp
-from .common import get_item_by_id, list_items, create_item
+from .common import get_item_by_id, list_items, create_item, delete_item
 import logging
 import chapps.logging
 
@@ -46,22 +46,15 @@ api.post(
 )
 
 
-@api.delete("/{user_id}", response_model=DeleteResp)
-async def delete_user(
-    user_id: int = Path(..., gt=0, title="The ID of the user to delete")
-):
-    return DeleteResp.send(response, status=status)
+api.delete("/", response_model=DeleteResp)(delete_item(User))
 
 
-api.get("/")(list_items(User, engine=sql_engine, response_model=UsersResp))
+api.get("/", response_model=UsersResp)(list_items(User, response_model=UsersResp))
 
 
-api.get("/{item_id}")(
+api.get("/{item_id}", response_model=UserResp)(
     get_item_by_id(
-        User,
-        engine=sql_engine,
-        response_model=UserResp,
-        assoc=[(Quota, "quota"), (Domain, "domains")],
+        User, response_model=UserResp, assoc=[(Quota, "quota"), (Domain, "domains")]
     )
 )
 

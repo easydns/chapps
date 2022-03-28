@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status
-from chapps.rest.models import Quota, QuotaResp, QuotasResp
-from .common import get_item_by_id, list_items, create_item
+from chapps.rest.models import Quota, QuotaResp, QuotasResp, DeleteResp
+from .common import get_item_by_id, list_items, create_item, delete_item
 import logging
 import chapps.logging
 
@@ -31,3 +31,5 @@ api.post(
 logger.debug("Created Quota::create_i")
 # @api.post("/")
 # async def create_quota(name: str=Body(...), limit: int=Body(...)):
+
+api.delete("/", response_model=DeleteResp)(delete_item(Quota))
