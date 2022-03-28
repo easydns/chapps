@@ -20,6 +20,10 @@ async def list_query_params(
     return dict(q=q, skip=skip, limit=limit)
 
 
+def model_name(cls):
+    return cls.__name__.lower()
+
+
 def db_interaction(  # a decorator with parameters
     *,
     cls,
@@ -36,24 +40,24 @@ def db_interaction(  # a decorator with parameters
        a delete operation could not find any objects to delete
     """
 
+    mname = model_name(cls)
+
     def interaction_wrapper(rt_coro):
         logger.debug(f"Wrapping {rt_coro.__name__} for {cls.__name__}")
 
-        exc = exception_message.format(
-            route_name=rt_coro.__name__, model=cls.__name__.lower()
-        )
-        empty = empty_set_message.format(
-            route_name=rt_coro.__name__, model=cls.__name__.lower()
-        )
+        exc = exception_message.format(route_name=rt_coro.__name__, model=mname)
+        empty = empty_set_message.format(route_name=rt_coro.__name__, model=mname)
 
         @wraps(rt_coro)
         async def wrapped_interaction(*args, **kwargs):
             with Session(engine) as session:
                 rt_coro.__globals__["session"] = session
-                rt_coro.__globals__["model_name"] = cls.__name__.lower()
+                rt_coro.__globals__["model_name"] = mname
 
                 try:
-                    return await rt_coro(*args, **kwargs)
+                    result = await rt_coro(*args, **kwargs)
+                    if result:
+                        return result
                 except Exception:
                     logger.exception(exc + f"({args!r},{kwargs!r})")
             raise HTTPException(status_code=404, detail=empty)
@@ -61,10 +65,6 @@ def db_interaction(  # a decorator with parameters
         return wrapped_interaction  # a coroutine
 
     return interaction_wrapper  # a regular function
-
-
-def model_name(cls):
-    return cls.__name__.lower()
 
 
 def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
