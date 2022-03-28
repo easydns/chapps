@@ -4,6 +4,14 @@ import pudb
 import chapps.config
 
 
+class Test_API_Health:
+    """Tests of the overall API"""
+
+    def test_api_docs_render(self, testing_api_client):
+        response = testing_api_client.get("/docs")
+        assert response.status_code == 200
+
+
 class Test_Users_API:
     """Tests of the User CRUD API"""
 
@@ -129,10 +137,10 @@ class Test_Domains_API:
     def test_delete_domain(
         self, fixed_time, testing_api_client, populated_database_fixture
     ):
-        response = testing_api_client.delete("/domains/", json=1)
+        response = testing_api_client.delete("/domains/", json=[1])
         assert response.status_code == 200
         assert response.json() == {
-            "status": True,
+            "response": "deleted",
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
