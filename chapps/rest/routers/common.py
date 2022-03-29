@@ -15,7 +15,9 @@ logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 
 async def list_query_params(
-    skip: Optional[int] = 0, limit: Optional[int] = 1000, q: Optional[str] = "%"
+    skip: Optional[int] = 0,
+    limit: Optional[int] = 1000,
+    q: Optional[str] = "%",
 ):
     return dict(q=q, skip=skip, limit=limit)
 
@@ -45,8 +47,12 @@ def db_interaction(  # a decorator with parameters
     def interaction_wrapper(rt_coro):
         logger.debug(f"Wrapping {rt_coro.__name__} for {cls.__name__}")
 
-        exc = exception_message.format(route_name=rt_coro.__name__, model=mname)
-        empty = empty_set_message.format(route_name=rt_coro.__name__, model=mname)
+        exc = exception_message.format(
+            route_name=rt_coro.__name__, model=mname
+        )
+        empty = empty_set_message.format(
+            route_name=rt_coro.__name__, model=mname
+        )
 
         @wraps(rt_coro)
         async def wrapped_interaction(*args, **kwargs):
@@ -118,7 +124,9 @@ def list_items(cls, *, response_model, engine=sql_engine):
     return list_i
 
 
-def delete_item(cls, *, response_model=DeleteResp, params=None, engine=sql_engine):
+def delete_item(
+    cls, *, response_model=DeleteResp, params=None, engine=sql_engine
+):
     f"""Delete {cls.__name__}"""
     params = params or dict(ids=List[int])
 
@@ -129,7 +137,9 @@ def delete_item(cls, *, response_model=DeleteResp, params=None, engine=sql_engin
             session.execute(cls.remove(item_ids))
             session.commit()
         except IntegrityError:
-            logger.exception("trying to delete {model_name(cls)} with {args!r}")
+            logger.exception(
+                "trying to delete {model_name(cls)} with {args!r}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Database integrity conflict.",
@@ -140,7 +150,100 @@ def delete_item(cls, *, response_model=DeleteResp, params=None, engine=sql_engin
     return delete_i
 
 
-def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engine):
+def update_item(cls, *, response_model, assoc=None, engine=sql_engine):
+    """
+    Build a route to update items.
+    """
+    mname = model_name(cls)
+    fname = f"update_{mname}"
+    params = dict(mname=cls)  # we are updating objects of this type
+
+    @db_interaction(cls=cls, engine=engine)
+    async def update_i(*pargs, **args):
+        f"""Update {cls.__name__}"""
+        extras = {}
+        assoc_ret = {}
+        if assoc:
+            extras = {
+                a.assoc_name: (a, args.pop(a.assoc_name))
+                for a in assoc
+                if a.assoc_name in args
+            }
+        item_id = args[mname].id
+        stmt = cls.update_by_id(args[mname])
+        try:
+            result = session.execute(stmt)
+            if result.rowcount > 0:  # commit if changes were made
+                session.commit()
+            else:  # return None if there is no record to update -> 404
+                return
+        except Exception:
+            logger.exception(f"{fname}: {args!r}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        item = session.scalar(cls.select_by_id(item_id))
+        if extras:
+            for assoc_name, (assc, vals) in extras.items():
+                if not vals:
+                    continue
+                try:
+                    session.execute(
+                        assc.delete().where(
+                            getattr(assc.table.c, assc.source_id) == item_id
+                        )
+                    )
+                    session.execute(assc.insert(), assc.values(item, vals))
+                    session.commit()
+                    assoc_ret[assoc_name] = assc.assoc_model.wrap(
+                        getattr(item, assoc_name)
+                    )
+                except IntegrityError:
+                    logger.exception(
+                        f"{fname}: associating {item} with"
+                        f" {assoc_name}s {vals!r}"
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=(
+                            "Unable to create requested association to"
+                            f"{assc.assoc_model.__name__.lower()} entries."
+                            "  Please check object ids and try again."
+                        ),
+                    )
+        return response_model.send(cls.wrap(item), **assoc_ret)
+
+    routeparams = [
+        inspect.Parameter(
+            name=param,
+            kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            default=Body(...),
+            annotation=type_,
+        )
+        for param, type_ in params.items()
+    ]
+    logger.debug(f"{fname} got routeparams {routeparams!r}")
+    if assoc:
+        routeparams.extend(
+            [
+                inspect.Parameter(
+                    name=a.assoc_name,
+                    kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=Body(None),
+                    annotation=a.assoc_type,
+                )
+                for a in assoc
+            ]
+        )
+    update_i.__signature__ = inspect.Signature(routeparams)
+    update_i.__annotations__ = params
+    update_i.__name__ = fname
+    return update_i
+
+
+def create_item(
+    cls, *, response_model, params=None, assoc=None, engine=sql_engine
+):
     """
     Build a route to create items.
     """
@@ -164,11 +267,14 @@ def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engi
             session.commit()
         except IntegrityError:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Unique key conflict."
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Unique key conflict.",
             )
         except Exception:
             logger.exception(f"{fname}: {args!r}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         if extras:
             for assoc_name, (assc, vals) in extras.items():
                 if not vals:  # no empty inserts
@@ -184,7 +290,7 @@ def create_item(cls, *, response_model, params=None, assoc=None, engine=sql_engi
                         status_code=status.HTTP_409_CONFLICT,
                         detail=(
                             "Unable to create requested association to"
-                            "{assc.assoc_model.__name__.lower()} entries."
+                            f"{assc.assoc_model.__name__.lower()} entries."
                             "  Please check object ids and try again."
                         ),
                     )
