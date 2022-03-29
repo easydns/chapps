@@ -134,7 +134,7 @@ def delete_item(
     async def delete_i(item_ids: List[int]):
         f"""Delete {cls.__name__}"""
         try:
-            session.execute(cls.remove(item_ids))
+            session.execute(cls.remove_by_id(item_ids))
             session.commit()
         except IntegrityError:
             logger.exception(
@@ -156,7 +156,7 @@ def update_item(cls, *, response_model, assoc=None, engine=sql_engine):
     """
     mname = model_name(cls)
     fname = f"update_{mname}"
-    params = dict(mname=cls)  # we are updating objects of this type
+    params = {mname: cls}  # we are updating objects of this type
 
     @db_interaction(cls=cls, engine=engine)
     async def update_i(*pargs, **args):
