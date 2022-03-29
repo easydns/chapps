@@ -7,10 +7,16 @@ from sqlalchemy import (
     ForeignKey,
     Table,
     select,
+    update,
     tuple_,
     delete,
 )
-from sqlalchemy.orm import declarative_base, relationship, backref, DeclarativeMeta
+from sqlalchemy.orm import (
+    declarative_base,
+    relationship,
+    backref,
+    DeclarativeMeta,
+)
 import logging
 import chapps.logging
 
@@ -30,10 +36,20 @@ class DB_Customizations(DeclarativeMeta):
         return select(cls).where(cls.name.like(q))
 
     def windowed_list(cls, q: str = "%", skip: int = 0, limit: int = 1000):
-        return cls.select_by_pattern(q).offset(skip).limit(limit).order_by(cls.id)
+        return (
+            cls.select_by_pattern(q).offset(skip).limit(limit).order_by(cls.id)
+        )
 
-    def remove(cls, ids: List[int]):  # (i,) creates a tuple w/ 1 element
+    def remove_by_id(cls, ids: List[int]):  # (i,) creates a tuple w/ 1 element
         return delete(cls).where(tuple_(cls.id).in_([(i,) for i in ids]))
+
+    def update_by_id(cls, item):
+        print(f"Got item:{item!r}")
+        args = {
+            k: getattr(item, k) for k in item.schema()["properties"].keys()
+        }
+        id = args.pop("id")
+        return update(cls).where(cls.id == id).values(**args)
 
 
 # declare DB model base class
