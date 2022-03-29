@@ -222,7 +222,6 @@ def update_item(cls, *, response_model, assoc=None, engine=sql_engine):
         )
         for param, type_ in params.items()
     ]
-    logger.debug(f"{fname} got routeparams {routeparams!r}")
     if assoc:
         routeparams.extend(
             [
@@ -235,6 +234,7 @@ def update_item(cls, *, response_model, assoc=None, engine=sql_engine):
                 for a in assoc
             ]
         )
+    logger.debug(f"{fname} got routeparams {routeparams!r}")
     update_i.__signature__ = inspect.Signature(routeparams)
     update_i.__annotations__ = params
     update_i.__name__ = fname
@@ -306,7 +306,6 @@ def create_item(
         )
         for param, type_ in params.items()
     ]
-    logger.debug(f"Got routeparams: {routeparams!r}")
     if assoc:
         routeparams.extend(
             [
@@ -319,6 +318,7 @@ def create_item(
                 for a in assoc
             ]
         )
+    logger.debug(f"{fname} got routeparams: {routeparams!r}")
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
     create_i.__name__ = fname
