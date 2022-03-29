@@ -48,6 +48,9 @@ class JoinAssoc:
     def insert(self):
         return self.table.insert()
 
+    def delete(self):
+        return self.table.delete()
+
     def values(self, item, assoc):
         try:
             i = iter(assoc)
@@ -100,7 +103,9 @@ class User(CHAPPSModel):
 
     class Config:
         orm_mode = True
-        schema_extra = dict(example=dict(name=("[user.identifier@]domain.name")))
+        schema_extra = dict(
+            example=dict(name=("[user.identifier@]domain.name"))
+        )
 
     class Meta:
         orm_model = dbmodels.User
