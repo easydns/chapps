@@ -1,6 +1,12 @@
 from fastapi import APIRouter, status
 from chapps.rest.models import Quota, QuotaResp, QuotasResp, DeleteResp
-from .common import get_item_by_id, list_items, create_item, delete_item
+from .common import (
+    get_item_by_id,
+    list_items,
+    create_item,
+    delete_item,
+    update_item,
+)
 import logging
 import chapps.logging
 
@@ -14,7 +20,9 @@ api = APIRouter(
 )
 
 
-api.get("/", response_model=QuotasResp)(list_items(Quota, response_model=QuotasResp))
+api.get("/", response_model=QuotasResp)(
+    list_items(Quota, response_model=QuotasResp)
+)
 
 
 api.get("/{item_id}", response_model=QuotaResp)(
@@ -25,11 +33,21 @@ api.post(
     "/",
     status_code=201,
     response_model=QuotaResp,
-    responses={status.HTTP_400_BAD_REQUEST: {"description": "Unique key error."}},
-)(create_item(Quota, response_model=QuotaResp, params=dict(name=str, quota=int)))
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Unique key error."}
+    },
+)(
+    create_item(
+        Quota, response_model=QuotaResp, params=dict(name=str, quota=int)
+    )
+)
 
 logger.debug("Created Quota::create_i")
 # @api.post("/")
 # async def create_quota(name: str=Body(...), limit: int=Body(...)):
 
 api.delete("/", response_model=DeleteResp)(delete_item(Quota))
+
+api.put("/", response_model=QuotaResp)(
+    update_item(Quota, response_model=QuotaResp)
+)
