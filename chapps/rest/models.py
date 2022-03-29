@@ -104,7 +104,7 @@ class User(CHAPPSModel):
     class Config:
         orm_mode = True
         schema_extra = dict(
-            example=dict(name=("[user.identifier@]domain.name"))
+            example=dict(id=0, name=("[user.identifier@]domain.name"))
         )
 
     class Meta:
@@ -118,7 +118,9 @@ class Quota(CHAPPSModel):
 
     class Config:
         orm_mode = True
-        schema_extra = dict(example=dict(name="fiftyPerHour", quota=1200))
+        schema_extra = dict(
+            example=dict(id=0, name="fiftyPerHour", quota=1200)
+        )
 
     class Meta:
         orm_model = dbmodels.Quota
@@ -129,7 +131,7 @@ class Domain(CHAPPSModel):
 
     class Config:
         orm_mode = True
-        schema_extra = dict(example=dict(name="[sub.]domain.tld"))
+        schema_extra = dict(example=dict(id=0, name="[sub.]domain.tld"))
 
     class Meta:
         orm_model = dbmodels.Domain
