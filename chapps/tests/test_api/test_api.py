@@ -15,7 +15,9 @@ class Test_API_Health:
 class Test_Users_API:
     """Tests of the User CRUD API"""
 
-    def test_get_user(self, fixed_time, testing_api_client, populated_database_fixture):
+    def test_get_user(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
         response = testing_api_client.get("/users/1")
         assert response.status_code == 200
         assert response.json() == {
@@ -45,7 +47,8 @@ class Test_Users_API:
     ):
         # pudb.set_trace()
         response = testing_api_client.post(
-            "/users/", json={"name": "schmo1@chapps.io", "domains": [], "quota": 0}
+            "/users/",
+            json={"name": "schmo1@chapps.io", "domains": [], "quota": 0},
         )
         assert response.status_code == 201
         assert response.json() == {
@@ -62,7 +65,8 @@ class Test_Users_API:
     ):
         # pudb.set_trace()
         response = testing_api_client.post(
-            "/users/", json={"name": "schmo1@chapps.io", "domains": [1], "quota": 1}
+            "/users/",
+            json={"name": "schmo1@chapps.io", "domains": [1], "quota": 1},
         )
         assert response.status_code == 201
         assert response.json() == {
@@ -223,3 +227,17 @@ class Test_Quotas_API:
         }
         response = testing_api_client.get("/quotas/3")
         assert response.status_code == 404
+
+    @pytest.mark.timeout(2)
+    def test_update_quota(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.put(
+            "/quotas/", json=dict(id=1, name="newname", quota=220)
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {"id": 1, "name": "newname", "quota": 220},
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
