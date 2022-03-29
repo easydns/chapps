@@ -1,9 +1,20 @@
 from typing import List
 from starlette import status
 from fastapi import APIRouter  # , Body, Path, HTTPException
-from chapps.util import AttrDict
-from chapps.rest.models import User, Domain, DomainResp, DomainsResp, DeleteResp
-from .common import get_item_by_id, list_items, create_item, delete_item
+from chapps.rest.models import (
+    User,
+    Domain,
+    DomainResp,
+    DomainsResp,
+    DeleteResp,
+)
+from .common import (
+    get_item_by_id,
+    list_items,
+    create_item,
+    delete_item,
+    update_item,
+)
 import logging
 import chapps.logging
 
@@ -13,13 +24,31 @@ logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 api = APIRouter(
     prefix="/domains",
     tags=["domains"],
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Domain not found."}},
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Domain not found."
+        }
+    },
 )
 
-api.get("/", response_model=DomainsResp)(list_items(Domain, response_model=DomainsResp))
+domain_join_assoc = [
+    Domain.join_assoc(
+        assoc_name="users",
+        assoc_type=List[int],
+        assoc_model=User,
+        assoc_id="user_id",
+        table=Domain.Meta.orm_model.metadata.tables["domain_user"],
+    )
+]
+
+api.get("/", response_model=DomainsResp)(
+    list_items(Domain, response_model=DomainsResp)
+)
 
 api.get("/{item_id}", response_model=DomainResp)(
-    get_item_by_id(Domain, response_model=DomainResp, assoc=[(User, "users")])
+    get_item_by_id(
+        Domain, response_model=DomainResp, assoc=[(User, "users")]
+    )
 )
 
 api.post(
@@ -27,23 +56,25 @@ api.post(
     status_code=201,
     response_model=DomainResp,
     responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Unable to create domain"},
-        status.HTTP_409_CONFLICT: {"description": "Unique key error."},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Unable to create domain"
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Unique key error."
+        },
     },
 )(
     create_item(
         Domain,
         response_model=DomainResp,
         params=dict(name=str),
-        assoc=[
-            Domain.join_assoc(
-                assoc_name="users",
-                assoc_type=List[int],
-                assoc_model=User,
-                assoc_id="user_id",
-                table=Domain.Meta.orm_model.metadata.tables["domain_user"],
-            )
-        ],
+        assoc=domain_join_assoc,
+    )
+)
+
+api.put("/", response_model=DomainResp)(
+    update_item(
+        Domain, response_model=DomainResp, assoc=domain_join_assoc
     )
 )
 
@@ -51,9 +82,15 @@ api.delete(
     "/",
     response_model=DeleteResp,
     responses={
-        status.HTTP_202_ACCEPTED: {"description": "Items will be deleted."},
-        status.HTTP_204_NO_CONTENT: {"description": "No item to delete."},
-        status.HTTP_409_CONFLICT: {"description": "Database integrity conflict."},
+        status.HTTP_202_ACCEPTED: {
+            "description": "Items will be deleted."
+        },
+        status.HTTP_204_NO_CONTENT: {
+            "description": "No item to delete."
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Database integrity conflict."
+        },
     },
 )(
     delete_item(Domain)
