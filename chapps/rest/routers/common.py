@@ -7,7 +7,8 @@ from functools import wraps
 import inspect
 import logging
 from chapps.rest.dbsession import sql_engine
-from chapps.rest.models import DeleteResp
+from chapps.rest.models import AssocOperation, DeleteResp, TextResp
+from chapps.rest.dbmodels import JoinAssoc
 import chapps.logging
 
 logger = logging.getLogger(__name__)
@@ -148,6 +149,82 @@ def delete_item(
 
     delete_i.__name__ = f"delete_{model_name(cls)}"
     return delete_i
+
+
+def adjust_associations(
+    cls,
+    *,
+    assoc: List[JoinAssoc],
+    assoc_op: AssocOperation,
+    params: dict = None,
+    response_model=TextResp,
+    engine=sql_engine,
+):
+    """Build a route to add or subtract associations"""
+    mname = model_name(cls)
+    assoc_s = assoc[0].assoc_name if len(assoc) == 1 else "assoc"
+    fname = f"{mname}_{assoc_op}_{assoc_s}"
+    params = params or dict(item_id=int)
+    assoc_params = {a.assoc_name: a.assoc_type for a in assoc}
+
+    @db_interaction(cls=cls, engine=engine)
+    async def assoc_op_i(*pargs, **args):
+        (
+            f"{str(assoc_op).capitalize()} "
+            f"{', '.join([a.assoc_name for a in assoc])} objects "
+            f"{'to' if assoc_op==AssocOperation.add else 'from'} {mname}"
+        )
+        # item_id will be used for the source object, and assoc_ids will
+        # be a list of associated ids to either remove or add associations
+        # for, ignoring integrity errors arising from attempting to insert
+        # duplicate associations; non-existent associations should not cause
+        # errors when a query attempts to delete them.
+        extras = {
+            a.assoc_name: (a, args.pop(a.assoc_name))
+            for a in assoc
+            if a.assoc_name in args
+        }
+        item_id = args["item_id"]
+        if extras:
+            for assoc_name, (assc, vals) in extras.items():
+                if not vals:
+                    continue
+                if assoc_op == AssocOperation.add:
+                    stmt = assc.insert_assoc(item_id, vals)
+                else:
+                    stmt = assc.delete_assoc(item_id, vals)
+                try:
+                    session.execute(stmt)
+                except IntegrityError:
+                    pass  # ignoring as stated above
+            session.commit()
+            return response_model.send("Updated.")
+        return response_model.send("Empty request.")
+
+    # this approach may seem laborious, but it supports multicolumn prikeys
+    routeparams = [
+        inspect.Parameter(
+            name=param,
+            kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            annotation=type_,
+        )
+        for param, type_ in params.items()
+    ]
+    routeparams.extend(
+        [
+            inspect.Parameter(
+                name=param,
+                kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                annotation=type_,
+            )
+            for param, type_ in assoc_params.items()
+        ]
+    )
+    logger.debug(f"{fname} got routeparams {routeparams!r}")
+    assoc_op_i.__signature__ = inspect.Signature(routeparams)
+    assoc_op_i.__annotations__ = params
+    assoc_op_i.__name__ = fname
+    return assoc_op_i
 
 
 def update_item(cls, *, response_model, assoc=None, engine=sql_engine):
