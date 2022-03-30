@@ -111,7 +111,7 @@ class JoinAssoc:
         return (
             self.update()
             .where(self.source_col == item_id)
-            .values(**{self.assoc_col: assoc_id})
+            .values(**{self.assoc_id: assoc_id})
         )
 
 
