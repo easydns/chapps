@@ -12,6 +12,7 @@ from chapps.tests.test_adapter.conftest import (
     base_adapter_fixture,
     database_fixture,
     populated_database_fixture,
+    populated_database_fixture_with_extras,
 )
 import chapps.config
 import time

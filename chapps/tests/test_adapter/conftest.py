@@ -13,7 +13,9 @@ from chapps.adapter import (
 @fixture
 def mock_mariadb(monkeypatch):
     """Patch the mariadb module's connect function with a mock"""
-    monkeypatch.setattr(mariadb, "connect", Mock(return_value="mock connection"))
+    monkeypatch.setattr(
+        mariadb, "connect", Mock(return_value="mock connection")
+    )
 
 
 def _adapter_fixture(fixtype):
@@ -79,7 +81,11 @@ def finalizing_mdbsdaadapter(mdbsdaadapter_fixture):
 
 @fixture
 def test_emails():
-    return ["ccullen@easydns.com", "somebody@chapps.io", "nonexistent@chapps.io"]
+    return [
+        "ccullen@easydns.com",
+        "somebody@chapps.io",
+        "nonexistent@chapps.io",
+    ]
 
 
 def _populated_database_fixture(database_fixture):
@@ -191,9 +197,22 @@ def _populated_database_fixture(database_fixture):
     # could drop and re-create the DB here, but we do that elsewhere
 
 
+def _populated_database_fixture_with_extras(database_fixture):
+    cur = _populated_database_fixture(database_fixture)
+    extra_domains = "INSERT INTO domains (name) VALUES ('easydns.com');"
+    extra_assoc = "INSERT INTO domain_user (domain_id, user_id) VALUES (2, 3);"
+    cur.execute(extra_domains)
+    cur.execute(extra_assoc)
+
+
 @fixture
 def populated_database_fixture(database_fixture):
     return _populated_database_fixture(database_fixture)
+
+
+@fixture
+def populated_database_fixture_with_extras(database_fixture):
+    return _populated_database_fixture_with_extras(database_fixture)
 
 
 @fixture
