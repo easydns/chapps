@@ -16,10 +16,7 @@ class Test_Users_API:
     """Tests of the User CRUD API"""
 
     def test_get_user(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.get("/users/1")
         assert response.status_code == 200
@@ -46,19 +43,12 @@ class Test_Users_API:
 
     @pytest.mark.timeout(2)
     def test_create_user(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         # pudb.set_trace()
         response = testing_api_client.post(
             "/users/",
-            json={
-                "name": "schmo1@chapps.io",
-                "domains": [],
-                "quota": 0,
-            },
+            json={"name": "schmo1@chapps.io", "domains": [], "quota": 0},
         )
         assert response.status_code == 201
         assert response.json() == {
@@ -71,19 +61,12 @@ class Test_Users_API:
 
     @pytest.mark.timeout(2)
     def test_create_user_with_associations(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         # pudb.set_trace()
         response = testing_api_client.post(
             "/users/",
-            json={
-                "name": "schmo1@chapps.io",
-                "domains": [1],
-                "quota": 1,
-            },
+            json={"name": "schmo1@chapps.io", "domains": [1], "quota": 1},
         )
         assert response.status_code == 201
         assert response.json() == {
@@ -96,10 +79,7 @@ class Test_Users_API:
 
     @pytest.mark.timeout(2)
     def test_delete_user(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.delete("/users/", json=[1])
         assert response.status_code == 200
@@ -113,16 +93,11 @@ class Test_Users_API:
 
     @pytest.mark.timeout(2)
     def test_update_user(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.put(
             "/users/",
-            json=dict(
-                user=dict(id=1, name="ccruller@easydonuts.com")
-            ),
+            json=dict(user=dict(id=1, name="ccruller@easydonuts.com")),
         )
         assert response.status_code == 200
         assert response.json() == {
@@ -135,16 +110,11 @@ class Test_Users_API:
 
     @pytest.mark.timeout(2)
     def test_update_user_quota(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.put(
             "/users/",
-            json=dict(
-                user=dict(id=1, name="ccullen@easydns.com"), quota=2
-            ),
+            json=dict(user=dict(id=1, name="ccullen@easydns.com"), quota=2),
         )
         assert response.status_code == 200
         assert response.json() == {
@@ -157,16 +127,12 @@ class Test_Users_API:
 
     @pytest.mark.timeout(2)
     def test_update_user_domains(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.put(
             "/users/",
             json=dict(
-                user=dict(id=1, name="ccullen@easydns.com"),
-                domains=[1],
+                user=dict(id=1, name="ccullen@easydns.com"), domains=[1]
             ),
         )
         assert response.status_code == 200
@@ -180,17 +146,11 @@ class Test_Users_API:
 
     @pytest.mark.timeout(2)
     def test_update_user_domains_empty(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.put(
             "/users/",
-            json=dict(
-                user=dict(id=1, name="ccullen@easydns.com"),
-                domains=[],
-            ),
+            json=dict(user=dict(id=1, name="ccullen@easydns.com"), domains=[]),
         )
         assert response.status_code == 200
         assert response.json() == {
@@ -203,10 +163,7 @@ class Test_Users_API:
 
     @pytest.mark.timeout(2)
     def test_update_user_associations(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.put(
             "/users/",
@@ -225,15 +182,61 @@ class Test_Users_API:
             "version": "CHAPPS v0.4",
         }
 
+    @pytest.mark.timeout(2)
+    def test_update_user_add_domains(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.put("/users/1/allow/", json=[2])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "Updated.",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.get("/users/1")
+        assert response.json() == {
+            "response": {"id": 1, "name": "ccullen@easydns.com"},
+            "domains": [
+                {"id": 1, "name": "chapps.io"},
+                {"id": 2, "name": "easydns.com"},
+            ],
+            "quota": {"id": 1, "name": "10eph", "quota": 240},
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
+    @pytest.mark.timeout(2)
+    def test_update_user_remove_domains(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.put("/users/3/deny/", json=[1])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "Updated.",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.get("/users/3")
+        assert response.json() == {
+            "response": {"id": 3, "name": "bigsender@chapps.io"},
+            "domains": [{"id": 2, "name": "easydns.com"}],
+            "quota": {"id": 3, "name": "200eph", "quota": 4800},
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
 
 class Test_Domains_API:
     """Tests of the Domain CRUD API"""
 
     def test_get_domain(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.get("/domains/1")
         assert response.status_code == 200
@@ -259,10 +262,7 @@ class Test_Domains_API:
 
     @pytest.mark.timeout(2)
     def test_create_domain(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         # pudb.set_trace()
         response = testing_api_client.post(
@@ -278,10 +278,7 @@ class Test_Domains_API:
 
     @pytest.mark.timeout(3)
     def test_create_domain_with_users(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.post(
             "/domains/", json={"name": "easydns.com", "users": [1]}
@@ -296,10 +293,7 @@ class Test_Domains_API:
 
     @pytest.mark.timeout(2)
     def test_delete_domain(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.delete("/domains/", json=[1])
         assert response.status_code == 200
@@ -322,14 +316,10 @@ class Test_Domains_API:
 
     @pytest.mark.timeout(2)
     def test_update_domain(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.put(
-            "/domains/",
-            json=dict(domain=dict(id=1, name="crapps.io")),
+            "/domains/", json=dict(domain=dict(id=1, name="crapps.io"))
         )
         assert response.status_code == 200
         assert response.json() == {
@@ -341,16 +331,11 @@ class Test_Domains_API:
 
     @pytest.mark.timeout(2)
     def test_update_domain_with_users(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.put(
             "/domains/",
-            json=dict(
-                domain=dict(id=1, name="chapps.io"), users=[2, 3]
-            ),
+            json=dict(domain=dict(id=1, name="chapps.io"), users=[2, 3]),
         )
         assert response.status_code == 200
         assert response.json() == {
@@ -360,6 +345,55 @@ class Test_Domains_API:
                 {"id": 2, "name": "somebody@chapps.io"},
                 {"id": 3, "name": "bigsender@chapps.io"},
             ],
+            "version": "CHAPPS v0.4",
+        }
+
+    @pytest.mark.timeout(2)
+    def test_update_domain_add_users(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.put("/domains/2/allow/", json=[2, 3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "Updated.",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.get("/users/2")
+        assert response.json() == {
+            "response": {"id": 2, "name": "somebody@chapps.io"},
+            "domains": [
+                {"id": 1, "name": "chapps.io"},
+                {"id": 2, "name": "easydns.com"},
+            ],
+            "quota": {"id": 2, "name": "50eph", "quota": 1200},
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
+    @pytest.mark.timeout(2)
+    def test_update_domain_remove_users(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.put("/domains/1/deny/", json=[3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "Updated.",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.get("/users/3")
+        assert response.json() == {
+            "response": {"id": 3, "name": "bigsender@chapps.io"},
+            "domains": [{"id": 2, "name": "easydns.com"}],
+            "quota": {"id": 3, "name": "200eph", "quota": 4800},
+            "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
 
@@ -391,10 +425,7 @@ class Test_Quotas_API:
 
     @pytest.mark.timeout(2)
     def test_create_quota(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.post(
             "/quotas/", json={"name": "400eph", "quota": 9600}
@@ -408,10 +439,7 @@ class Test_Quotas_API:
 
     @pytest.mark.timeout(2)
     def test_delete_quota(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.delete("/quotas/", json=[3])
         assert response.status_code == 200
@@ -425,10 +453,7 @@ class Test_Quotas_API:
 
     @pytest.mark.timeout(2)
     def test_update_quota(
-        self,
-        fixed_time,
-        testing_api_client,
-        populated_database_fixture,
+        self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.put(
             "/quotas/", json=dict(id=1, name="newname", quota=220)
