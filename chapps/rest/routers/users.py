@@ -92,6 +92,12 @@ api.put("/{item_id}/deny/", response_model=TextResp)(
     )
 )
 
+api.put("/{item_id}/quota/{quota_id}")(
+    adjust_associations(
+        User, assoc=[user_quota_assoc], assoc_op=AssocOperation.replace
+    )
+)
+
 
 @api.get("/count/", response_model=IntResp)
 async def count_all_users():

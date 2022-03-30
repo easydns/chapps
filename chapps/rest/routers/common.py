@@ -165,7 +165,7 @@ def adjust_associations(
     assoc_s = assoc[0].assoc_name if len(assoc) == 1 else "assoc"
     fname = f"{mname}_{assoc_op}_{assoc_s}"
     params = params or dict(item_id=int)
-    assoc_params = {a.assoc_name: a.assoc_type for a in assoc}
+    assoc_params = {a.assoc_id: a.assoc_type for a in assoc}
 
     @db_interaction(cls=cls, engine=engine)
     async def assoc_op_i(*pargs, **args):
@@ -180,9 +180,9 @@ def adjust_associations(
         # duplicate associations; non-existent associations should not cause
         # errors when a query attempts to delete them.
         extras = {
-            a.assoc_name: (a, args.pop(a.assoc_name))
+            a.assoc_name: (a, args.pop(a.assoc_id))
             for a in assoc
-            if a.assoc_name in args
+            if a.assoc_id in args
         }
         item_id = args["item_id"]
         if extras:
@@ -191,6 +191,8 @@ def adjust_associations(
                     continue
                 if assoc_op == AssocOperation.add:
                     stmt = assc.insert_assoc(item_id, vals)
+                elif assoc_op == AssocOperation.replace:
+                    stmt = assc.update_assoc(item_id, vals)
                 else:
                     stmt = assc.delete_assoc(item_id, vals)
                 try:
