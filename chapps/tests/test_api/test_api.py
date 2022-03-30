@@ -231,7 +231,6 @@ class Test_Users_API:
             "version": "CHAPPS v0.4",
         }
 
-    @pytest.mark.xfail
     @pytest.mark.timeout(2)
     def test_update_user_set_quota(
         self,
