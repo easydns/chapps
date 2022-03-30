@@ -24,6 +24,87 @@ logger = logging.getLogger(__name__)
 logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 
+class JoinAssoc:
+    """
+    A class for representing joins via jointable
+    There is probably some way to use SQLA for this
+    but I am using it wrongly, to avoid loading associations
+    just in order to link them to other objects
+    via a join table
+    """
+
+    def __init__(
+        self,
+        source_model,
+        source_id: str,
+        *,
+        assoc_name: str,
+        assoc_type,
+        assoc_model,
+        assoc_id: str,
+        table,
+    ):
+        self.source_model = source_model
+        self.source_id = source_id
+        self.assoc_name = assoc_name
+        self.assoc_type = assoc_type
+        self.assoc_model = assoc_model
+        self.assoc_id = assoc_id
+        self.table = table
+
+    def __repr__(self):
+        return (
+            f"JoinAssoc({self.source_model.__name__}, "
+            f"{self.assoc_model.__name__}, "
+            f"{self.assoc_name}, {self.assoc_type!r})"
+        )
+
+    def insert(self):
+        return self.table.insert()
+
+    def delete(self):
+        return self.table.delete()
+
+    def values(self, item, assoc):
+        item_id = item if type(item) == int else item.id
+        try:
+            i = iter(assoc)
+            ins = [{self.source_id: item_id, self.assoc_id: val} for val in i]
+        except TypeError:
+            ins = [{self.source_id: item_id, self.assoc_id: assoc}]
+        return ins
+
+    def where_tuples(self, item_id, assoc):
+        try:
+            i = iter(assoc)
+            res = [(item_id, val) for val in i]
+        except TypeError:
+            res = [(item_id, assoc)]
+        return res
+
+    @property
+    def source_col(self):
+        return getattr(self.table.c, self.source_id)
+
+    @property
+    def assoc_col(self):
+        return getattr(self.table.c, self.assoc_id)
+
+    def insert_assoc(self, item_id, vals):
+        return (
+            self.insert()
+            .prefix_with("IGNORE")
+            .values(self.values(item_id, vals))
+        )
+
+    def delete_assoc(self, item_id, vals):
+        return self.delete().where(
+            tuple_(self.source_col, self.assoc_col).in_(
+                self.where_tuples(item_id, vals)
+            )
+        )
+
+
 # declare subclass of the SQLAlchemy DeclarativeMeta class
 # in order to attach custom routines to the ORM objects
 class DB_Customizations(DeclarativeMeta):
