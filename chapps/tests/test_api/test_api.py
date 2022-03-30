@@ -231,6 +231,30 @@ class Test_Users_API:
             "version": "CHAPPS v0.4",
         }
 
+    @pytest.mark.xfail
+    @pytest.mark.timeout(2)
+    def test_update_user_set_quota(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.put("/users/1/quota/2")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "Updated.",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.get("/users/1")
+        assert response.json() == {
+            "response": {"id": 1, "name": "ccullen@easydns.com"},
+            "domains": [{"id": 1, "name": "chapps.io"}],
+            "quota": {"id": 2, "name": "50eph", "quota": 1200},
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
 
 class Test_Domains_API:
     """Tests of the Domain CRUD API"""
