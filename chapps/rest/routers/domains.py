@@ -7,6 +7,8 @@ from chapps.rest.models import (
     DomainResp,
     DomainsResp,
     DeleteResp,
+    TextResp,
+    AssocOperation,
 )
 from .common import (
     get_item_by_id,
@@ -14,6 +16,7 @@ from .common import (
     create_item,
     delete_item,
     update_item,
+    adjust_associations,
 )
 import logging
 import chapps.logging
@@ -25,9 +28,7 @@ api = APIRouter(
     prefix="/domains",
     tags=["domains"],
     responses={
-        status.HTTP_404_NOT_FOUND: {
-            "description": "Domain not found."
-        }
+        status.HTTP_404_NOT_FOUND: {"description": "Domain not found."}
     },
 )
 
@@ -46,9 +47,7 @@ api.get("/", response_model=DomainsResp)(
 )
 
 api.get("/{item_id}", response_model=DomainResp)(
-    get_item_by_id(
-        Domain, response_model=DomainResp, assoc=[(User, "users")]
-    )
+    get_item_by_id(Domain, response_model=DomainResp, assoc=[(User, "users")])
 )
 
 api.post(
@@ -59,9 +58,7 @@ api.post(
         status.HTTP_400_BAD_REQUEST: {
             "description": "Unable to create domain"
         },
-        status.HTTP_409_CONFLICT: {
-            "description": "Unique key error."
-        },
+        status.HTTP_409_CONFLICT: {"description": "Unique key error."},
     },
 )(
     create_item(
@@ -73,8 +70,18 @@ api.post(
 )
 
 api.put("/", response_model=DomainResp)(
-    update_item(
-        Domain, response_model=DomainResp, assoc=domain_join_assoc
+    update_item(Domain, response_model=DomainResp, assoc=domain_join_assoc)
+)
+
+api.put("/{item_id}/allow/", response_model=TextResp)(
+    adjust_associations(
+        Domain, assoc=domain_join_assoc, assoc_op=AssocOperation.add
+    )
+)
+
+api.put("/{item_id}/deny/", response_model=TextResp)(
+    adjust_associations(
+        Domain, assoc=domain_join_assoc, assoc_op=AssocOperation.subtract
     )
 )
 
@@ -82,12 +89,8 @@ api.delete(
     "/",
     response_model=DeleteResp,
     responses={
-        status.HTTP_202_ACCEPTED: {
-            "description": "Items will be deleted."
-        },
-        status.HTTP_204_NO_CONTENT: {
-            "description": "No item to delete."
-        },
+        status.HTTP_202_ACCEPTED: {"description": "Items will be deleted."},
+        status.HTTP_204_NO_CONTENT: {"description": "No item to delete."},
         status.HTTP_409_CONFLICT: {
             "description": "Database integrity conflict."
         },
