@@ -65,6 +65,9 @@ class JoinAssoc:
     def delete(self):
         return self.table.delete()
 
+    def update(self):
+        return self.table.update()
+
     def values(self, item, assoc):
         item_id = item if type(item) == int else item.id
         try:
@@ -74,7 +77,7 @@ class JoinAssoc:
             ins = [{self.source_id: item_id, self.assoc_id: assoc}]
         return ins
 
-    def where_tuples(self, item_id, assoc):
+    def where_tuples(self, item_id: int, assoc):
         try:
             i = iter(assoc)
             res = [(item_id, val) for val in i]
@@ -90,18 +93,25 @@ class JoinAssoc:
     def assoc_col(self):
         return getattr(self.table.c, self.assoc_id)
 
-    def insert_assoc(self, item_id, vals):
+    def insert_assoc(self, item_id: int, vals):
         return (
             self.insert()
             .prefix_with("IGNORE")
             .values(self.values(item_id, vals))
         )
 
-    def delete_assoc(self, item_id, vals):
+    def delete_assoc(self, item_id: int, vals):
         return self.delete().where(
             tuple_(self.source_col, self.assoc_col).in_(
                 self.where_tuples(item_id, vals)
             )
+        )
+
+    def update_assoc(self, item_id: int, assoc_id: int):
+        return (
+            self.update()
+            .where(self.source_col == item_id)
+            .values(**{self.assoc_col: assoc_id})
         )
 
 

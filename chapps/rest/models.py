@@ -9,17 +9,14 @@ import time
 verstr = config.chapps.version
 
 
-class APIException(str, Enum):
-    """Not sure if needed, leaving for now"""
-
-    nonexistent = "nonexistent"
-    integrity = "integrity"
-    internal = "internal"
-
-
 class AssocOperation(str, Enum):
+    """
+    'add', 'subtract', or 'set'; use 'set' only with unitary associations
+    """
+
     add = "add"
     subtract = "subtract"
+    replace = "replace"
 
 
 # a metaclass for passing calls through to the orm_model
@@ -164,9 +161,3 @@ class DeleteResp(TextResp):
 ### the following classes are somewhat speculative for now
 class FloatResp(CHAPPSResponse):
     response: float
-
-
-class ErrorResp(CHAPPSResponse):
-    response: None
-    error: APIException
-    message: str
