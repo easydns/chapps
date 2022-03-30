@@ -15,6 +15,7 @@ class Test_API_Health:
 class Test_Users_API:
     """Tests of the User CRUD API"""
 
+    @pytest.mark.timeout(2)
     def test_get_user(
         self, fixed_time, testing_api_client, populated_database_fixture
     ):
@@ -28,6 +29,7 @@ class Test_Users_API:
             "version": "CHAPPS v0.4",
         }
 
+    @pytest.mark.timeout(2)
     def test_list_users(self, fixed_time, testing_api_client):
         response = testing_api_client.get("/users/")
         assert response.status_code == 200
@@ -258,6 +260,7 @@ class Test_Users_API:
 class Test_Domains_API:
     """Tests of the Domain CRUD API"""
 
+    @pytest.mark.timeout(2)
     def test_get_domain(
         self, fixed_time, testing_api_client, populated_database_fixture
     ):
@@ -274,6 +277,7 @@ class Test_Domains_API:
             "version": "CHAPPS v0.4",
         }
 
+    @pytest.mark.timeout(2)
     def test_list_domains(self, fixed_time, testing_api_client):
         response = testing_api_client.get("/domains/")
         assert response.status_code == 200
@@ -424,6 +428,7 @@ class Test_Domains_API:
 class Test_Quotas_API:
     """Tests of the Quota CRUD API"""
 
+    @pytest.mark.timeout(2)
     def test_get_quota(self, fixed_time, testing_api_client):
         response = testing_api_client.get("/quotas/1")
         assert response.status_code == 200
@@ -433,6 +438,7 @@ class Test_Quotas_API:
             "version": "CHAPPS v0.4",
         }
 
+    @pytest.mark.timeout(2)
     def test_list_quotas(self, fixed_time, testing_api_client):
         response = testing_api_client.get("/quotas/")
         assert response.status_code == 200
