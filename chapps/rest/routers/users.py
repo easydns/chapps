@@ -23,7 +23,6 @@ import logging
 import chapps.logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 api = APIRouter(
     prefix="/users",
