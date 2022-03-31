@@ -126,6 +126,9 @@ class DB_Customizations(DeclarativeMeta):
     def select_by_pattern(cls, q: str):
         return select(cls).where(cls.name.like(q))
 
+    def select_by_name(cls, q: str):
+        return select(cls).where(cls.name == q)
+
     def windowed_list(cls, q: str = "%", skip: int = 0, limit: int = 1000):
         return (
             cls.select_by_pattern(q).offset(skip).limit(limit).order_by(cls.id)
