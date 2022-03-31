@@ -131,11 +131,15 @@ class Test_GreylistingPolicy_Base:
             == f"{GreylistingPolicy.redis_key_prefix}:{ppr.client_address}"
         )
 
-    def test_config_overrides_properly_forwarded(self, caplog, testing_policy_grl):
+    def test_config_overrides_properly_forwarded(
+        self, caplog, testing_policy_grl
+    ):
         ### sanity check
         ### this really tests functionality of the superclass, but it is much more complicated to test it there
         assert (
-            testing_policy_grl.config.get_block("GreylistingPolicy").rejection_message
+            testing_policy_grl.config.get_block(
+                "GreylistingPolicy"
+            ).rejection_message
             == testing_policy_grl.config.policy_grl.rejection_message
         )
         assert (
@@ -156,7 +160,9 @@ class Test_GreylistingPolicy_Base:
         monkeypatch.setattr(policy, "_evaluate_policy_request", lambda x: True)
         assert policy.approve_policy_request(ppr) == True
 
-    def test_policy_request_instance_cache(self, caplog, monkeypatch, allowable_ppr):
+    def test_policy_request_instance_cache(
+        self, caplog, monkeypatch, allowable_ppr
+    ):
         """
         GIVEN a positive policy evaluation
         WHEN  approve_policy_request is called
@@ -181,11 +187,15 @@ class Test_GreylistingPolicyEvaluation:
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
         ### simulate a new encounter with a new client
-        monkeypatch.setattr(policy, "_get_control_data", lambda x: (None, None))
+        monkeypatch.setattr(
+            policy, "_get_control_data", lambda x: (None, None)
+        )
         response = policy._evaluate_policy_request(allowable_ppr)
         assert response == False
 
-    def test_first_encounter_updates_tuple(self, caplog, monkeypatch, allowable_ppr):
+    def test_first_encounter_updates_tuple(
+        self, caplog, monkeypatch, allowable_ppr
+    ):
         """
         GIVEN a new tuple
         WHEN  executed
@@ -194,7 +204,9 @@ class Test_GreylistingPolicyEvaluation:
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
         ### simulate a new encounter with a new client
-        monkeypatch.setattr(policy, "_get_control_data", lambda x: (None, None))
+        monkeypatch.setattr(
+            policy, "_get_control_data", lambda x: (None, None)
+        )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_tuple", mock_update)
         response = policy._evaluate_policy_request(allowable_ppr)
@@ -210,7 +222,9 @@ class Test_GreylistingPolicyEvaluation:
         policy = GreylistingPolicy()
         ### simulate a timestamp we saw about 15 min ago
         monkeypatch.setattr(
-            policy, "_get_control_data", lambda x: (time.time() - (60 * 15), None)
+            policy,
+            "_get_control_data",
+            lambda x: (time.time() - (60 * 15), None),
         )
         response = policy._evaluate_policy_request(allowable_ppr)
         assert response == True
@@ -227,7 +241,9 @@ class Test_GreylistingPolicyEvaluation:
         policy = GreylistingPolicy()
         ### simulate a timestamp we saw about 15 min ago
         monkeypatch.setattr(
-            policy, "_get_control_data", lambda x: (time.time() - (60 * 15), None)
+            policy,
+            "_get_control_data",
+            lambda x: (time.time() - (60 * 15), None),
         )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_client_tally", mock_update)
@@ -235,7 +251,12 @@ class Test_GreylistingPolicyEvaluation:
         assert mock_update.called
 
     def test_sufficient_client_tally_permits_sending_for_unrecognized_tuple(
-        self, caplog, monkeypatch, allowable_ppr, mock_client_tally, populate_redis_grl
+        self,
+        caplog,
+        monkeypatch,
+        allowable_ppr,
+        mock_client_tally,
+        populate_redis_grl,
     ):
         """
         GIVEN a new tuple from a client with a large enough tally
@@ -249,13 +270,22 @@ class Test_GreylistingPolicyEvaluation:
             m.setattr(ppr, "sender", "someschmo@chapps.io")
             populate_redis_grl(
                 policy.tuple_key(ppr),
-                {policy.client_key(ppr): mock_client_tally(policy.allow_after)},
+                {
+                    policy.client_key(ppr): mock_client_tally(
+                        policy.allow_after
+                    )
+                },
             )
         response = policy._evaluate_policy_request(ppr)
         assert response == True
 
     def test_client_tally_updated_when_unrecognized_tuple_passes(
-        self, caplog, monkeypatch, allowable_ppr, mock_client_tally, populate_redis_grl
+        self,
+        caplog,
+        monkeypatch,
+        allowable_ppr,
+        mock_client_tally,
+        populate_redis_grl,
     ):
         """
         GIVEN a new tuple from a client with a large enough tally
@@ -269,7 +299,11 @@ class Test_GreylistingPolicyEvaluation:
             m.setattr(ppr, "sender", "someschmo@chapps.io")
             populate_redis_grl(
                 policy.tuple_key(ppr),
-                {policy.client_key(ppr): mock_client_tally(policy.allow_after)},
+                {
+                    policy.client_key(ppr): mock_client_tally(
+                        policy.allow_after
+                    )
+                },
             )
         tally = policy.redis.zrange(policy.client_key(ppr), 0, -1)
         assert len(tally) == policy.allow_after
@@ -287,11 +321,15 @@ class Test_GreylistingPolicyEvaluation:
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
         ### simulate a timestamp we saw about 15 min ago
-        monkeypatch.setattr(policy, "_get_control_data", lambda x: (time.time(), None))
+        monkeypatch.setattr(
+            policy, "_get_control_data", lambda x: (time.time(), None)
+        )
         response = policy._evaluate_policy_request(allowable_ppr)
         assert response == False
 
-    def test_retry_too_soon_updates_tuple(self, caplog, monkeypatch, allowable_ppr):
+    def test_retry_too_soon_updates_tuple(
+        self, caplog, monkeypatch, allowable_ppr
+    ):
         """
         GIVEN a recognized tuple
         WHEN  the tuple was seen too recently (less than min_delay seconds)
@@ -300,7 +338,9 @@ class Test_GreylistingPolicyEvaluation:
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
         ### simulate a timestamp we saw about 15 min ago
-        monkeypatch.setattr(policy, "_get_control_data", lambda x: (time.time(), None))
+        monkeypatch.setattr(
+            policy, "_get_control_data", lambda x: (time.time(), None)
+        )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_tuple", mock_update)
         response = policy._evaluate_policy_request(allowable_ppr)
@@ -500,13 +540,19 @@ class Test_OutboundQuotaPolicy:
         caplog.set_level(logging.DEBUG)
         recipient_count = len(groupsend_ppr.recipient.split(","))
         populate_redis(
-            groupsend_ppr.sender, 100, well_spaced_attempts(100 - recipient_count)
+            groupsend_ppr.sender,
+            100,
+            well_spaced_attempts(100 - recipient_count),
         )
         policy = OutboundQuotaPolicy()
         assert policy.approve_policy_request(groupsend_ppr)
 
     def test_approve_underquota_within_margin(
-        self, caplog, multisend_ppr_factory, well_spaced_attempts, populate_redis
+        self,
+        caplog,
+        multisend_ppr_factory,
+        well_spaced_attempts,
+        populate_redis,
     ):
         """
         Verify that when a multi-recipient email takes an underquota account overquota, it will be
@@ -556,13 +602,19 @@ class Test_OutboundQuotaPolicy:
         the margin.
         """
         caplog.set_level(logging.DEBUG)
-        populate_redis(groupsend_ppr.sender, 100, well_spaced_attempts(101), 10)
+        populate_redis(
+            groupsend_ppr.sender, 100, well_spaced_attempts(101), 10
+        )
         policy = OutboundQuotaPolicy()
         assert not policy.approve_policy_request(groupsend_ppr)
-        assert any("too many attempts" in rec.message for rec in caplog.records)
+        assert any(
+            "too many attempts" in rec.message for rec in caplog.records
+        )
 
     @pytest.mark.skip  # no longer the default; modified in parallel branch
-    def test_deny_rapid_attempts(self, allowable_ppr, rapid_attempts, populate_redis):
+    def test_deny_rapid_attempts(
+        self, allowable_ppr, rapid_attempts, populate_redis
+    ):
         """
         Verify that attempts which come too fast will be rejected.
         """
@@ -571,14 +623,20 @@ class Test_OutboundQuotaPolicy:
         assert not policy.approve_policy_request(allowable_ppr)
 
     def test_return_cached_instance_approval(
-        self, allowable_ppr, well_spaced_double_attempts, populate_redis, caplog
+        self,
+        allowable_ppr,
+        well_spaced_double_attempts,
+        populate_redis,
+        caplog,
     ):
         """
         GIVEN we have already seen a particular instance before,
         WHEN  we are asked to approve or deny it
         THEN  we will return the cached value of the instance (which really only matters on approval)
         """
-        populate_redis(allowable_ppr.sender, 200, well_spaced_double_attempts(100))
+        populate_redis(
+            allowable_ppr.sender, 200, well_spaced_double_attempts(100)
+        )
         policy = OutboundQuotaPolicy()
         policy.instance_cache[allowable_ppr.instance] = False
         ### need a patched policy which has the instance in its instance cache
@@ -608,9 +666,8 @@ class Test_OutboundQuotaPolicy:
         """
         assert not testing_policy.approve_policy_request(undefined_ppr)
 
-    ### there was a thought about auto-loading user quotas from a memo-list, but
-    ### seeing as Redis store is persistent across restarts, there seems no
-    ### good reason to store a memo of users to load en-masse
+    def test_current_quota(self, allowable_ppr):
+        raise NotImplementedError
 
 
 auto_ppr_param_list = _auto_ppr_param_list(
@@ -629,7 +686,9 @@ class Test_SenderDomainAuthPolicy:
         redis_key = policy._fmtkey("ccullen@easydns.com", "chapps.io")
         assert redis_key == "sda:ccullen@easydns.com:chapps.io"
 
-    @pytest.mark.parametrize("auto_ppr, expected_result", auto_ppr_param_list, ids=idfn)
+    @pytest.mark.parametrize(
+        "auto_ppr, expected_result", auto_ppr_param_list, ids=idfn
+    )
     def test_get_sender_domain(self, auto_ppr, expected_result):
         policy = SenderDomainAuthPolicy()
         if isclass(expected_result) and issubclass(expected_result, Exception):
@@ -661,14 +720,22 @@ class Test_SenderDomainAuthPolicy:
     ):
         mock_acq_pol_data = Mock(result=False)
         with monkeypatch.context() as m:
-            m.setattr(testing_policy_sda, "acquire_policy_for", mock_acq_pol_data)
-            result = testing_policy_sda.approve_policy_request(sda_allowable_ppr)
+            m.setattr(
+                testing_policy_sda, "acquire_policy_for", mock_acq_pol_data
+            )
+            result = testing_policy_sda.approve_policy_request(
+                sda_allowable_ppr
+            )
         mock_acq_pol_data.assert_not_called()
 
     ### For completeness we will test both
-    def test_cached_unauth_user(self, monkeypatch, sda_unauth_ppr, testing_policy_sda):
+    def test_cached_unauth_user(
+        self, monkeypatch, sda_unauth_ppr, testing_policy_sda
+    ):
         mock_acq_pol_data = Mock(result=True)
         with monkeypatch.context() as m:
-            m.setattr(testing_policy_sda, "acquire_policy_for", mock_acq_pol_data)
+            m.setattr(
+                testing_policy_sda, "acquire_policy_for", mock_acq_pol_data
+            )
             result = testing_policy_sda.approve_policy_request(sda_unauth_ppr)
         mock_acq_pol_data.assert_not_called()
