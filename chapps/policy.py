@@ -15,11 +15,13 @@ from chapps.signals import (
     NullSenderException,
     NotAnEmailAddressException,
 )
+from chapps.rest.models import Quota
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 seconds_per_day = 3600 * 24
 SENTINEL_TIMEOUT = 0.1
+TIME_FORMAT = "%d %b %Y %H:%M:%S %z"
 
 
 class EmailPolicy:
@@ -347,9 +349,9 @@ class OutboundQuotaPolicy(EmailPolicy):
                 m = 0
         return m
 
-    def current_quota(self, user: str):
-        attempts_key = self._fmtkey(user.name, "attempts")
-        limit_key = self._fmtkey(user.name, "limit")
+    def current_quota(self, user: str, quota: Quota):
+        attempts_key = self._fmtkey(user, "attempts")
+        limit_key = self._fmtkey(user, "limit")
         pipe = self.redis.pipeline()
         pipe.zremrangebyscore(
             attempts_key, 0, time.time() - float(self.interval)
@@ -372,15 +374,13 @@ class OutboundQuotaPolicy(EmailPolicy):
             last_try = time.strftime(
                 TIME_FORMAT, time.gmtime(float(attempts_bytes[-1]))
             )
-            remarks.push(f"Last send attempt was at {last_try}")
+            remarks.append(f"Last send attempt was at {last_try}")
         if not limit_bytes:
-            remarks.push(
-                f"There is no resident quota limit for {user.name} (#{user.id})."
-            )
+            remarks.append(f"There is no resident quota limit for {user}.")
         if not quota:
-            remarks.push(f"There is no quota configured for user {user.name}.")
+            remarks.append(f"There is no quota configured for user {user}.")
         if not limit:
-            remarks.push(
+            remarks.append(
                 f"No limit could be found; returning zero xmits remaining."
             )
         return (response, remarks)
