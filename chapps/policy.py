@@ -66,7 +66,9 @@ class EmailPolicy:
                 return rh
         except AttributeError:
             pass
-        return redis.Redis(host=self.config.redis.server, port=self.config.redis.port)
+        return redis.Redis(
+            host=self.config.redis.server, port=self.config.redis.port
+        )
 
     def approve_policy_request(self, ppr):
         raise NotImplementedError(
@@ -132,13 +134,17 @@ class GreylistingPolicy(EmailPolicy):
         ###       can be generalized
         instance = ppr.instance
         cached_response = self.instance_cache.get(instance, None)
-        logger.debug(f"Approval for {instance} finds cached value {cached_response}")
+        logger.debug(
+            f"Approval for {instance} finds cached value {cached_response}"
+        )
         if cached_response is not None:
             logger.debug(f"Returning cached response for {instance}")
             return cached_response
         response = self._evaluate_policy_request(ppr)
         self.instance_cache[instance] = response
-        logger.debug(f"Caching and returning reponse {response} for {instance}")
+        logger.debug(
+            f"Caching and returning reponse {response} for {instance}"
+        )
         return response
 
     def _evaluate_policy_request(self, ppr):
@@ -149,7 +155,9 @@ class GreylistingPolicy(EmailPolicy):
             logger.debug(f"Got values ({tuple_seen}, {client_tally})")
         except Exception:  # pragma: no cover
             logger.exception("UNEXPECTED")
-            logger.debug(f"Returning denial for {ppr.instance} (unexpected exception).")
+            logger.debug(
+                f"Returning denial for {ppr.instance} (unexpected exception)."
+            )
         if client_tally is not None and client_tally >= self.allow_after:
             self._update_client_tally(ppr)
             return True
@@ -186,7 +194,9 @@ class GreylistingPolicy(EmailPolicy):
         if len(result) == 3:
             client_tally_bits = result[2]
 
-        tuple_seen = float(tuple_bits) if tuple_bits else None  # UNIX epoch time
+        tuple_seen = (
+            float(tuple_bits) if tuple_bits else None
+        )  # UNIX epoch time
         client_tally = None
         if self.allow_after > 0 and client_tally_bits:
             client_tally = len(client_tally_bits)
@@ -288,7 +298,7 @@ class OutboundQuotaPolicy(EmailPolicy):
         if self.counting_recipients:
             tries_dict = {
                 (time_now_s + f":{i:05d}"): time_now
-                for i, r in enumerate(ppr.recipient.split(","))
+                for i, r in enumerate(ppr.recipients)
             }
         else:
             tries_dict = {time_now_s: time_now}
@@ -321,17 +331,59 @@ class OutboundQuotaPolicy(EmailPolicy):
         pipe.reset()
         # Attempt typecasting on the margin number, which is allowed
         # to be either int or float
-        try:
-            m = int(margin)
-        except:
-            try:
-                m = float(margin)
-            except:
-                m = 0
+        m = _cast_margin(margin)
         # If no limit is defined, that means there is no quota profile
         # for the user, and we just return None here; we must test against
         # None because it might be 0
         return (int(limit) if limit is not None else None, m, attempts)
+
+    def _cast_margin(margin_bytes):
+        try:
+            m = int(margin_bytes)
+        except:
+            try:
+                m = float(margin_bytes)
+            except:
+                m = 0
+        return m
+
+    def current_quota(self, user: str):
+        attempts_key = self._fmtkey(user.name, "attempts")
+        limit_key = self._fmtkey(user.name, "limit")
+        pipe = self.redis.pipeline()
+        pipe.zremrangebyscore(
+            attempts_key, 0, time.time() - float(self.interval)
+        )
+        pipe.get(limit_key)
+        pipe.zrange(attempts_key, 0, -1)
+        results = pipe.execute()
+        _, limit_bytes, attempts_bytes = results
+        pipe.reset()
+        limit = (
+            int(limit_bytes)
+            if limit_bytes is not None
+            else quota.quota
+            if quota is not None
+            else None
+        )
+        response = limit - len(attempts_bytes) if limit else 0
+        remarks = []
+        if attempts_bytes:
+            last_try = time.strftime(
+                TIME_FORMAT, time.gmtime(float(attempts_bytes[-1]))
+            )
+            remarks.push(f"Last send attempt was at {last_try}")
+        if not limit_bytes:
+            remarks.push(
+                f"There is no resident quota limit for {user.name} (#{user.id})."
+            )
+        if not quota:
+            remarks.push(f"There is no quota configured for user {user.name}.")
+        if not limit:
+            remarks.push(
+                f"No limit could be found; returning zero xmits remaining."
+            )
+        return (response, remarks)
 
     def _store_control_data(self, user, quota, margin=0):
         """Using a context manager, build up a set of instructions to store control data"""
@@ -393,7 +445,9 @@ class OutboundQuotaPolicy(EmailPolicy):
             self.acquire_policy_for(user)
         response = self._evaluate_policy_request(ppr)
         self.instance_cache[instance] = response
-        logger.debug(f"Caching and returning response {response} for {instance}")
+        logger.debug(
+            f"Caching and returning response {response} for {instance}"
+        )
         return response
 
     def _get_delta(self, ppr, attempts):
@@ -406,7 +460,7 @@ class OutboundQuotaPolicy(EmailPolicy):
         each recipient is listed as an attempt in the log.
         """
         if len(attempts) < 2:
-            return float('inf')
+            return float("inf")
         delta_index = [-1, -2]
         if self.counting_recipients:
             # skip back all but one recipient
@@ -426,7 +480,7 @@ class OutboundQuotaPolicy(EmailPolicy):
                 f"attempts: {[attempts[i] for i in delta_index]}; timestamps: {timestamps!r}"
             )
             return timestamps[0] - timestamps[1]
-        return float('inf')  # return a large value
+        return float("inf")  # return a large value
 
     def _evaluate_policy_request(self, ppr):
         """
@@ -525,7 +579,9 @@ class SenderDomainAuthPolicy(EmailPolicy):
             self.redis.delete(key)
         return res
 
-    _get_control_data = _detect_control_data  ### maintaining parallelism w/ OQP
+    _get_control_data = (
+        _detect_control_data
+    )  ### maintaining parallelism w/ OQP
     # We will need to be able to store data in Redis
     def _store_control_data(self, ppr, allowed):
         with self._control_data_storage_context() as dsc:
