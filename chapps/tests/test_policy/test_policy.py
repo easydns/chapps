@@ -10,6 +10,7 @@ from chapps.policy import (
     GreylistingPolicy,
     OutboundQuotaPolicy,
     SenderDomainAuthPolicy,
+    TIME_FORMAT,
 )
 from chapps.config import CHAPPSConfig
 from chapps.tests.test_config.conftest import (
@@ -23,6 +24,7 @@ from chapps.tests.test_config.conftest import (
     chapps_sentinel_config_file,
 )
 from chapps.tests.test_policy.conftest import _auto_ppr_param_list, idfn
+from chapps.rest.models import Quota
 from inspect import isclass
 
 seconds_per_day = 3600 * 24
@@ -666,8 +668,23 @@ class Test_OutboundQuotaPolicy:
         """
         assert not testing_policy.approve_policy_request(undefined_ppr)
 
-    def test_current_quota(self, allowable_ppr):
-        raise NotImplementedError
+    def test_current_quota(
+        self,
+        sda_allowable_ppr,
+        populate_redis,
+        well_spaced_attempts,
+        populated_database_fixture,
+        testing_policy,
+    ):
+        ppr = sda_allowable_ppr
+        attempts = well_spaced_attempts(100)
+        populate_redis(ppr.user, 240, attempts)
+        remaining, remarks = testing_policy.current_quota(
+            ppr.user, Quota(id=1, name="10eph", quota=240)
+        )
+        assert remaining == 140
+        last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
+        assert f"Last send attempt was at {last_try}" in remarks
 
 
 auto_ppr_param_list = _auto_ppr_param_list(
