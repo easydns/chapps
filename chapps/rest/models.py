@@ -148,6 +148,11 @@ class TextResp(CHAPPSResponse):
     response: str
 
 
+class LiveQuotaResp(CHAPPSResponse):
+    response: int
+    remarks: str = ""
+
+
 class ConfigResp(CHAPPSResponse):
     response: List[str]
     written: bool
