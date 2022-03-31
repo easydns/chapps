@@ -331,13 +331,13 @@ class OutboundQuotaPolicy(EmailPolicy):
         pipe.reset()
         # Attempt typecasting on the margin number, which is allowed
         # to be either int or float
-        m = _cast_margin(margin)
+        m = self._cast_margin(margin)
         # If no limit is defined, that means there is no quota profile
         # for the user, and we just return None here; we must test against
         # None because it might be 0
         return (int(limit) if limit is not None else None, m, attempts)
 
-    def _cast_margin(margin_bytes):
+    def _cast_margin(self, margin_bytes):
         try:
             m = int(margin_bytes)
         except:
