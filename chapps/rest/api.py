@@ -5,7 +5,7 @@
 
 from chapps.config import config
 from chapps._version import __version__
-from chapps.rest.routers import users, domains, quotas
+from chapps.rest.routers import users, domains, quotas, live
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -50,6 +50,16 @@ tags_metadata = [
             "update the user."
         ),
     ),
+    dict(
+        name="live",
+        description=(
+            "Status reporting and remote command interface.  Routes "
+            "provided for obtaining real-time remaining quota, resetting "
+            "quota, refreshing policy settings, adding or removing SDAs, "
+            "and causing CHAPPS to rewrite its config file, in order to "
+            "allow for updates post-upgrade without losing site customizations."
+        ),
+    ),
 ]
 
 api = FastAPI(
@@ -68,10 +78,13 @@ verstr = config.chapps.version
 api.include_router(users.api)
 api.include_router(domains.api)
 api.include_router(quotas.api)
+api.include_router(live.api)
 
 
 @api.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
     exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
     body = await request.json()
     logging.error(f"{body!r}: {exc_str}")
