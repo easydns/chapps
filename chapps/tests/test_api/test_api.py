@@ -546,7 +546,10 @@ class Test_Live_API:
         response = testing_api_client.post("/live/quota/reset/1")
         assert response.status_code == 200
         assert response.json() == {
-            "response": "Quota reset for ccullen@easydns.com",
+            "response": 100,
+            "remarks": [
+                "Quota reset for ccullen@easydns.com: 100 xmits dropped"
+            ],
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
