@@ -371,9 +371,13 @@ class OutboundQuotaPolicy(EmailPolicy):
         response = limit - len(attempts_bytes) if limit else 0
         remarks = []
         if attempts_bytes:
-            last_try = time.strftime(
-                TIME_FORMAT, time.gmtime(float(attempts_bytes[-1]))
-            )
+            last = attempts_bytes[-1]
+            try:
+                last = float(last)
+            except ValueError:
+                logger.debug(f"current_quota got last attempt: {last!r}")
+                last = float(last.split(b":")[0])
+            last_try = time.strftime(TIME_FORMAT, time.gmtime(last))
             remarks.append(f"Last send attempt was at {last_try}")
         if not limit_bytes:
             remarks.append(f"There is no resident quota limit for {user}.")
