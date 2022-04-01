@@ -39,6 +39,10 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
         orm_model = dbmodels.DB_Base
 
     @classmethod
+    def id_name(cls):
+        return "_".join(str(cls.Meta.orm_model.id).lower().split("."))
+
+    @classmethod
     def wrap(cls, orm_instance):
         """create a pydantic model from an ORM model"""
         if not orm_instance:  # could be None or []
