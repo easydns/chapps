@@ -385,6 +385,17 @@ class OutboundQuotaPolicy(EmailPolicy):
             )
         return (response, remarks)
 
+    def reset_quota(self, user: str):
+        attempts_key = self._fmtkey(user, "attempts")
+        pipe = self.redis.pipeline()
+        pipe.zrange(attempts_key, 0, -1)
+        pipe.delete(attempts_key)
+        results = pipe.execute()
+        pipe.reset()
+        attempts = results[0]
+        n_att = len(attempts) if attempts else 0
+        return (n_att, [f"Quota reset for {user}: {n_att} xmits dropped"])
+
     def _store_control_data(self, user, quota, margin=0):
         """Using a context manager, build up a set of instructions to store control data"""
         with self._control_data_storage_context() as dsc:
