@@ -513,7 +513,7 @@ class Test_Live_API:
         ppr = sda_allowable_ppr
         populate_redis(ppr.user, 240, attempts)
         last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
-        response = testing_api_client.get("/live/quota/1")
+        response = testing_api_client.get("/live/quota/remaining/1")
         assert response.status_code == 200
         assert response.json() == {
             "response": 140,
@@ -521,3 +521,26 @@ class Test_Live_API:
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
+
+    def test_reset_quota(
+        self,
+        fixed_time,
+        testing_api_client,
+        sda_allowable_ppr,
+        populated_database_fixture,
+        populate_redis,
+        well_spaced_attempts,
+    ):
+        attempts = well_spaced_attempts(100)
+        ppr = sda_allowable_ppr
+        populate_redis(ppr.user, 240, attempts)
+        last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
+        response = testing_api_client.get("/live/quota/remaining/1")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": 140,
+            "remarks": [f"Last send attempt was at {last_try}"],
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        raise NotImplementedError

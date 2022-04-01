@@ -21,7 +21,7 @@ api = APIRouter(
 
 
 @api.get(
-    "/quota/{user_id}",
+    "/quota/remaining/{user_id}",
     response_model=LiveQuotaResp,
     responses={
         status.HTTP_400_BAD_REQUEST: {
