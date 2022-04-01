@@ -2,6 +2,8 @@
 import pytest
 import pudb
 import chapps.config
+import time
+from chapps.policy import TIME_FORMAT
 
 
 class Test_API_Health:
@@ -490,6 +492,32 @@ class Test_Quotas_API:
         assert response.status_code == 200
         assert response.json() == {
             "response": {"id": 1, "name": "newname", "quota": 220},
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
+
+class Test_Live_API:
+    """Tests of API routes which interact with Redis"""
+
+    def test_get_current_quota(
+        self,
+        fixed_time,
+        testing_api_client,
+        sda_allowable_ppr,
+        populated_database_fixture,
+        populate_redis,
+        well_spaced_attempts,
+    ):
+        attempts = well_spaced_attempts(100)
+        ppr = sda_allowable_ppr
+        populate_redis(ppr.user, 240, attempts)
+        last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
+        response = testing_api_client.get("/live/quota/1")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": 140,
+            "remarks": [f"Last send attempt was at {last_try}"],
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
