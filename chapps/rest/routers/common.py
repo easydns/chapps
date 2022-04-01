@@ -1,6 +1,6 @@
 """Common code between routers; mainly dependencies"""
 from typing import Optional, List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 from fastapi import status, Depends, Body, HTTPException
 from functools import wraps
@@ -27,6 +27,57 @@ def model_name(cls):
     return cls.__name__.lower()
 
 
+def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
+    mname = model_name(cls)
+    assoc_s = "_".join([a.assoc_name for a in assoc])
+    fname = f"load_{mname}_with_{assoc_s}"
+    Session = sessionmaker(engine)
+
+    def get_model_and_assoc(item_id: int, name: Optional[str]):
+        remarks = []
+        items = {k: None for k in [mname, *[a.assoc_name for a in assoc]]}
+        with Session() as sess:
+            if item_id:
+                items[mname] = sess.scalar(cls.select_by_id(item_id))
+            if name and not items[mname]:
+                items[mname] = sess.scalar(cls.select_by_name(name))
+                if items[mname] and item_id:
+                    remarks.append(
+                        f"Selecting {mname} {items[mname].name} with "
+                        f"id {items[mname].id} by name because "
+                        "provided id does not exist."
+                    )
+            if not items[mname] and not (item_id or name):
+                logger.debug(  # log this, as it is weird
+                    f"{fname}({item_id!r}, {name!r}): unable to load {mname}"
+                )
+                raise HTTPException(  # describe error to the caller
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=(
+                        f"One of {cls.id_name()} or name must be provided. "
+                        "If both are provided, {cls.id_name()} is preferred."
+                    ),
+                )
+            if items[mname]:
+                for a in assoc:
+                    items[a.assoc_name] = getattr(items[mname], a.assoc_name)
+            else:
+                detail = "No {mname} could be found with "
+                if item_id:
+                    detail += "id {item_id}"
+                    if name:
+                        detail += f" or with "
+                if name:
+                    detail += "name {name}"
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail=detail
+                )
+        return (items.pop(mname), items, remarks)
+
+    get_model_and_assoc.__name__ = fname
+    return get_model_and_assoc
+
+
 def db_interaction(  # a decorator with parameters
     *,
     cls,
@@ -44,6 +95,7 @@ def db_interaction(  # a decorator with parameters
     """
 
     mname = model_name(cls)
+    Session = sessionmaker(engine)
 
     def interaction_wrapper(rt_coro):
         logger.debug(f"Wrapping {rt_coro.__name__} for {cls.__name__}")
@@ -57,7 +109,7 @@ def db_interaction(  # a decorator with parameters
 
         @wraps(rt_coro)
         async def wrapped_interaction(*args, **kwargs):
-            with Session(engine) as session:
+            with Session() as session:
                 rt_coro.__globals__["session"] = session
                 rt_coro.__globals__["model_name"] = mname
 
@@ -162,7 +214,7 @@ def adjust_associations(
 ):
     """Build a route to add or subtract associations"""
     mname = model_name(cls)
-    assoc_s = assoc[0].assoc_name if len(assoc) == 1 else "assoc"
+    assoc_s = "_".join([a.assoc_name for a in assoc])
     fname = f"{mname}_{assoc_op}_{assoc_s}"
     params = params or dict(item_id=int)
     assoc_params = {a.assoc_id: a.assoc_type for a in assoc}
