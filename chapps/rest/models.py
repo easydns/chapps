@@ -150,7 +150,7 @@ class TextResp(CHAPPSResponse):
 
 class LiveQuotaResp(CHAPPSResponse):
     response: int
-    remarks: str = ""
+    remarks: List[str] = []
 
 
 class ConfigResp(CHAPPSResponse):
