@@ -20,6 +20,7 @@ from chapps.tests.test_util.conftest import (
 )
 from chapps.tests.test_policy.conftest import (
     populate_redis,
+    populate_redis_multi,
     clear_redis,
     well_spaced_attempts,
     sda_allowable_ppr,
