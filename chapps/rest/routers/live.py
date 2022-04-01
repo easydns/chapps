@@ -1,7 +1,7 @@
 """routes for live access to CHAPPS state"""
-from typing import List
-from fastapi import status, APIRouter, Body
-from ..models import User, Quota, Domain, IntResp, TextResp
+from typing import List, Optional
+from fastapi import status, APIRouter, Body, HTTPException
+from ..models import User, Quota, Domain, LiveQuotaResp
 from ...policy import OutboundQuotaPolicy
 from ..dbsession import sql_engine
 from sqlalchemy.orm import sessionmaker
@@ -10,7 +10,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 Session = sessionmaker(sql_engine)
-TIME_FORMAT = "%d %b %Y %H:%M:%S %z"
 
 api = APIRouter(
     prefix="/live",
@@ -34,25 +33,32 @@ api = APIRouter(
     },
 )
 async def get_current_quota_remaining_for_user(
-    user_id: int = 0, name: str = Body(None)
+    user_id: int = 0, name: Optional[str] = Body(None)
 ):
     remarks = []
     user, quota = None, None
     with Session() as sess:
-        if user_id:
+        if user_id:  # prefer to select by id
             user = sess.scalar(User.select_by_id(user_id))
-        if not user and name:
+        if name and not user:  # if user hasn't been loaded, look for a name
             user = sess.scalars(User.select_by_name(name))
             if user and user_id:
-                remarks.push(
+                remarks.append(
                     f"Selecting user {user.name} with "
                     f"id {user.id} by name because "
                     "provided id has no record."
                 )
-        else:
-            raise HTTPException(
+        if not user and not (user_id or name):
+            logger.debug(  # log this, as it is weird
+                "get_current_quota_remaining_for_user"
+                f"({user_id!r}, {name!r}): unable to load user"
+            )
+            raise HTTPException(  # describe error to the caller
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="One of user_id or name must be provided. If both are provided, user_id is preferred.",
+                detail=(
+                    "One of user_id or name must be provided. "
+                    "If both are provided, user_id is preferred."
+                ),
             )
         if user:
             quota = user.quota
@@ -72,6 +78,6 @@ async def get_current_quota_remaining_for_user(
     # from chapps.policy.OutboundQuotaPolicy that this routine is based on
     # must be atomic, and so it cannot be factored into more than one function
     oqp = OutboundQuotaPolicy()
-    response, more_remarks = oqp.current_quota(user.name)
+    response, more_remarks = oqp.current_quota(user.name, quota)
     remarks.extend(more_remarks)
-    return LiveQuotaResp.send(response, remarks="  ".join(remarks))
+    return LiveQuotaResp.send(response, remarks=remarks)
