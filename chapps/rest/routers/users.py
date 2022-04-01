@@ -34,7 +34,7 @@ user_quota_assoc = User.join_assoc(
     assoc_name="quota",
     assoc_type=int,
     assoc_model=Quota,
-    assoc_id="quota_id",
+    assoc_id=Quota.id_name(),
     table=User.Meta.orm_model.metadata.tables["quota_user"],
 )
 
@@ -42,7 +42,7 @@ user_domains_assoc = User.join_assoc(
     assoc_name="domains",
     assoc_type=List[int],
     assoc_model=Domain,
-    assoc_id="domain_id",
+    assoc_id=Domain.id_name(),
     table=User.Meta.orm_model.metadata.tables["domain_user"],
 )
 
