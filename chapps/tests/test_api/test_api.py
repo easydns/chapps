@@ -543,4 +543,10 @@ class Test_Live_API:
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
-        raise NotImplementedError
+        response = testing_api_client.post("/live/quota/reset/1")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "Quota reset for ccullen@easydns.com",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
