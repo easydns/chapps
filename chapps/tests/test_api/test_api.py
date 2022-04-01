@@ -522,6 +522,13 @@ class Test_Live_API:
             "version": "CHAPPS v0.4",
         }
 
+    def test_get_current_after_multisend(self):
+        """
+        Create test like above but ensure that Redis reflects
+        multisender attempts payload
+        """
+        raise NotImplementedError
+
     def test_reset_quota(
         self,
         fixed_time,
@@ -550,6 +557,38 @@ class Test_Live_API:
             "remarks": [
                 "Quota reset for ccullen@easydns.com: 100 xmits dropped"
             ],
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
+    def test_refresh_quota(
+        self,
+        fixed_time,
+        testing_api_client,
+        sda_allowable_ppr,
+        populated_database_fixture,
+        populate_redis,
+        well_spaced_attempts,
+    ):
+        """
+        Test refreshment of quota policy parameters without dropping xmits
+        """
+        attempts = well_spaced_attempts(100)
+        ppr = sda_allowable_ppr
+        populate_redis(ppr.user, 240, attempts)
+        last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
+        response = testing_api_client.get("/live/quota/remaining/1")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": 140,
+            "remarks": [f"Last send attempt was at {last_try}"],
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.post("/live/quota/refresh/1")
+        assert response.status_code == 200
+        assert response.json == {
+            "response": "Quota policy refreshed for ccullen@easydns.com",
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
