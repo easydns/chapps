@@ -570,7 +570,11 @@ class SenderDomainAuthPolicy(EmailPolicy):
     # but maybe there should also be a generic single entry point
     def sender_domain_key(self, ppr):
         """Create a Redis key for each valid user->domain mapping, for speed"""
-        return self._fmtkey(ppr.user, self._get_sender_domain(ppr))
+        return self._sender_domain_key(ppr.user, self._get_sender_domain(ppr))
+
+    # factored out for use in API
+    def _sender_domain_key(self, user, domain):
+        return self._fmtkey(user, domain)
 
     # determine the domain of the sender address, if any
     @functools.lru_cache(maxsize=2)
@@ -595,9 +599,9 @@ class SenderDomainAuthPolicy(EmailPolicy):
         raise NullSenderException
 
     # We will need to be able to access policy data in the RDBMS
-    def _detect_control_data(self, ppr):
+    def _detect_control_data(self, user, domain):
         """Look for SDA control data for a user"""
-        key = self.sender_domain_key(ppr)
+        key = self._sender_domain_key(user, domain)
         res = None
         try:
             res = self.redis.get(key)
@@ -605,9 +609,11 @@ class SenderDomainAuthPolicy(EmailPolicy):
             self.redis.delete(key)
         return res
 
-    _get_control_data = (
-        _detect_control_data
-    )  ### maintaining parallelism w/ OQP
+    def _get_control_data(self, ppr):
+        return self._detect_control_data(
+            ppr.user, self._get_sender_domain(ppr)
+        )
+
     # We will need to be able to store data in Redis
     def _store_control_data(self, ppr, allowed):
         with self._control_data_storage_context() as dsc:
@@ -665,8 +671,19 @@ class SenderDomainAuthPolicy(EmailPolicy):
             ppr.instance, None
         )  # instances sometimes repeat
         if not result:
-            result = self._detect_control_data(ppr)
+            result = self._get_control_data(ppr)
             if result is None:
                 result = self.acquire_policy_for(ppr)
             self.instance_cache[ppr.instance] = result
         return bool(int(result))
+
+    # For the API -- inspect state
+    def check_policy_cache(self, user, domain):
+        result = self._detect_control_data(user, domain)
+        if result:
+            return "AUTHORIZED"
+        elif result is None:
+            return "NOT CACHED"
+        else:
+            return "PROHIBITED"
+        ### this needs to be an enum
