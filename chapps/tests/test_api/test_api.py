@@ -3,6 +3,7 @@ import pytest
 import pudb
 import chapps.config
 import time
+from urllib.parse import quote_plus as urlencode
 from chapps.policy import TIME_FORMAT
 
 
@@ -616,6 +617,7 @@ class Test_Live_API:
             ],
         }
 
+    # CONFIG oriented
     def test_write_config(
         self, fixed_time, testing_api_client, chapps_mock_cfg_path
     ):
@@ -625,6 +627,29 @@ class Test_Live_API:
         assert response.status_code == 200
         assert response.json() == {
             "response": chapps_mock_cfg_path,
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
+    # SDA oriented
+    def test_sda_cache_peek_with_names(
+        self,
+        fixed_time,
+        testing_api_client,
+        sda_allowable_ppr,
+        populated_database_fixture,
+        populate_redis,
+        well_spaced_attempts,
+    ):
+        response = testing_api_client.get(
+            "/live/sda/on/"
+            + urlencode(chapps.io)
+            + "/for/"
+            + urlencode(sda_allowable_ppr.user)
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "AUTHORIZED",
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
