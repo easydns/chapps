@@ -104,3 +104,15 @@ async def refresh_config_on_disk(passcode: str = Body(...)):
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Password does not match.",
     )
+
+
+@api.post(
+    "/live/sda/on/{domain_name}/for/{user_name}", response_model=TextResp
+)
+async def sda_peek(domain_name: str, user_name: str):
+    """
+    Returns status of cached SDA for the named user and domain,
+    i.e. is this user allowed to transmit email apparently from this domain
+    """
+    sda = SenderDomainAuthPolicy()
+    return TextResp.send(sda.check_policy_cache(user_name, domain_name))
