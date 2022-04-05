@@ -1,11 +1,13 @@
 """routes for live access to CHAPPS state"""
 from typing import List, Optional
 from fastapi import status, APIRouter, Body, HTTPException
-from ..models import User, Quota, Domain, LiveQuotaResp
 from .users import user_quota_assoc, user_domains_assoc
 from .common import load_model_with_assoc
+from ..models import User, Quota, Domain, LiveQuotaResp, TextResp
 from ...policy import OutboundQuotaPolicy
+from ...config import config
 from time import strftime, gmtime
+import hashlib
 import logging
 
 logger = logging.getLogger(__name__)
@@ -72,3 +74,33 @@ async def refresh_quota_policy_for_user(
     remarks.append(f"Quota policy config cache reset for {user.name}")
     response, more_remarks = oqp.refresh_policy_cache(user.name, quota)
     return LiveQuotaResp.send(response, remarks=remarks + more_remarks)
+
+
+@api.post(
+    "/config/write/",
+    response_model=TextResp,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Password does not match."
+        }
+    },
+)
+async def refresh_config_on_disk(passcode: str = Body(...)):
+    """
+    Writes the current effective config to disk.
+    Requires the CHAPPS password to be provided.
+    If line transmission security is an issue, an SSL proxy layer will
+      be required.  This is true for the entire application.
+    """
+    if (
+        hashlib.sha256(
+            passcode.encode(config.chapps.payload_encoding)
+        ).hexdigest()
+        == config.chapps.password
+    ):
+        response = config.write()
+        return TextResp.send(str(response))
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Password does not match.",
+    )

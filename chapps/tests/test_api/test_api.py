@@ -615,3 +615,16 @@ class Test_Live_API:
                 f"Last send attempt was at {last_try}",
             ],
         }
+
+    def test_write_config(
+        self, fixed_time, testing_api_client, chapps_mock_cfg_path
+    ):
+        response = testing_api_client.post(
+            "/live/config/write/", json="screwy%pass${word}"
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": chapps_mock_cfg_path,
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
