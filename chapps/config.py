@@ -8,9 +8,11 @@ from pathlib import Path
 from os import environ as env
 from chapps.util import AttrDict
 from chapps._version import __version__
-import logging, chapps.logging # chapps.logging to get some settings
+import logging
+
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except Exception:
     pass
@@ -38,10 +40,14 @@ class CHAPPSConfig:
         cp["CHAPPS"] = {
             "payload_encoding": "utf-8",
             "listen_address": "localhost",  # should be real IP
-            "listen_port": 11511,           # for API listener
+            "listen_port": 11511,  # for API listener
             "user_key": "sasl_username",
             "require_user_key": True,
             "no_user_key_response": "REJECT Rejected - Authentication failed",
+            "password": (
+                "effda33d276c1d5649f3933a6d6b286e"
+                "d7eaaede0b944221e7699553ce0558e2"
+            ),
         }
         cp["PolicyConfigAdapter"] = {
             "adapter": "mariadb",
@@ -144,6 +150,18 @@ class CHAPPSConfig:
         except Exception:
             pass
         return None
+
+    def write(self, location=None):
+        location = Path(location or self.chapps.config_file)
+        config_file = self.chapps.config_file
+        version = self.chapps.version
+        self.configparser.remove_option("CHAPPS", "config_file")
+        self.configparser.remove_option("CHAPPS", "version")
+        result = CHAPPSConfig.write_config(self.configparser, location)
+        if config_file:
+            self.configparser["CHAPPS"]["config_file"] = config_file
+        self.configparser["CHAPPS"]["version"] = version
+        return result
 
 
 config = CHAPPSConfig()
