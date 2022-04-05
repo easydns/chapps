@@ -574,7 +574,7 @@ class Test_Live_API:
         assert response.json() == {
             "response": 100,
             "remarks": [
-                "Quota reset for ccullen@easydns.com: 100 xmits dropped"
+                "Attempts (quota) reset for ccullen@easydns.com: 100 xmits dropped"
             ],
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
@@ -594,20 +594,24 @@ class Test_Live_API:
         """
         attempts = well_spaced_attempts(100)
         ppr = sda_allowable_ppr
-        populate_redis(ppr.user, 240, attempts)
+        populate_redis(ppr.user, 1200, attempts)
         last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
         response = testing_api_client.get("/live/quota/remaining/1")
         assert response.status_code == 200
         assert response.json() == {
-            "response": 140,
+            "response": 1100,
             "remarks": [f"Last send attempt was at {last_try}"],
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
         response = testing_api_client.post("/live/quota/refresh/1")
         assert response.status_code == 200
-        assert response.json == {
-            "response": "Quota policy refreshed for ccullen@easydns.com",
+        assert response.json() == {
+            "response": 140,
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
+            "remarks": [
+                f"Quota policy config cache reset for ccullen@easydns.com",
+                f"Last send attempt was at {last_try}",
+            ],
         }
