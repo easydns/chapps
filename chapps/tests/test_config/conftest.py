@@ -61,10 +61,7 @@ def chapps_sentinel_env(monkeypatch, chapps_sentinel_cfg_path):
 def chapps_mock_config():
     """Some settings are intentionally left out; their defaults shall prevail"""
     cp = configparser.ConfigParser(interpolation=None)
-    cp["CHAPPS"] = {
-        "payload_encoding": "UTF-8",
-        "require_user_key": False,
-    }
+    cp["CHAPPS"] = {"payload_encoding": "UTF-8", "require_user_key": False}
     cp["PolicyConfigAdapter"] = {
         "adapter": "mysql",
         "db_name": "chapps_test",
@@ -80,7 +77,10 @@ def chapps_mock_config():
     cp["GreylistingPolicy"] = {
         "rejection_message": "DEFER_IF_PERMIT Service temporarily stupid"
     }
-    cp["SPFEnforcementPolicy"] = {"whitelist": ["chapps.io"], "adapter": "None"}
+    cp["SPFEnforcementPolicy"] = {
+        "whitelist": ["chapps.io"],
+        "adapter": "None",
+    }
     cp["Redis"] = {
         "sentinel_master": "",
         "server": "127.0.0.1",
@@ -110,7 +110,10 @@ def chapps_sentinel_config():
     cp["GreylistingPolicy"] = {
         "rejection_message": "DEFER_IF_PERMIT Service temporarily stupid"
     }
-    cp["SPFEnforcementPolicy"] = {"whitelist": ["chapps.io"], "adapter": "None"}
+    cp["SPFEnforcementPolicy"] = {
+        "whitelist": ["chapps.io"],
+        "adapter": "None",
+    }
     cp["Redis"] = {
         "sentinel_servers": "10.5.12.201:26379 10.5.12.202:26379 10.5.12.203:26379",
         "sentinel_dataset": "redis-easymail",
@@ -123,11 +126,15 @@ def chapps_sentinel_config():
 
 @pytest.fixture(scope="session")
 def chapps_mock_config_file(chapps_mock_config, chapps_mock_cfg_path):
-    yield from _chapps_mock_config_file(chapps_mock_config, chapps_mock_cfg_path)
+    yield from _chapps_mock_config_file(
+        chapps_mock_config, chapps_mock_cfg_path
+    )
 
 
 @pytest.fixture(scope="session")
-def chapps_sentinel_config_file(chapps_sentinel_config, chapps_sentinel_cfg_path):
+def chapps_sentinel_config_file(
+    chapps_sentinel_config, chapps_sentinel_cfg_path
+):
     yield from _chapps_mock_config_file(
         chapps_sentinel_config, chapps_sentinel_cfg_path
     )
