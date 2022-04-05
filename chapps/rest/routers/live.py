@@ -46,8 +46,29 @@ async def reset_live_quota_for_user(
     user, assoc_d, remarks = load_user_with_quota(user_id, name)
     quota = assoc_d[user_quota_assoc.assoc_name]
     oqp = OutboundQuotaPolicy()
-    response, remarks = oqp.reset_quota(user.name)
+    response, more_remarks = oqp.reset_quota(user.name)
     if not quota:
         remarks.append(f"User {user.name} has no assigned quota.")
-    logger.info(" ".join(remarks))
-    return LiveQuotaResp.send(response, remarks=remarks)
+    logger.info(" ".join(more_remarks))  # log only reset message
+    return LiveQuotaResp.send(response, remarks=remarks + more_remarks)
+
+
+@api.post("/quota/refresh/{user_id}", response_model=LiveQuotaResp)
+async def refresh_quota_policy_for_user(
+    user_id: int = 0, name: Optional[str] = Body(None)
+):
+    """
+    Returns the new remaining quota after the policy update as the
+    numerical response.
+    """
+    user, assoc_d, remarks = load_user_with_quota(user_id, name)
+    quota = assoc_d[user_quota_assoc.assoc_name]
+    oqp = OutboundQuotaPolicy()
+    if not quota:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Cannot load quota for user {user.name}: none assigned.",
+        )
+    remarks.append(f"Quota policy config cache reset for {user.name}")
+    response, more_remarks = oqp.refresh_policy_cache(user.name, quota)
+    return LiveQuotaResp.send(response, remarks=remarks + more_remarks)
