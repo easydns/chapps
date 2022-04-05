@@ -28,7 +28,9 @@ class Test_Config:
         cp = configparser.ConfigParser()
         CHAPPSConfig.setup_config(cp)
         assert cp["CHAPPS"]["payload_encoding"] == "utf-8"
-        assert cp["CHAPPS"]["user_key"] == "sasl_username"  # we assume this elsewhere
+        assert (
+            cp["CHAPPS"]["user_key"] == "sasl_username"
+        )  # we assume this elsewhere
         assert cp["PolicyConfigAdapter"]["adapter"] == "mariadb"
         assert cp["GreylistingPolicy"]["acceptance_message"] == "DUNNO"
         assert cp["Redis"]["server"] == "localhost"
@@ -51,6 +53,15 @@ class Test_Config:
             assert CHAPPSConfig.write_config(
                 chapps_mock_config, "/dev/null/somedir/noway.ini"
             )
+
+    def test_self_write(self, chapps_test_env, chapps_test_cfg_path):
+        cfg = CHAPPSConfig()
+        cfg_path = cfg.write(DEFAULT_CHAPPS_TEST_CONFIG_WRITE_PATH)
+        assert filecmp.cmp(
+            str(cfg_path), cfg.chapps.config_file, shallow=False
+        )
+        cfg_path.unlink()
+        assert cfg.chapps.config_file == chapps_test_cfg_path
 
     def test_chapps_config_defaults(self, chapps_test_env):
         """Ensure that all CHAPPS settings defaults are present"""
@@ -110,7 +121,10 @@ class Test_Config:
             chapps_config.payload_encoding
             == chapps_mock_config["CHAPPS"]["payload_encoding"]
         )
-        assert policy_config.rejection_message == "554 Rejected because I said so."
+        assert (
+            policy_config.rejection_message
+            == "554 Rejected because I said so."
+        )
         assert policy_config.acceptance_message == "DUNNO"
         assert adapter_config.adapter == "mysql"
         assert adapter_config.db_port == 3306
@@ -135,4 +149,6 @@ class Test_Config:
     ):
         config = CHAPPSConfig()
         policy_grl = config.get_block("GreylistingPolicy")
-        assert policy_grl.rejection_message == config.policy_grl.rejection_message
+        assert (
+            policy_grl.rejection_message == config.policy_grl.rejection_message
+        )
