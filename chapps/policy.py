@@ -375,12 +375,11 @@ class OutboundQuotaPolicy(EmailPolicy):
             try:
                 last = float(last)
             except ValueError:
-                logger.debug(f"current_quota got last attempt: {last!r}")
                 last = float(last.split(b":")[0])
             last_try = time.strftime(TIME_FORMAT, time.gmtime(last))
             remarks.append(f"Last send attempt was at {last_try}")
         if not limit_bytes:
-            remarks.append(f"There is no resident quota limit for {user}.")
+            remarks.append(f"There is no cached quota limit for {user}.")
         if not quota:
             remarks.append(f"There is no quota configured for user {user}.")
         if not limit:
@@ -397,8 +396,19 @@ class OutboundQuotaPolicy(EmailPolicy):
         results = pipe.execute()
         pipe.reset()
         attempts = results[0]
-        n_att = len(attempts) if attempts else 0
-        return (n_att, [f"Quota reset for {user}: {n_att} xmits dropped"])
+        if attempts:
+            msg = f"Attempts (quota) reset for {user}:"
+            n_att = len(attempts)
+        else:
+            n_att = 0
+            msg = f"No attempts to reset for {user}:"
+        msg += f" {n_att} xmits dropped"
+        return (n_att, [msg])
+
+    def refresh_policy_cache(self, user: str, quota: Quota):
+        """API adapter method for refreshing policy config cache"""
+        self.acquire_policy_for(user, quota.quota)
+        return self.current_quota(user, quota)
 
     def _store_control_data(self, user, quota, margin=0):
         """Using a context manager, build up a set of instructions to store control data"""
@@ -427,14 +437,15 @@ class OutboundQuotaPolicy(EmailPolicy):
             self.redis.delete(key)
         return res
 
-    def acquire_policy_for(self, user):
+    def acquire_policy_for(self, user, quota=None):
         """Go get the policy for a sender from the relational database or
            other policy source via adapter.  If the margin needs to be
            altered on a per-sender basis, this is the place to adjust
            that.
         """
-        with self._adapter_handle() as adapter:
-            quota = adapter.quota_for_user(user)
+        if not quota:
+            with self._adapter_handle() as adapter:
+                quota = adapter.quota_for_user(user)
         if quota:
             self._store_control_data(user, quota, self.params.margin)
 
