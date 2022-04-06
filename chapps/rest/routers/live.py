@@ -3,10 +3,9 @@ from typing import List, Optional
 from fastapi import status, APIRouter, Body, HTTPException
 from .users import user_quota_assoc, user_domains_assoc
 from .common import load_model_with_assoc
-from ..models import User, Quota, Domain, LiveQuotaResp, TextResp
-from ...policy import OutboundQuotaPolicy
+from ..models import User, LiveQuotaResp, TextResp
+from ...policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
 from ...config import config
-from time import strftime, gmtime
 import hashlib
 import logging
 
@@ -106,9 +105,7 @@ async def refresh_config_on_disk(passcode: str = Body(...)):
     )
 
 
-@api.post(
-    "/live/sda/on/{domain_name}/for/{user_name}", response_model=TextResp
-)
+@api.get("/sda/{domain_name}/for/{user_name}", response_model=TextResp)
 async def sda_peek(domain_name: str, user_name: str):
     """
     Returns status of cached SDA for the named user and domain,
