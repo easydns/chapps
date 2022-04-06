@@ -514,7 +514,7 @@ class Test_Live_API:
         ppr = sda_allowable_ppr
         populate_redis(ppr.user, 240, attempts)
         last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
-        response = testing_api_client.get("/live/quota/remaining/1")
+        response = testing_api_client.get("/live/quota/1")
         assert response.status_code == 200
         assert response.json() == {
             "response": 140,
@@ -540,7 +540,7 @@ class Test_Live_API:
         ppr = sda_allowable_ppr
         populate_redis_multi(ppr.user, 240, attempts)
         last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
-        response = testing_api_client.get("/live/quota/remaining/1")
+        response = testing_api_client.get("/live/quota/1")
         assert response.status_code == 200
         assert response.json() == {
             "response": 140,
@@ -562,7 +562,7 @@ class Test_Live_API:
         ppr = sda_allowable_ppr
         populate_redis(ppr.user, 240, attempts)
         last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
-        response = testing_api_client.get("/live/quota/remaining/1")
+        response = testing_api_client.get("/live/quota/1")
         assert response.status_code == 200
         assert response.json() == {
             "response": 140,
@@ -570,7 +570,7 @@ class Test_Live_API:
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
-        response = testing_api_client.post("/live/quota/reset/1")
+        response = testing_api_client.delete("/live/quota/1")
         assert response.status_code == 200
         assert response.json() == {
             "response": 100,
@@ -597,7 +597,7 @@ class Test_Live_API:
         ppr = sda_allowable_ppr
         populate_redis(ppr.user, 1200, attempts)
         last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
-        response = testing_api_client.get("/live/quota/remaining/1")
+        response = testing_api_client.get("/live/quota/1")
         assert response.status_code == 200
         assert response.json() == {
             "response": 1100,
@@ -605,7 +605,7 @@ class Test_Live_API:
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
-        response = testing_api_client.post("/live/quota/refresh/1")
+        response = testing_api_client.post("/live/quota/1")
         assert response.status_code == 200
         assert response.json() == {
             "response": 140,
