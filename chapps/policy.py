@@ -4,6 +4,7 @@ Policy routines for CHAPPS
 """
 import time
 from contextlib import contextmanager
+from collections import deque
 import functools
 import redis
 import logging, chapps.logging
@@ -15,7 +16,7 @@ from chapps.signals import (
     NullSenderException,
     NotAnEmailAddressException,
 )
-from chapps.rest.models import Quota
+from chapps.rest.models import Quota, SDAStatus
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -136,21 +137,13 @@ class GreylistingPolicy(EmailPolicy):
         ###       can be generalized
         instance = ppr.instance
         cached_response = self.instance_cache.get(instance, None)
-        logger.debug(
-            f"Approval for {instance} finds cached value {cached_response}"
-        )
         if cached_response is not None:
-            logger.debug(f"Returning cached response for {instance}")
             return cached_response
         response = self._evaluate_policy_request(ppr)
         self.instance_cache[instance] = response
-        logger.debug(
-            f"Caching and returning reponse {response} for {instance}"
-        )
         return response
 
     def _evaluate_policy_request(self, ppr):
-        logger.debug("Entering subroutine.")
         try:
             logger.debug(f"Getting control data for {self.tuple_key( ppr )}")
             tuple_seen, client_tally = self._get_control_data(ppr)
@@ -164,14 +157,14 @@ class GreylistingPolicy(EmailPolicy):
             self._update_client_tally(ppr)
             return True
         if tuple_seen:
-            ### The tuple is recognized; need to check if it was long enough ago
+            # The tuple is recognized; need to check if it was long enough ago
             now = time.time()
             if now - tuple_seen >= self.min_defer:
-                ### the email will be approved; some housekeeping is necessary
+                # the email will be approved; some housekeeping is necessary
                 self._update_client_tally(ppr)
                 return True
-        ### if we get here, the tuple either isn't stored or was stored too recently
-        ### either way, we update it
+        # if we get here, the tuple either isn't stored or was stored too recently
+        # either way, we update it
         self._update_tuple(ppr)
         return False
 
@@ -462,18 +455,13 @@ class OutboundQuotaPolicy(EmailPolicy):
         instance = ppr.instance
         cached_response = self.instance_cache.get(instance, None)
         if cached_response is not None:
-            logger.debug(f"Returning cached response for {instance}")
             return cached_response
         if not self._detect_control_data(
             user
         ):  # attempt to retrieve control data if need be
-            logger.debug(f"Obtaining quota policy for {user}")
             self.acquire_policy_for(user)
         response = self._evaluate_policy_request(ppr)
         self.instance_cache[instance] = response
-        logger.debug(
-            f"Caching and returning response {response} for {instance}"
-        )
         return response
 
     def _get_delta(self, ppr, attempts):
@@ -677,13 +665,48 @@ class SenderDomainAuthPolicy(EmailPolicy):
             self.instance_cache[ppr.instance] = result
         return bool(int(result))
 
+    def _decode_policy_cache(self, result):
+        if result is not None:
+            result = int(result)
+            if result:
+                return SDAStatus.AUTH
+            else:
+                return SDAStatus.PROH
+        else:
+            return SDAStatus.NONE
+
     # For the API -- inspect state
     def check_policy_cache(self, user, domain):
-        result = self._detect_control_data(user, domain)
-        if result:
-            return "AUTHORIZED"
-        elif result is None:
-            return "NOT CACHED"
-        else:
-            return "PROHIBITED"
-        ### this needs to be an enum
+        return self._decode_policy_cache(
+            self._detect_control_data(user, domain)
+        )
+
+    def clear_policy_cache(self, user, domain):
+        prev = self.check_policy_cache(user, domain)
+        if prev != SDAStatus.NONE:
+            self.redis.delete(self._sender_domain_key(user, domain))
+        return prev
+
+    def bulk_clear_policy_cache(self, users, domains):
+        # there seems to be no max pipeline size
+        # but if things get sketchy, we can chunk this
+        with self.redis.pipeline() as pipe:
+            for d in domains:
+                for u in users:
+                    pipe.delete(self._sender_domain_key(u, d))
+            pipe.execute()
+            pipe.reset()
+
+    def bulk_check_policy_cache(self, users, domains):
+        """Build a map based on domain, full of maps from username to status"""
+        with self.redis.pipeline() as pipe:
+            for d in domains:
+                for u in users:
+                    logger.debug(f"bcpc seeking SDA for {u} from {d}")
+                    pipe.get(self._sender_domain_key(u, d))
+            results = deque(pipe.execute())
+            pipe.reset()
+        return {
+            d: {u: self._decode_policy_cache(results.popleft()) for u in users}
+            for d in domains
+        }
