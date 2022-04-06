@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import status, APIRouter, Body, HTTPException
 from .users import user_quota_assoc, user_domains_assoc
 from .common import load_model_with_assoc
-from ..models import User, LiveQuotaResp, TextResp
+from ..models import User, Domain, LiveQuotaResp, TextResp, DomainUserMapResp
 from ...policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
 from ...config import config
 import hashlib
@@ -29,7 +29,7 @@ api = APIRouter(
 load_user_with_quota = load_model_with_assoc(User, assoc=[user_quota_assoc])
 
 
-@api.get("/quota/remaining/{user_id}", response_model=LiveQuotaResp)
+@api.get("/quota/{user_id}", response_model=LiveQuotaResp)
 async def get_current_quota_remaining_for_user(
     user_id: int = 0, name: Optional[str] = Body(None)
 ):
@@ -40,7 +40,7 @@ async def get_current_quota_remaining_for_user(
     return LiveQuotaResp.send(response, remarks=remarks + more_remarks)
 
 
-@api.post("/quota/reset/{user_id}", response_model=LiveQuotaResp)
+@api.delete("/quota/{user_id}", response_model=LiveQuotaResp)
 async def reset_live_quota_for_user(
     user_id: int = 0, name: Optional[str] = Body(None)
 ):
@@ -54,7 +54,7 @@ async def reset_live_quota_for_user(
     return LiveQuotaResp.send(response, remarks=remarks + more_remarks)
 
 
-@api.post("/quota/refresh/{user_id}", response_model=LiveQuotaResp)
+@api.post("/quota/{user_id}", response_model=LiveQuotaResp)
 async def refresh_quota_policy_for_user(
     user_id: int = 0, name: Optional[str] = Body(None)
 ):
@@ -105,6 +105,24 @@ async def refresh_config_on_disk(passcode: str = Body(...)):
     )
 
 
+@api.get("/sda/", response_model=DomainUserMapResp)
+async def sda_batch_peek(domain_ids: List[int], user_ids: List[int]):
+    """
+    Looks at current authorizations for all domain-user combinations
+    Returns their cache status as a dict of dicts, keyed on name,
+      with domain first.
+    """
+    sda = SenderDomainAuthPolicy()
+    with Session() as sess:
+        domains = sess.scalars(Domain.select_by_ids(domain_ids))
+        users = sess.scalars(User.select_by_ids(user_ids))
+    domain_names = [d.name for d in domains]
+    user_names = [u.name for u in domains]
+    return DomainUserMapResp.send(
+        sda.bulk_check_policy_cache(user_names, domain_names)
+    )
+
+
 @api.get("/sda/{domain_name}/for/{user_name}", response_model=TextResp)
 async def sda_peek(domain_name: str, user_name: str):
     """
@@ -113,3 +131,27 @@ async def sda_peek(domain_name: str, user_name: str):
     """
     sda = SenderDomainAuthPolicy()
     return TextResp.send(sda.check_policy_cache(user_name, domain_name))
+
+
+@api.delete("/sda/", response_model=TextResp)
+async def sda_batch_clear(domain_ids: List[int], user_ids: List[int]):
+    """
+    Clears all domain - user mappings by iterating through both lists
+    """
+    sda = SenderDomainAuthPolicy()
+    with Session() as sess:
+        domains = sess.scalars(Domain.select_by_ids(domain_ids))
+        users = sess.scalars(User.select_by_ids(user_ids))
+    domain_names = [d.name for d in domains]
+    user_names = [u.name for u in users]
+    sda.bulk_clear_policy_cache(user_names, domain_names)
+    return TextResp.send("SDA cache cleared for specified domains x users.")
+
+
+@api.delete("/sda/{domain_name}/for/{user_name}", response_model=TextResp)
+async def sda_clear(domain_name: str, user_name: str):
+    """
+    Returns the status of the SDA prior to clearing.
+    """
+    sda = SenderDomainAuthPolicy()
+    return TextResp.send(sda.clear_policy_cache(user_name, domain_name))
