@@ -98,8 +98,6 @@ def db_interaction(  # a decorator with parameters
     Session = sessionmaker(engine)
 
     def interaction_wrapper(rt_coro):
-        logger.debug(f"Wrapping {rt_coro.__name__} for {cls.__name__}")
-
         exc = exception_message.format(
             route_name=rt_coro.__name__, model=mname
         )
@@ -274,7 +272,6 @@ def adjust_associations(
             for param, type_ in assoc_params.items()
         ]
     )
-    logger.debug(f"{fname} got routeparams {routeparams!r}")
     assoc_op_i.__signature__ = inspect.Signature(routeparams)
     assoc_op_i.__annotations__ = params
     assoc_op_i.__name__ = fname
@@ -365,7 +362,6 @@ def update_item(cls, *, response_model, assoc=None, engine=sql_engine):
                 for a in assoc
             ]
         )
-    logger.debug(f"{fname} got routeparams {routeparams!r}")
     update_i.__signature__ = inspect.Signature(routeparams)
     update_i.__annotations__ = params
     update_i.__name__ = fname
@@ -449,7 +445,6 @@ def create_item(
                 for a in assoc
             ]
         )
-    logger.debug(f"{fname} got routeparams: {routeparams!r}")
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
     create_i.__name__ = fname

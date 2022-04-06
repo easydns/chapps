@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-ability
+class OutboundPPR(
+    PostfixPolicyRequest
+):  # empty line eliminated for paste-ability
     memoized_routines = dict()
     # Initialize with optional config, in order to allow site-specific user-search path
     def __init__(self, payload, *, cfg=None):
@@ -49,11 +51,12 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
         # if there is no procedure, we build one
         if not get_user:
             if cfg.require_user_key:
-                logger.debug(f"configfile={cfg.config_file}, cfg.require_user_key={cfg.require_user_key}")
                 if not cfg.user_key:
                     raise ConfigurationError(
-                        ("If require_user_key is True, "
-                         "then user_key must be set.")
+                        (
+                            "If require_user_key is True, "
+                            "then user_key must be set."
+                        )
                     )
                 qk_list = [cfg.user_key]
             else:
@@ -61,7 +64,7 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
                     "sasl_username",
                     "ccert_subject",
                     "sender",
-                    "client_address"
+                    "client_address",
                 ]
                 qk = cfg.user_key
                 if qk and qk != qk_list[0]:
@@ -72,12 +75,14 @@ class OutboundPPR(PostfixPolicyRequest):  # empty line eliminated for paste-abil
                     user = getattr(ppr, k, None)
                     if user and user != "None":
                         logger.debug(
-                            f"Selecting quota-identifier {user} from key {k}"
+                            f"Selecting user-identifier {user} from key {k}"
                         )
                         return user
                 raise ValueError(
-                    ("None of the following keys had values in "
-                     f"the provided PPR: {qk_list}")
+                    (
+                        "None of the following keys had values in "
+                        f"the provided PPR: {qk_list}"
+                    )
                 )
 
             # this memoizes the procedure for finding the user
