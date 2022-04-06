@@ -1,8 +1,10 @@
 """routes for live access to CHAPPS state"""
 from typing import List, Optional
 from fastapi import status, APIRouter, Body, HTTPException
+from sqlalchemy.orm import sessionmaker
 from .users import user_quota_assoc, user_domains_assoc
 from .common import load_model_with_assoc
+from ..dbsession import sql_engine
 from ..models import User, Domain, LiveQuotaResp, TextResp, DomainUserMapResp
 from ...policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
 from ...config import config
@@ -10,6 +12,7 @@ import hashlib
 import logging
 
 logger = logging.getLogger(__name__)
+Session = sessionmaker(sql_engine)
 
 api = APIRouter(
     prefix="/live",
@@ -114,10 +117,10 @@ async def sda_batch_peek(domain_ids: List[int], user_ids: List[int]):
     """
     sda = SenderDomainAuthPolicy()
     with Session() as sess:
-        domains = sess.scalars(Domain.select_by_ids(domain_ids))
-        users = sess.scalars(User.select_by_ids(user_ids))
-    domain_names = [d.name for d in domains]
-    user_names = [u.name for u in domains]
+        domain_names = list(
+            sess.scalars(Domain.select_names_by_id(domain_ids))
+        )
+        user_names = list(sess.scalars(User.select_names_by_id(user_ids)))
     return DomainUserMapResp.send(
         sda.bulk_check_policy_cache(user_names, domain_names)
     )
@@ -140,10 +143,10 @@ async def sda_batch_clear(domain_ids: List[int], user_ids: List[int]):
     """
     sda = SenderDomainAuthPolicy()
     with Session() as sess:
-        domains = sess.scalars(Domain.select_by_ids(domain_ids))
-        users = sess.scalars(User.select_by_ids(user_ids))
-    domain_names = [d.name for d in domains]
-    user_names = [u.name for u in users]
+        domain_names = list(
+            sess.scalars(Domain.select_names_by_id(domain_ids))
+        )
+        user_names = list(sess.scalars(User.select_names_by_id(user_ids)))
     sda.bulk_clear_policy_cache(user_names, domain_names)
     return TextResp.send("SDA cache cleared for specified domains x users.")
 

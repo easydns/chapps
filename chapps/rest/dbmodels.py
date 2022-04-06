@@ -123,6 +123,9 @@ class DB_Customizations(DeclarativeMeta):
     def select_by_id(cls, id: int):
         return select(cls).where(cls.id == id)
 
+    def select_names_by_id(cls, ids: List[int]):
+        return select(cls.name).where(tuple_(cls.id).in_([(i,) for i in ids]))
+
     def select_by_pattern(cls, q: str):
         return select(cls).where(cls.name.like(q))
 
@@ -135,6 +138,8 @@ class DB_Customizations(DeclarativeMeta):
         )
 
     def remove_by_id(cls, ids: List[int]):  # (i,) creates a tuple w/ 1 element
+        if type(ids) == int:
+            ids = [ids]
         return delete(cls).where(tuple_(cls.id).in_([(i,) for i in ids]))
 
     def update_by_id(cls, item):
