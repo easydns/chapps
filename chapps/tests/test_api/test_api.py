@@ -3,7 +3,7 @@ import pytest
 import pudb
 import chapps.config
 import time
-from urllib.parse import quote_plus as urlencode
+from urllib.parse import quote as urlencode
 from chapps.policy import TIME_FORMAT
 
 
@@ -636,14 +636,16 @@ class Test_Live_API:
         self,
         fixed_time,
         testing_api_client,
+        testing_policy_sda,
         sda_allowable_ppr,
         populated_database_fixture,
         populate_redis,
         well_spaced_attempts,
     ):
+        result = testing_policy_sda.approve_policy_request(sda_allowable_ppr)
         response = testing_api_client.get(
-            "/live/sda/on/"
-            + urlencode(chapps.io)
+            "/live/sda/"
+            + urlencode("chapps.io")
             + "/for/"
             + urlencode(sda_allowable_ppr.user)
         )

@@ -24,6 +24,7 @@ from chapps.tests.test_policy.conftest import (
     clear_redis,
     well_spaced_attempts,
     sda_allowable_ppr,
+    testing_policy_sda,
 )
 import chapps.config
 import time
