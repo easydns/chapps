@@ -5,6 +5,11 @@ import chapps.config
 import time
 from urllib.parse import quote as urlencode
 from chapps.policy import TIME_FORMAT
+from chapps.rest.models import SDAStatus
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class Test_API_Health:
@@ -632,7 +637,7 @@ class Test_Live_API:
         }
 
     # SDA oriented
-    def test_sda_cache_peek_with_names(
+    def test_sda_cache_peek_single(
         self,
         fixed_time,
         testing_api_client,
@@ -652,6 +657,137 @@ class Test_Live_API:
         assert response.status_code == 200
         assert response.json() == {
             "response": "AUTHORIZED",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
+    def test_sda_cache_peek_bulk(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_sda,
+        sda_allowable_ppr,
+        sda_unauth_ppr,
+        populated_database_fixture_with_extras,
+        populate_redis,
+        well_spaced_attempts,
+    ):
+        result = testing_policy_sda.approve_policy_request(sda_allowable_ppr)
+        assert result == True
+        result = testing_policy_sda.approve_policy_request(sda_unauth_ppr)
+        assert result == False
+        response = testing_api_client.get(
+            "/live/sda/", json={"user_ids": [1, 2], "domain_ids": [1, 2]}
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {
+                "chapps.io": {
+                    "ccullen@easydns.com": SDAStatus.AUTH.value,
+                    "somebody@chapps.io": SDAStatus.NONE.value,
+                },
+                "easydns.com": {
+                    "ccullen@easydns.com": SDAStatus.NONE.value,
+                    "somebody@chapps.io": SDAStatus.PROH.value,
+                },
+            },
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
+    def test_sda_cache_clear_single(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_sda,
+        sda_allowable_ppr,
+        populated_database_fixture,
+        populate_redis,
+        well_spaced_attempts,
+    ):
+        result = testing_policy_sda.approve_policy_request(sda_allowable_ppr)
+        response = testing_api_client.delete(
+            "/live/sda/"
+            + urlencode("chapps.io")
+            + "/for/"
+            + urlencode(sda_allowable_ppr.user)
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": SDAStatus.AUTH.value,
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.get(
+            "/live/sda/"
+            + urlencode("chapps.io")
+            + "/for/"
+            + urlencode(sda_allowable_ppr.user)
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": SDAStatus.NONE.value,
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+
+    def test_sda_cache_clear_bulk(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_sda,
+        sda_allowable_ppr,
+        sda_unauth_ppr,
+        populated_database_fixture_with_extras,
+        populate_redis,
+        well_spaced_attempts,
+    ):
+        result = testing_policy_sda.approve_policy_request(sda_allowable_ppr)
+        assert result == True
+        result = testing_policy_sda.approve_policy_request(sda_unauth_ppr)
+        assert result == False
+        response = testing_api_client.get(
+            "/live/sda/", json={"user_ids": [1, 2], "domain_ids": [1, 2]}
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {
+                "chapps.io": {
+                    "ccullen@easydns.com": SDAStatus.AUTH.value,
+                    "somebody@chapps.io": SDAStatus.NONE.value,
+                },
+                "easydns.com": {
+                    "ccullen@easydns.com": SDAStatus.NONE.value,
+                    "somebody@chapps.io": SDAStatus.PROH.value,
+                },
+            },
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.delete(
+            "/live/sda/", json={"domain_ids": [1, 2], "user_ids": [1, 2]}
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "SDA cache cleared for specified domains x users.",
+            "timestamp": fixed_time,
+            "version": "CHAPPS v0.4",
+        }
+        response = testing_api_client.get(
+            "/live/sda/", json={"user_ids": [1, 2], "domain_ids": [1, 2]}
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {
+                "chapps.io": {
+                    "ccullen@easydns.com": SDAStatus.NONE.value,
+                    "somebody@chapps.io": SDAStatus.NONE.value,
+                },
+                "easydns.com": {
+                    "ccullen@easydns.com": SDAStatus.NONE.value,
+                    "somebody@chapps.io": SDAStatus.NONE.value,
+                },
+            },
             "timestamp": fixed_time,
             "version": "CHAPPS v0.4",
         }
