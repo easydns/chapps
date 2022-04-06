@@ -1,11 +1,18 @@
 """pytest config for chapps.util"""
 
 import pytest
+import logging
+import time
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
 def mock_config_dict():
-    return dict(intval="99", floatval="9.9", stringval="ninety-nine", boolean="True")
+    return dict(
+        intval="99", floatval="9.9", stringval="ninety-nine", boolean="True"
+    )
 
 
 @pytest.fixture
@@ -22,8 +29,11 @@ def postfix_sasl_username():
 def postfix_policy_request_payload():
     return _postfix_policy_request_payload()
 
+
 def _postfix_policy_request_payload():
-    def _pprp(email="ccullen@easydns.com", recipients=None, instance=None, **kwargs):
+    def _pprp(
+        email="ccullen@easydns.com", recipients=None, instance=None, **kwargs
+    ):
         namespace = dict(
             sender=email,
             sasl_username=email,
@@ -39,7 +49,9 @@ def _postfix_policy_request_payload():
         namespace.update(kwargs)
         if "recipient" not in namespace:
             recipients = (
-                recipients or namespace.get("recipients", None) or ["bar@foo.tld"]
+                recipients
+                or namespace.get("recipients", None)
+                or ["bar@foo.tld"]
             )
             namespace["recipient"] = ",".join(recipients)
         if "instance" not in namespace:
@@ -86,11 +98,13 @@ server_port=54321
 def postfix_policy_request_message(postfix_policy_request_payload):
     return _postfix_policy_request_message(postfix_policy_request_payload)
 
+
 def _postfix_policy_request_message(postfix_policy_request_payload=None):
     pprp = postfix_policy_request_payload or _postfix_policy_request_payload()
+
     def _ppr(email=None, recipients=None, instance=None, **kwargs):
         return (
-            pprp(email, recipients, **kwargs)
+            pprp(email, recipients, instance, **kwargs)
             .decode("utf-8")
             .split("\n")
         )
