@@ -1,6 +1,6 @@
 from chapps.config import config
 from chapps.rest import dbmodels
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 from enum import Enum
@@ -17,6 +17,12 @@ class AssocOperation(str, Enum):
     add = "add"
     subtract = "subtract"
     replace = "replace"
+
+
+class SDAStatus(str, Enum):
+    AUTH = "AUTHORIZED"
+    PROH = "PROHIBITED"
+    NONE = "NOT CACHED"
 
 
 # a metaclass for passing calls through to the orm_model
@@ -157,10 +163,15 @@ class LiveQuotaResp(CHAPPSResponse):
     remarks: List[str] = []
 
 
-class ConfigResp(CHAPPSResponse):
-    response: List[str]
-    written: bool
-    write_path: str = None
+class DomainUserMapResp(CHAPPSResponse):
+    """
+    A dict-of-dicts:
+      top level key is domain name
+      second key is user
+      value is SDAStatus
+    """
+
+    response: Dict[str, Dict[str, SDAStatus]]
 
 
 class DeleteResp(TextResp):
