@@ -193,7 +193,15 @@ setup(
     packages=["chapps"],
     data_files=[
         ("chapps", ["README.md", "INSTALLATION.md"]),
-        ("chapps/install", ["install/chapps-systemd-service.tmpl"]),
+        (
+            "chapps/install",
+            [
+                "install/chapps-systemd-service.tmpl",
+                "install/chapps-api-systemd-service.tmpl",
+                "install/chapps-api-gunicorn.socket",
+                "install/chapps-api-nginx.conf",
+            ],
+        ),
         (
             "chapps/postfix/greylisting",
             ["postfix/greylisting/main.cf", "postfix/greylisting/master.cf"],
