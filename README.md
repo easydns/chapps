@@ -126,6 +126,30 @@ with a large volume of email.  Since SPF doesn't make much use of
 Redis, the inbound load may be lighter than the outbound load,
 depending on which things happen more at a particular site.
 
+## API Service
+
+Starting with version 0.4.0, a REST API service is included, based on
+FastAPI, and using SQLAlchemy with the MySQLclient backend.  A service
+template for the API is provided, as well as a socket template and
+an **nginx** example config, for using a UDS to proxy between the web
+and the application.  Alternatively, Gunicorn can be used to launch
+Uvicorn workers and serve the API directly.
+
+It is also possible that other approaches are preferred at other sites.
+The extra files, provided in the `install` directory, are provided in
+the hope that they may be useful.
+
+The API is self-documenting.  Once it is running, visit it at `/docs/`
+to browse the documentation.
+
+The API service needs to have the same configuration as the other
+CHAPPS services it is meant to manage.  Since it instantiates policy
+objects, it is best to simply provide the same copy of the config to
+all related nodes.  Please note that the API service is completely
+separate from the policy service(s), and need not run on the same
+server, and in fact, probably should not run on the same server, with
+the policy service.
+
 ## Outbound Services
 
 Policy services can be divided into those which work on outbound mail,
