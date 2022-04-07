@@ -190,7 +190,7 @@ with open("README.md", "r") as fh:
 setup(
     cmdclass={"install": PostInstallSetup},
     name="chapps",
-    packages=["chapps"],
+    packages=["chapps", "chapps.rest", "chapps.rest.routers"],
     data_files=[
         ("chapps", ["README.md", "INSTALLATION.md"]),
         (
