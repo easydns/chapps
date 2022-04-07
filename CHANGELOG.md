@@ -18,6 +18,16 @@
       install API prerequisites (which are not otherwise needed)
 	- CHANGELOG adapted to be Markdown-compatible
 
+##v0.3.13
+	- fixing a problem with logging, wherein library logs were suppressed
+	- generally tidying logging
+	- updated documentation to discuss logging
+	- refined installation instructions
+
+##v0.3.12
+	- making OQP throttling disabled by default; it needs some work
+	- adding log handler to send messages to the mail log
+
 ##v0.3.11
 	- modifying logic around user-key extraction, and adding new
 	  settings: require_user_key (boolean), and no_user_key_response
