@@ -1,12 +1,20 @@
 # Change Log
 
 ##v0.4:
-	- introducing a new script to provide a REST API; INSTALLATION
+	- introducing the first version of the REST API; INSTALLATION
 	  instructions will be modified to discuss and provide references
 	  for proper, highly-available deployment of the REST API, which
-	  it is advised be run on separate servers in order to avoid
-	  interfering with email throughput.
-	- PyPI package now provides the [API] extras definition, to
+	  it is advised be run on separate servers.
+	- The API is powered by [FastAPI](https://fastapi.tiangolo.com/);
+	  detailed instructions regarding API deployment may be found in
+	  its documentation, including how to use a reverse proxy such as
+	  **nginx** to provide SSL.
+	- Database access for the API is performed using
+	  [SQLAlchemy](https://www.sqlalchemy.org/), and in future
+	  releases, all database accesses will be converted to using it,
+	  for the sake of consistency and to eliminate the needless
+	  dependency on the MariaDB client software.
+	- PyPI package now provides the `[API]` extras definition, to
       install API prerequisites (which are not otherwise needed)
 	- CHANGELOG adapted to be Markdown-compatible
 
