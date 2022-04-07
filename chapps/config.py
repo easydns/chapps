@@ -17,7 +17,6 @@ try:
 except Exception:
     pass
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -59,7 +58,7 @@ class CHAPPSConfig:
             "listen_address": "localhost",
             "listen_port": 10225,
             "margin": 0.10,
-            "min_delta": 5,
+            "min_delta": 0,
             "counting_recipients": True,
             "rejection_message": "REJECT Rejected - outbound quota fulfilled",
             "acceptance_message": "DUNNO",
@@ -103,7 +102,11 @@ class CHAPPSConfig:
 
     @staticmethod
     def write_config(cp, fn):
-        """write config in cp to file named fn, if no such file exists; returns a Path object pointing at the config file"""
+        """
+        write config in cp to file named fn,
+        if no such file exists; returns a Path
+        object pointing at the config file
+        """
         config_file = Path(fn)
         if not config_file.parent.exists():
             try:

@@ -2,7 +2,7 @@
 import mariadb
 
 # import re ### needed if implementing domain_re_for_user()
-import logging, chapps.logging
+import logging
 from chapps.config import config
 from contextlib import contextmanager
 

@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from collections import deque
 import functools
 import redis
-import logging, chapps.logging
+import logging
 from expiring_dict import ExpiringDict
 from chapps.config import config
 from chapps.adapter import MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter
@@ -19,7 +19,6 @@ from chapps.signals import (
 from chapps.rest.models import Quota, SDAStatus
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 seconds_per_day = 3600 * 24
 SENTINEL_TIMEOUT = 0.1
 TIME_FORMAT = "%d %b %Y %H:%M:%S %z"
@@ -220,7 +219,7 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     redis_key_prefix = "oqp"
 
-    def __init__(self, cfg=None, *, enforcement_interval=None, min_delta=5):
+    def __init__(self, cfg=None, *, enforcement_interval=None, min_delta=0):
         """first, optional positional argument: a CHAPPSConfig object to use
            named arguments: enforcement_interval will default to seconds per day if not provided
                             min_delta defaults to 5 seconds, to prevent spamming; set to 0 to disable
@@ -476,19 +475,38 @@ class OutboundQuotaPolicy(EmailPolicy):
         if len(attempts) < 2:
             return float("inf")
         delta_index = [-1, -2]
-        if self.counting_recipients:
+        if not self.counting_recipients:
+            if len(attempts) < 2:
+                return float("inf")
+        elif len(attempts) > len(ppr.recipients):
             # skip back all but one recipient
             recipients_offset = 0 - len(ppr.recipients)
             delta_index = [d + recipients_offset for d in delta_index]
+        else:
+            logger.debug()
+            return float("inf")  # automatically wins
         logger.debug(
             f"Looking at time-delta for {ppr}: indices {delta_index!r}"
         )
-        timestamps = [
-            float(t.decode("utf-8").split(":")[0])
-            if ":" in t.decode("utf-8")
-            else float(t.decode("utf-8"))
-            for t in [attempts[i] for i in delta_index if i < len(attempts)]
-        ]
+        try:
+            timestamps = [
+                float(t.decode("utf-8").split(":")[0])
+                if ":" in t.decode("utf-8")
+                else float(t.decode("utf-8"))
+                for t in [
+                    attempts[i] for i in delta_index if i < len(attempts)
+                ]
+            ]
+        except IndexError:
+            msg = (
+                f"Recipients={-recipients_offset}"
+                f" delta_indices={delta_index!r}"
+                f" Attempts: (#{len(attempts)})"
+            )
+            if len(attempts) < 10:
+                msg += f" {attempts!r}"
+            logger.exception(msg)
+            return float("inf")
         if len(timestamps) == 2:
             logger.debug(
                 f"attempts: {[attempts[i] for i in delta_index]}; timestamps: {timestamps!r}"

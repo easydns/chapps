@@ -613,7 +613,7 @@ class Test_OutboundQuotaPolicy:
             "too many attempts" in rec.message for rec in caplog.records
         )
 
-    @pytest.mark.skip  # no longer the default; modified in parallel branch
+    @pytest.mark.xfail
     def test_deny_rapid_attempts(
         self, allowable_ppr, rapid_attempts, populate_redis
     ):

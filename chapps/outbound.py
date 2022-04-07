@@ -2,10 +2,9 @@
 from chapps.util import PostfixPolicyRequest
 from chapps.config import config
 from chapps.signals import ConfigurationError, AuthenticationFailureException
-import logging, chapps.logging
+import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class OutboundPPR(
@@ -24,9 +23,18 @@ class OutboundPPR(
 
     def __str__(self):
         try:
-            return f"OutboundPPR({self.user}:{self.instance} as {self.sender}, #recip={len(self.recipients)})"
+            return (f"i={self.instance} "
+                    f"user={self.user} "
+                    f"sender={self.sender or 'None'} "
+                    f"client_address={self.client_address} "
+                    f"recipient={self.recipient}")
         except Exception:
-            return f"OutboundPPR(:{self.instance}) is missing sender and/or user_key"
+            return (f"i={self.instance} "
+                    f"sasl_username={self.sasl_username or 'None'} "
+                    f"ccert_subject={self.ccert_subject or 'None'} "
+                    f"sender={self.sender or 'None'} "
+                    f"client_address={self.client_address} "
+                    f"recipient={self.recipient}")
 
     ### create a property handler for "user"
     @property

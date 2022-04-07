@@ -6,6 +6,7 @@ This package contains the following modules:
     util -- utility functions
 """
 from ._version import __version__
+import chapps.logging
 
 __all__ = [
     "util",

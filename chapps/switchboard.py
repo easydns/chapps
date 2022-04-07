@@ -14,11 +14,10 @@ from chapps.signals import (
     AuthenticationFailureException,
 )
 from functools import cached_property
-import logging, chapps.logging
+import logging
 import asyncio
 
 logger = logging.getLogger(__name__)  # pragma: no cover
-logger.setLevel(logging.DEBUG)  # pragma: no cover
 
 
 class RequestHandler:
@@ -141,12 +140,13 @@ class CascadingPolicyHandler:
                 except CallableExhausted as e:
                     raise e
                 except Exception:
-                    logger.exception("UNEXPECTED ")
                     if reader.at_eof():
                         logger.debug(
                             "Postfix said goodbye oddly. Terminating this thread."
                         )
                         return
+                    else:
+                        logger.exception("UNEXPECTED ")
                     continue
                 logger.debug(f"Payload received: {policy_payload.decode( 'utf-8' )}")
                 policy_data = pprclass(policy_payload.decode(encoding).split("\n"))
@@ -155,30 +155,23 @@ class CascadingPolicyHandler:
                     try:
                         if policy.approve_policy_request(policy_data):
                             resp = "action=" + policy.params.acceptance_message + "\n\n"
-                            logger.debug(
-                                f" .. Policy {type(policy)} accepted with '{resp.strip()}'"
-                            )
+                            logger.info(f"{type(policy).__name__} PASS {policy_data}")
                         else:
                             resp = "action=" + policy.params.rejection_message + "\n\n"
                             approval = False
-                            logger.debug(
-                                f" .. Policy {type(policy)} denied with '{resp.strip()}'"
-                            )
+                            logger.info(f"{type(policy).__name__} FAIL {policy_data}")
                     except NullSenderException:
                         if policy.params.null_sender_ok:
                             resp = "action=" + policy.params.acceptance_message + "\n\n"
-                            logger.debug(
-                                f" .. Policy {type(policy)} accepted with '{resp.strip()}' on null sender"
-                            )
+                            logger.info(f"{type(policy).__name__} PASS NS {policy_data}")
                         else:
                             resp = "action=" + policy.params.rejection_message + "\n\n"
                             approval = False
-                            logger.debug(
-                                f" .. Policy {type(policy)} denied with '{resp.strip()}' on null sender"
-                            )
+                            logger.info(f"{type(policy).__name__} FAIL NS {policy_data}")
                     except AuthenticationFailureException:
                         resp = "action=" + config.no_user_key_response + "\n\n"
                         approval = False
+                        logger.info(f"{type(policy).__name__} FAIL NA {policy_data}")
                     except CHAPPSException:
                         logger.exception("During policy evaluation:")
                     if not approval:

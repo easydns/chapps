@@ -200,6 +200,7 @@ setup(
                 "install/chapps-api-systemd-service.tmpl",
                 "install/chapps-api-gunicorn.socket",
                 "install/chapps-api-nginx.conf",
+                "install/chapps-rsyslog.conf",
             ],
         ),
         (
