@@ -1,0 +1,21 @@
+[Unit]
+Description=CHAPPS REST API
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+Type=notify
+User={service_roleaccount}
+Group={service_rolegroup|d(service_roleaccount)}
+RuntimeDirectory=gunicorn
+WorkingDirectory={service_home}
+ExecStart={gunicorn_invocation} chapps.rest.api:api --bind unix:/run/gunicorn.sock
+# --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:80
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+{env_settings_lines}
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+[Unit]
+Description=CHAPPS REST API gunicorn socket
+
+[Socket]
+ListenStream=/run/gunicorn.sock
+SocketUser=www-data
+
+[Install]
+WantedBy=sockets.target
