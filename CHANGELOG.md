@@ -1,5 +1,10 @@
 # Change Log
 
+##v0.4.1:
+	- Improved Swagger/OpenAPI documentation.  Handling assignment of
+	  path closure docstrings explicitly fixes the problem.  Various
+	  formatting improvements have also been included.
+
 ##v0.4:
 	- introducing the first version of the REST API; INSTALLATION
 	  instructions will be modified to discuss and provide references
