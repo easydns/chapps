@@ -21,7 +21,7 @@ api = APIRouter(
         status.HTTP_404_NOT_FOUND: {"description": "Resource not found."},
         status.HTTP_400_BAD_REQUEST: {
             "description": (
-                "One of either user_id of name must be provided. "
+                "One of either user_id or name must be provided. "
                 "If both are present, user_id is preferred"
             )
         },
@@ -36,6 +36,11 @@ load_user_with_quota = load_model_with_assoc(User, assoc=[user_quota_assoc])
 async def get_current_quota_remaining_for_user(
     user_id: int = 0, name: Optional[str] = Body(None)
 ):
+    """
+    Accepts the id of the user whose remaining quota should be checked.<br/>
+    Returns the instantaneous number of available send attempts in
+    `response`
+    """
     user, assoc_d, remarks = load_user_with_quota(user_id, name)
     quota = assoc_d[user_quota_assoc.assoc_name]
     oqp = OutboundQuotaPolicy()
@@ -47,6 +52,10 @@ async def get_current_quota_remaining_for_user(
 async def reset_live_quota_for_user(
     user_id: int = 0, name: Optional[str] = Body(None)
 ):
+    """
+    Accepts the id of the user whose quota should be reset.<br/>
+    Returns the number of send attempts dropped in `response`
+    """
     user, assoc_d, remarks = load_user_with_quota(user_id, name)
     quota = assoc_d[user_quota_assoc.assoc_name]
     oqp = OutboundQuotaPolicy()
@@ -62,8 +71,8 @@ async def refresh_quota_policy_for_user(
     user_id: int = 0, name: Optional[str] = Body(None)
 ):
     """
-    Returns the new remaining quota after the policy update as the
-    numerical response.
+    Accepts the id of the user whose quota policy should be refreshed.<br/>
+    Returns the new remaining quota after the policy update in `response`
     """
     user, assoc_d, remarks = load_user_with_quota(user_id, name)
     quota = assoc_d[user_quota_assoc.assoc_name]
@@ -89,8 +98,8 @@ async def refresh_quota_policy_for_user(
 )
 async def refresh_config_on_disk(passcode: str = Body(...)):
     """
-    Writes the current effective config to disk.
-    Requires the CHAPPS password to be provided.
+    Writes the current effective config to disk.<br/>
+    Requires the CHAPPS password to be provided as the body.<br/>
     If line transmission security is an issue, an SSL proxy layer will
       be required.  This is true for the entire application.
     """
@@ -111,9 +120,11 @@ async def refresh_config_on_disk(passcode: str = Body(...)):
 @api.get("/sda/", response_model=DomainUserMapResp)
 async def sda_batch_peek(domain_ids: List[int], user_ids: List[int]):
     """
-    Looks at current authorizations for all domain-user combinations
-    Returns their cache status as a dict of dicts, keyed on name,
-      with domain first.
+    Accepts `domain_ids` and `user_ids` as body arguments: lists of
+    integer object ids.<br/>
+    Looks at current authorizations for all domain-user combinations.<br/>
+    Returns their cache status as a dict of dicts, keyed as:
+    `sda[domain][user] = SDAStatus`
     """
     sda = SenderDomainAuthPolicy()
     with Session() as sess:
@@ -129,6 +140,7 @@ async def sda_batch_peek(domain_ids: List[int], user_ids: List[int]):
 @api.get("/sda/{domain_name}/for/{user_name}", response_model=TextResp)
 async def sda_peek(domain_name: str, user_name: str):
     """
+    Accepts url-encoded domain name and user name as path arguments.<br/>
     Returns status of cached SDA for the named user and domain,
     i.e. is this user allowed to transmit email apparently from this domain
     """
@@ -139,7 +151,7 @@ async def sda_peek(domain_name: str, user_name: str):
 @api.delete("/sda/", response_model=TextResp)
 async def sda_batch_clear(domain_ids: List[int], user_ids: List[int]):
     """
-    Clears all domain - user mappings by iterating through both lists
+    Clears all domain - user mappings by iterating through both lists.
     """
     sda = SenderDomainAuthPolicy()
     with Session() as sess:
@@ -154,6 +166,7 @@ async def sda_batch_clear(domain_ids: List[int], user_ids: List[int]):
 @api.delete("/sda/{domain_name}/for/{user_name}", response_model=TextResp)
 async def sda_clear(domain_name: str, user_name: str):
     """
+    Accepts url-encoded domain name and user name of SDA to clear.</br>
     Returns the status of the SDA prior to clearing.
     """
     sda = SenderDomainAuthPolicy()

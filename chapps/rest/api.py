@@ -24,40 +24,43 @@ tags_metadata = [
     dict(
         name="users",
         description=(
-            "CRUD operations involving users.  Update a user "
-            "to assign a new quota.  Some special routes are "
-            "planned for adding/removing just some domains without "
-            "having to handle the entire set of associations."
+            "<h3>Create, list, fetch, update, and delete operations "
+            "involving users.</h3><p>Update a user "
+            "to assign a new quota.  There are some special routes "
+            "for adding/removing just some domains without "
+            "having to handle the entire set of associations.</p>"
         ),
     ),
     dict(
         name="domains",
         description=(
-            "CRUD operations for domains.  When creating a domain, "
-            "it is possible to specify a list of user-ids to "
-            "associate.  Some special routes are planned for managing"
+            "<h3>Create, list, fetch, update and delete operations for "
+            "domains.</h3><p>When creating a domain, "
+            "it is possible to specify a list of User IDs to "
+            "associate.  There are some special routes for managing"
             " user associations (add/remove arbitrary) without having"
-            " to handle the entire set of associations."
+            " to handle the entire set of associations.</p>"
         ),
     ),
     dict(
         name="quotas",
         description=(
-            "CRUD operations for quotas.  Since there are very "
+            "<h3>Create, list, fetch, update and delete operations for "
+            "quotas.</h3><p>Since there are very "
             "few quotas compared to the number of users, there is "
             "no support planned for managing users from their "
             "associated quotas.  To change a quota for a user, "
-            "update the user."
+            "update the user.</p>"
         ),
     ),
     dict(
         name="live",
         description=(
-            "Status reporting and remote command interface.  Routes "
+            "<h3>Status reporting and remote command interface.</h3><p>Routes "
             "provided for obtaining real-time remaining quota, resetting "
             "quota, refreshing policy settings, adding or removing SDAs, "
             "and causing CHAPPS to rewrite its config file, in order to "
-            "allow for updates post-upgrade without losing site customizations."
+            "allow for updates post-upgrade without losing site customizations.</p>"
         ),
     ),
 ]
