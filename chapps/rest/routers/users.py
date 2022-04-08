@@ -97,21 +97,27 @@ api.put("/{item_id}/quota/{quota_id}")(
     )
 )
 
+# commenting out to get a clean release without these non-working routes
+#
+# we will provide these routes in a future release
+# along with routes to count a user's domain authorizations
+# and paginate the list of those authorizations
 
-@api.get("/count/", response_model=IntResp)
-async def count_all_users():
-    return await count_users("%")
+
+# @api.get("/count/", response_model=IntResp)
+# async def count_all_users():
+#     return await count_users("%")
 
 
-@api.get("/count/{pattern}", response_model=IntResp)
-async def count_users(pattern: str):
-    cur = pca.conn.cursor()
-    sanitized_pattern = pattern
-    query = f"SELECT COUNT( * ) FROM users WHERE name LIKE ?"
-    logger.debug(
-        f"Attempting to count users like {pattern} with query {query}"
-    )
-    cur.execute(query, (f"%{pattern}%",))
-    results = cur.fetchone()[0]
-    cur.close()
-    return IntResp.send(results)
+# @api.get("/count/{pattern}", response_model=IntResp)
+# async def count_users(pattern: str):
+#     cur = pca.conn.cursor()
+#     sanitized_pattern = pattern
+#     query = f"SELECT COUNT( * ) FROM users WHERE name LIKE ?"
+#     logger.debug(
+#         f"Attempting to count users like {pattern} with query {query}"
+#     )
+#     cur.execute(query, (f"%{pattern}%",))
+#     results = cur.fetchone()[0]
+#     cur.close()
+#     return IntResp.send(results)
