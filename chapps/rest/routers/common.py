@@ -119,6 +119,7 @@ def db_interaction(  # a decorator with parameters
                     logger.exception(exc + f"({args!r},{kwargs!r})")
             raise HTTPException(status_code=404, detail=empty)
 
+        wrapped_interaction.__doc__ = rt_coro.__doc__
         return wrapped_interaction  # a coroutine
 
     return interaction_wrapper  # a regular function
@@ -136,10 +137,6 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
 
     @db_interaction(cls=cls, engine=engine)
     async def get_i(item_id: int):
-        f"""
-        Retrieve {cls.__name__} records by ID,
-        with any associated records
-        """
         stmt = cls.select_by_id(item_id)
         item = session.scalar(stmt)
         if item:
@@ -152,6 +149,10 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
                 return response_model.send(cls.wrap(item))
 
     get_i.__name__ = f"get_{model_name(cls)}"
+    get_i.__doc__ = (
+        f"Retrieve {cls.__name__} records by ID, "
+        "along with all associated records."
+    )
     return get_i
 
 
@@ -165,13 +166,17 @@ def list_items(cls, *, response_model, engine=sql_engine):
 
     @db_interaction(cls=cls, engine=engine)
     async def list_i(qparams: dict = Depends(list_query_params)):
-        f"""List {cls.__name__}s"""
         stmt = cls.windowed_list(**qparams)
         items = cls.wrap(session.scalars(stmt))
         if items:
             return response_model.send(items)
 
     list_i.__name__ = f"list_{model_name(cls)}"
+    list_i.__doc__ = f"""
+        List {cls.__name__}s.<br/>
+        Pass a substring to match as `q`.<br/>
+        Implement pagination by providing `skip` and `limit`.
+        """
     return list_i
 
 
@@ -180,24 +185,25 @@ def delete_item(
 ):
     f"""Delete {cls.__name__}"""
     params = params or dict(ids=List[int])
+    mname = model_name(cls)
 
     @db_interaction(cls=cls, engine=engine)
     async def delete_i(item_ids: List[int]):
-        f"""Delete {cls.__name__}"""
         try:
             session.execute(cls.remove_by_id(item_ids))
             session.commit()
         except IntegrityError:
-            logger.exception(
-                "trying to delete {model_name(cls)} with {args!r}"
-            )
+            logger.exception("trying to delete {mname} with {args!r}")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Database integrity conflict.",
             )
         return response_model.send()
 
-    delete_i.__name__ = f"delete_{model_name(cls)}"
+    delete_i.__name__ = f"delete_{mname}"
+    delete_i.__doc__ = f"""
+        Accepts a list of {mname} object IDs in the body.
+        Deletes them."""
     return delete_i
 
 
@@ -219,11 +225,6 @@ def adjust_associations(
 
     @db_interaction(cls=cls, engine=engine)
     async def assoc_op_i(*pargs, **args):
-        (
-            f"{str(assoc_op).capitalize()} "
-            f"{', '.join([a.assoc_name for a in assoc])} objects "
-            f"{'to' if assoc_op==AssocOperation.add else 'from'} {mname}"
-        )
         # item_id will be used for the source object, and assoc_ids will
         # be a list of associated ids to either remove or add associations
         # for, ignoring integrity errors arising from attempting to insert
@@ -275,6 +276,13 @@ def adjust_associations(
     assoc_op_i.__signature__ = inspect.Signature(routeparams)
     assoc_op_i.__annotations__ = params
     assoc_op_i.__name__ = fname
+    assoc_op_i.__doc__ = f"""
+        {str(assoc_op).capitalize()}
+        {', '.join([a.assoc_name for a in assoc])} objects
+        {'to' if assoc_op==AssocOperation.add else 'from'} {mname}<br/>
+        Accepts mname id as `item_id`.
+    """
+
     return assoc_op_i
 
 
@@ -288,7 +296,6 @@ def update_item(cls, *, response_model, assoc=None, engine=sql_engine):
 
     @db_interaction(cls=cls, engine=engine)
     async def update_i(*pargs, **args):
-        f"""Update {cls.__name__}"""
         extras = {}
         assoc_ret = {}
         if assoc:
@@ -365,6 +372,13 @@ def update_item(cls, *, response_model, assoc=None, engine=sql_engine):
     update_i.__signature__ = inspect.Signature(routeparams)
     update_i.__annotations__ = params
     update_i.__name__ = fname
+    update_i.__doc__ = f"""
+        Update {cls.__name__} by id.<br/>
+        All {mname} attributes are required.<br/>
+        Associations are not required, but if provided, will
+        completely replace any existing association relationships
+        of the same type.
+        """
     return update_i
 
 
@@ -379,7 +393,7 @@ def create_item(
 
     @db_interaction(cls=cls, engine=engine)
     async def create_i(*pargs, **args):
-        f"""Create {cls.__name__}"""
+        """Bogus create item docstring"""
         extras = {}
         assoc_ret = {}
         if assoc:
@@ -448,4 +462,11 @@ def create_item(
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
     create_i.__name__ = fname
+    create_i.__doc__ = f"""
+        Create a new {cls.__name__} record in the database.<br/>
+        All attributes are required.<br/>
+        The new object will be returned, including its id.<br/>
+        Raises descriptive errors on 409; checking the detail
+          of the error may aid in debugging.
+        """
     return create_i
