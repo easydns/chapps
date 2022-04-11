@@ -4,12 +4,14 @@ import pudb
 import chapps.config
 import time
 from urllib.parse import quote as urlencode
+from chapps._version import __version__
 from chapps.policy import TIME_FORMAT
 from chapps.rest.models import SDAStatus
 import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+verstr = "CHAPPS v" + __version__
 
 
 class Test_API_Health:
@@ -34,7 +36,7 @@ class Test_Users_API:
             "domains": [{"id": 1, "name": "chapps.io"}],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -48,7 +50,7 @@ class Test_Users_API:
                 {"id": 3, "name": "bigsender@chapps.io"},
             ],
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -66,7 +68,7 @@ class Test_Users_API:
             "domains": None,
             "quota": None,
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -84,7 +86,7 @@ class Test_Users_API:
             "domains": [{"id": 1, "name": "chapps.io"}],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -96,7 +98,7 @@ class Test_Users_API:
         assert response.json() == {
             "response": "deleted",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.get("/users/1")
         assert response.status_code == 404
@@ -115,7 +117,7 @@ class Test_Users_API:
             "domains": None,
             "quota": None,
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -132,7 +134,7 @@ class Test_Users_API:
             "domains": None,
             "quota": {"id": 2, "name": "50eph", "quota": 1200},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -151,7 +153,7 @@ class Test_Users_API:
             "domains": [{"id": 1, "name": "chapps.io"}],
             "quota": None,
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -168,7 +170,7 @@ class Test_Users_API:
             "domains": None,  # no value detected, no change, no value returned
             "quota": None,  # nothing provided, no change, no value returned
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -189,7 +191,7 @@ class Test_Users_API:
             "domains": [{"id": 1, "name": "chapps.io"}],
             "quota": {"id": 2, "name": "50eph", "quota": 1200},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -204,7 +206,7 @@ class Test_Users_API:
         assert response.json() == {
             "response": "Updated.",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.get("/users/1")
         assert response.json() == {
@@ -215,7 +217,7 @@ class Test_Users_API:
             ],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -230,7 +232,7 @@ class Test_Users_API:
         assert response.json() == {
             "response": "Updated.",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.get("/users/3")
         assert response.json() == {
@@ -238,7 +240,7 @@ class Test_Users_API:
             "domains": [{"id": 2, "name": "easydns.com"}],
             "quota": {"id": 3, "name": "200eph", "quota": 4800},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -253,7 +255,7 @@ class Test_Users_API:
         assert response.json() == {
             "response": "Updated.",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.get("/users/1")
         assert response.json() == {
@@ -261,7 +263,25 @@ class Test_Users_API:
             "domains": [{"id": 1, "name": "chapps.io"}],
             "quota": {"id": 2, "name": "50eph", "quota": 1200},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_user_paginate_domains(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.get("/users/5/allowed/?skip=2&limit=2")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                {"id": 3, "name": "easydns.net"},
+                {"id": 4, "name": "easydns.org"},
+            ],
+            "timestamp": fixed_time,
+            "version": verstr,
         }
 
 
@@ -282,7 +302,7 @@ class Test_Domains_API:
                 {"id": 2, "name": "somebody@chapps.io"},
                 {"id": 3, "name": "bigsender@chapps.io"},
             ],
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -292,7 +312,7 @@ class Test_Domains_API:
         assert response.json() == {
             "response": [{"id": 1, "name": "chapps.io"}],
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -308,7 +328,7 @@ class Test_Domains_API:
             "response": {"id": 2, "name": "easydns.com"},
             "users": None,
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(3)
@@ -323,7 +343,7 @@ class Test_Domains_API:
             "response": {"id": 2, "name": "easydns.com"},
             "timestamp": fixed_time,
             "users": [{"id": 1, "name": "ccullen@easydns.com"}],
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -335,7 +355,7 @@ class Test_Domains_API:
         assert response.json() == {
             "response": "deleted",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.get("/domains/1")
         assert response.status_code == 404
@@ -346,7 +366,7 @@ class Test_Domains_API:
             "domains": [],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -361,7 +381,7 @@ class Test_Domains_API:
             "response": {"id": 1, "name": "crapps.io"},
             "timestamp": fixed_time,
             "users": None,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -380,7 +400,7 @@ class Test_Domains_API:
                 {"id": 2, "name": "somebody@chapps.io"},
                 {"id": 3, "name": "bigsender@chapps.io"},
             ],
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -390,23 +410,20 @@ class Test_Domains_API:
         testing_api_client,
         populated_database_fixture_with_extras,
     ):
-        response = testing_api_client.put("/domains/2/allow/", json=[2, 3])
+        response = testing_api_client.put("/domains/2/allow/", json=[4, 3])
         assert response.status_code == 200
         assert response.json() == {
             "response": "Updated.",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
-        response = testing_api_client.get("/users/2")
+        response = testing_api_client.get("/users/4")
         assert response.json() == {
-            "response": {"id": 2, "name": "somebody@chapps.io"},
-            "domains": [
-                {"id": 1, "name": "chapps.io"},
-                {"id": 2, "name": "easydns.com"},
-            ],
-            "quota": {"id": 2, "name": "50eph", "quota": 1200},
+            "response": {"id": 4, "name": "schmo1@chapps.io"},
+            "domains": [{"id": 2, "name": "easydns.com"}],
+            "quota": None,
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -421,7 +438,7 @@ class Test_Domains_API:
         assert response.json() == {
             "response": "Updated.",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.get("/users/3")
         assert response.json() == {
@@ -429,7 +446,7 @@ class Test_Domains_API:
             "domains": [{"id": 2, "name": "easydns.com"}],
             "quota": {"id": 3, "name": "200eph", "quota": 4800},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
 
@@ -443,7 +460,7 @@ class Test_Quotas_API:
         assert response.json() == {
             "response": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -457,7 +474,7 @@ class Test_Quotas_API:
                 {"id": 3, "name": "200eph", "quota": 4800},
             ],
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -471,7 +488,7 @@ class Test_Quotas_API:
         assert response.json() == {
             "response": {"id": 4, "name": "400eph", "quota": 9600},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     @pytest.mark.timeout(2)
@@ -483,7 +500,7 @@ class Test_Quotas_API:
         assert response.json() == {
             "response": "deleted",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.get("/quotas/3")
         assert response.status_code == 404
@@ -499,7 +516,7 @@ class Test_Quotas_API:
         assert response.json() == {
             "response": {"id": 1, "name": "newname", "quota": 220},
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
 
@@ -525,7 +542,7 @@ class Test_Live_API:
             "response": 140,
             "remarks": [f"Last send attempt was at {last_try}"],
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     def test_get_current_after_multisend(
@@ -551,7 +568,7 @@ class Test_Live_API:
             "response": 140,
             "remarks": [f"Last send attempt was at {last_try}"],
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     def test_reset_quota(
@@ -573,7 +590,7 @@ class Test_Live_API:
             "response": 140,
             "remarks": [f"Last send attempt was at {last_try}"],
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.delete("/live/quota/1")
         assert response.status_code == 200
@@ -583,7 +600,7 @@ class Test_Live_API:
                 "Attempts (quota) reset for ccullen@easydns.com: 100 xmits dropped"
             ],
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     def test_refresh_quota(
@@ -608,14 +625,14 @@ class Test_Live_API:
             "response": 1100,
             "remarks": [f"Last send attempt was at {last_try}"],
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.post("/live/quota/1")
         assert response.status_code == 200
         assert response.json() == {
             "response": 140,
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
             "remarks": [
                 f"Quota policy config cache reset for ccullen@easydns.com",
                 f"Last send attempt was at {last_try}",
@@ -633,7 +650,7 @@ class Test_Live_API:
         assert response.json() == {
             "response": chapps_mock_cfg_path,
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     # SDA oriented
@@ -658,7 +675,7 @@ class Test_Live_API:
         assert response.json() == {
             "response": "AUTHORIZED",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     def test_sda_cache_peek_bulk(
@@ -692,7 +709,7 @@ class Test_Live_API:
                 },
             },
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     def test_sda_cache_clear_single(
@@ -716,7 +733,7 @@ class Test_Live_API:
         assert response.json() == {
             "response": SDAStatus.AUTH.value,
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.get(
             "/live/sda/"
@@ -728,7 +745,7 @@ class Test_Live_API:
         assert response.json() == {
             "response": SDAStatus.NONE.value,
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
 
     def test_sda_cache_clear_bulk(
@@ -762,7 +779,7 @@ class Test_Live_API:
                 },
             },
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.delete(
             "/live/sda/", json={"domain_ids": [1, 2], "user_ids": [1, 2]}
@@ -771,7 +788,7 @@ class Test_Live_API:
         assert response.json() == {
             "response": "SDA cache cleared for specified domains x users.",
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
         response = testing_api_client.get(
             "/live/sda/", json={"user_ids": [1, 2], "domain_ids": [1, 2]}
@@ -789,5 +806,5 @@ class Test_Live_API:
                 },
             },
             "timestamp": fixed_time,
-            "version": "CHAPPS v0.4",
+            "version": verstr,
         }
