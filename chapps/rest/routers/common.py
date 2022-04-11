@@ -180,6 +180,49 @@ def list_items(cls, *, response_model, engine=sql_engine):
     return list_i
 
 
+def list_associated(
+    cls, *, assoc: JoinAssoc, response_model, engine=sql_engine
+):
+    """
+    Build a route to list associated items with pagination
+    """
+    mname = model_name(cls)
+    fname = f"{mname}_list_{assoc.assoc_name}"
+    params = dict(item_id=int, qparams=dict)
+    p_dfls = dict(item_id=None, qparams=Depends(list_query_params))
+
+    @db_interaction(cls=cls, engine=engine)
+    async def assoc_list(*pargs, **args):
+        # item_id for source object of type cls
+        # the specified association is listed according to qparams
+        stmt = assoc.assoc_model.windowed_list_by_ids(
+            subquery=assoc.select_ids_by_source_id(args["item_id"]),
+            **args["qparams"],
+        )
+        assocs = assoc.assoc_model.wrap(session.scalars(stmt))
+        if assocs:
+            return response_model.send(assocs)
+
+    routeparams = [
+        inspect.Parameter(
+            name=param,
+            kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            annotation=type_,
+            default=p_dfls[param],
+        )
+        for param, type_ in params.items()
+    ]
+    assoc_list.__signature__ = inspect.Signature(routeparams)
+    assoc_list.__annotations__ = params
+    assoc_list.__name__ = fname
+    assoc_list.__doc__ = (
+        f"List {assoc.assoc_name} objects associated with a particular {mname},"
+        " identified by ID.<br/>Supply standard query parameters for"
+        " pagination."
+    )
+    return assoc_list
+
+
 def delete_item(
     cls, *, response_model=DeleteResp, params=None, engine=sql_engine
 ):

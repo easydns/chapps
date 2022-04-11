@@ -59,6 +59,9 @@ class JoinAssoc:
             f"{self.assoc_name}, {self.assoc_type!r})"
         )
 
+    def select(self):
+        return self.table.select()
+
     def insert(self):
         return self.table.insert()
 
@@ -114,6 +117,10 @@ class JoinAssoc:
             .values(**{self.assoc_id: assoc_id})
         )
 
+    def select_ids_by_source_id(self, item_id: int):
+        # not self.select() b/c we want the SQLA select()
+        return select(self.assoc_col).where(self.source_col == item_id)
+
 
 # declare subclass of the SQLAlchemy DeclarativeMeta class
 # in order to attach custom routines to the ORM objects
@@ -122,6 +129,33 @@ class DB_Customizations(DeclarativeMeta):
 
     def select_by_id(cls, id: int):
         return select(cls).where(cls.id == id)
+
+    def windowed_list_by_ids(
+        cls,
+        *,
+        ids: List[int] = [],
+        subquery=None,
+        skip: int = 0,
+        limit: int = 1000,
+        q: str = "%",
+    ):
+        """
+        Provide either a list of IDs (integers) or a SELECT which yields them.
+        Optionally provide pagination and name filtering.
+        """
+        if subquery is not None:
+            stmt = select(cls).where(cls.id.in_(subquery))
+        elif ids:
+            stmt = select(cls).where(tuple_(cls.id).in_([(i,) for i in ids]))
+        else:
+            raise ValueError("Supply one of ids or substatement.")
+        stmt = (
+            stmt.where(cls.name.like(q))
+            .offset(skip)
+            .limit(limit)
+            .order_by(cls.id)
+        )
+        return stmt
 
     def select_names_by_id(cls, ids: List[int]):
         return select(cls.name).where(tuple_(cls.id).in_([(i,) for i in ids]))
@@ -237,32 +271,3 @@ class User(DB_Base):
 
     def __repr__(self):
         return f"User[ORM](id={self.id!r}, name={self.name!r})"
-
-
-### for testing purposes:
-import urllib.parse
-from sqlalchemy import select, text, create_engine, insert
-from sqlalchemy.orm import Session
-
-password = urllib.parse.quote_plus("screwy%pass${word}")
-engine = create_engine(
-    f"mariadb+pymysql://chapps_test:{password}@localhost/chapps_test"
-)
-
-
-def proc_run(stmt):
-    results = []
-    with engine.connect() as conn:
-        for row in conn.execute(stmt):
-            print(row)
-            results.append(row)
-    return results
-
-
-def orm_run(stmt):
-    results = []
-    with Session(engine) as session:
-        for row in session.execute(stmt).scalars():
-            print(row)
-            results.append(row)
-    return results

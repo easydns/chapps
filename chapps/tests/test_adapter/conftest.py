@@ -199,10 +199,29 @@ def _populated_database_fixture(database_fixture):
 
 def _populated_database_fixture_with_extras(database_fixture):
     cur = _populated_database_fixture(database_fixture)
-    extra_domains = "INSERT INTO domains (name) VALUES ('easydns.com');"
-    extra_assoc = "INSERT INTO domain_user (domain_id, user_id) VALUES (2, 3);"
+    extra_domains = (
+        "INSERT INTO domains (name) VALUES"
+        " ('easydns.com'),"
+        " ('easydns.net'),"
+        " ('easydns.org');"
+    )
+    extra_users = (
+        "INSERT INTO users (name) VALUES "
+        "('schmo1@chapps.io'), ('schmo2@chapps.io');"
+    )
+
+    extra_assoc = [
+        (
+            "INSERT INTO domain_user (domain_id, user_id) VALUES"
+            " (2, 3), (1, 5), (2, 5), (3, 5), (4, 5);"
+        ),
+        ("INSERT INTO quota_user (quota_id, user_id) VALUES (1, 5);"),
+    ]
     cur.execute(extra_domains)
-    cur.execute(extra_assoc)
+    cur.execute(extra_users)
+    for q in extra_assoc:
+        cur.execute(q)
+    return cur
 
 
 @fixture

@@ -6,6 +6,7 @@ from ..models import (
     Domain,
     UserResp,
     UsersResp,
+    DomainsResp,
     DeleteResp,
     IntResp,
     TextResp,
@@ -18,6 +19,7 @@ from .common import (
     delete_item,
     update_item,
     adjust_associations,
+    list_associated,
 )
 import logging
 import chapps.logging
@@ -73,6 +75,10 @@ api.get("/{item_id}", response_model=UserResp)(
         response_model=UserResp,
         assoc=[(Quota, "quota"), (Domain, "domains")],
     )
+)
+
+api.get("/{item_id}/allowed/", response_model=DomainsResp)(
+    list_associated(User, assoc=user_domains_assoc, response_model=DomainsResp)
 )
 
 api.put("/", response_model=UserResp)(
