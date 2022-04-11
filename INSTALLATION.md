@@ -84,6 +84,16 @@ necessary to prepend the name with a number, such as `30-chapps.conf`,
 in order to get it to run before all the default log routes are
 defined.
 
+It is worth noting that the supplied file only deals with splitting up
+log messages locally.  If you want to send messages to a centralized
+log server via **syslog**, insert an additional line into the log
+config to send messages to that server.  That line might look like:
+```
+local0.info    @10.1.1.11
+```
+Replace `10.1.1.11` with the ingress IP address of your **syslog**
+concentrator.
+
 As for the SystemD profiles, you may choose to copy them to the system
 location, but my recommendtation is to *link* them, using `systemctl
 [link|enable] <path>` or the Ansible (et al.) equivalent, to cause
@@ -92,7 +102,7 @@ which makes administration, uninstallation, upgrading, etc. so much
 easier.
 
 If you're copying the files:
-Once the SystemD profiles are in place, let SystemD know about them by running:
+Once the SystemD profiles are in place, let SystemD know abouts them by running:
 ```
 systemctl daemon-reload
 ```

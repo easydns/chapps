@@ -1,5 +1,11 @@
 # Change Log
 
+##v0.4.2:
+	- Paginate associated objects
+	- Adjusting location of API README to correct bug preventing API launch
+	- Adding VenvDetector util class, to help find API README after installation
+	- Adding CHANGELOG to PyPI package
+	- Add a little extra documentation about **syslog** message configuration
 ##v0.4.1:
 	- Improved Swagger/OpenAPI documentation.  Handling assignment of
 	  path closure docstrings explicitly fixes the problem.  Various
