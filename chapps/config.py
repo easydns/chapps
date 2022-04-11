@@ -6,7 +6,7 @@ import collections.abc
 import configparser
 from pathlib import Path
 from os import environ as env
-from chapps.util import AttrDict
+from chapps.util import AttrDict, VenvDetector
 from chapps._version import __version__
 import logging
 
@@ -125,6 +125,7 @@ class CHAPPSConfig:
     def __init__(self):
         ### Create and initialize the config
         config_file = CHAPPSConfig.what_config_file()
+        self.venvdetector = VenvDetector()
         self.configparser = configparser.ConfigParser(interpolation=None)
         CHAPPSConfig.setup_config(self.configparser)
 
@@ -135,6 +136,7 @@ class CHAPPSConfig:
             self.configparser.read(str(config_file))
         self.configparser["CHAPPS"]["config_file"] = str(config_file)
         self.configparser["CHAPPS"]["version"] = f"CHAPPS v{__version__}"
+        self.configparser["CHAPPS"]["docpath"] = str(self.venvdetector.docpath)
         self.chapps = AttrDict(self.configparser["CHAPPS"])
         self.adapter = AttrDict(self.configparser["PolicyConfigAdapter"])
         self.actions_spf = AttrDict(self.configparser["PostfixSPFActions"])

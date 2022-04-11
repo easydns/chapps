@@ -5,8 +5,44 @@ These are the utility classes for CHAPPS
 from collections.abc import Mapping
 import re
 import logging
+import sys
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+class VenvDetector:
+    def __init__(self, *, datapath=None):
+        if datapath:
+            self.datapath = Path(datapath)
+        elif self.ve:
+            self.datapath = Path(sys.prefix)
+        else:
+            self.datapath = Path("/usr/local")
+
+    # find the base prefix; hopefully pyenv-compatible
+    def get_base_prefix_compat(self):
+        return (
+            getattr(sys, "base_prefix", None)
+            or getattr(sys, "real_prefix", None)
+            or sys.prefix
+        )
+
+    # return whether we are in a venv
+    def in_virtualenv(self):
+        return self.get_base_prefix_compat() != sys.prefix
+
+    @property
+    def ve(self):
+        if "_ve" not in vars(self):
+            self._ve = self.in_virtualenv()
+        return self._ve
+
+    @property
+    def docpath(self):
+        if "_docpath" not in vars(self):
+            self._docpath = self.datapath / "chapps"
+        return self._docpath
 
 
 class AttrDict:

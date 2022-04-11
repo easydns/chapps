@@ -192,7 +192,10 @@ setup(
     name="chapps",
     packages=["chapps", "chapps.rest", "chapps.rest.routers"],
     data_files=[
-        ("chapps", ["README.md", "INSTALLATION.md"]),
+        (
+            "chapps",
+            ["README.md", "INSTALLATION.md", "README-API.md", "CHANGELOG.md"],
+        ),
         (
             "chapps/install",
             [

@@ -16,8 +16,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
-restpath = Path(__file__).resolve().parent
-rest_readme = restpath / "README.md"
+rest_readme = Path(config.chapps.docpath) / "README-API.md"
 desc = rest_readme.open("rt").read()
 
 tags_metadata = [
