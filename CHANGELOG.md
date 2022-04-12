@@ -1,5 +1,10 @@
 # Change Log
 
+##v0.4.3:
+    - Correct error preventing automatic table building by provided
+      setup script.
+    - Provide better documentation about setting up the database.
+    - Minor adjustments to API README
 ##v0.4.2:
 	- Paginate associated objects
 	  (paginate domains for users, and users for domains)
