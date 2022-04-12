@@ -1,12 +1,12 @@
 [Unit]
 Description=CHAPPS REST API
-Requires=gunicorn.socket
+Requires=chapps-api-gunicorn.socket
 After=network.target
 
 [Service]
 Type=notify
 User={service_roleaccount}
-Group={service_rolegroup|d(service_roleaccount)}
+Group={service_rolegroup}
 RuntimeDirectory=gunicorn
 WorkingDirectory={service_home}
 ExecStart={gunicorn_invocation} chapps.rest.api:api --bind unix:/run/gunicorn.sock
