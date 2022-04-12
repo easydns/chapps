@@ -2,6 +2,7 @@
 
 ##v0.4.2:
 	- Paginate associated objects
+	  (paginate domains for users, and users for domains)
 	- Adjusting location of API README to correct bug preventing API launch
 	- Adding VenvDetector util class, to help find API README after installation
 	- Adding CHANGELOG to PyPI package
