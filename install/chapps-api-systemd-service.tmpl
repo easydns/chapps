@@ -1,16 +1,18 @@
 [Unit]
 Description=CHAPPS REST API
-Requires=chapps-api-gunicorn.socket
+# Requires=chapps-api-gunicorn.socket
 After=network.target
 
 [Service]
-Type=notify
+Type=simple
+#Type=notify # for using UDS w/ nginx + gunicorn
 User={service_roleaccount}
 Group={service_rolegroup}
 RuntimeDirectory=gunicorn
 WorkingDirectory={service_home}
-ExecStart={gunicorn_invocation} chapps.rest.api:api --bind unix:/run/gunicorn.sock
-# --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:80
+ExecStart={gunicorn_invocation} chapps.rest.api:api \
+ --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080
+# --bind unix:/run/gunicorn.sock
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
