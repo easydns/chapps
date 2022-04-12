@@ -146,7 +146,7 @@ class PostInstallSetup(install):
                         services_to_enable.append(service_file_path)
             if api_svc_tmpl_path:
                 api_svc_path = (
-                    api_svc_tmpl_path.parent / "chapps_rest_api.service"
+                    api_svc_tmpl_path.parent / "chapps-api-gunicorn.service"
                 )
                 try:
                     with api_svc_path.open("w") as outfile:
