@@ -77,7 +77,7 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         "CREATE TABLE IF NOT EXISTS quota_user ("  # pragma: no cover
         "quota_id BIGINT NOT NULL,"
         "user_id BIGINT NOT NULL PRIMARY KEY,"
-        "CONSTRAINT fk_user"
+        "CONSTRAINT fk_user_quota"
         " FOREIGN KEY (user_id) REFERENCES users (id)"
         " ON DELETE CASCADE"
         " ON UPDATE RESTRICT,"
@@ -124,10 +124,10 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         cur.execute(self.quota_query, dict(user=user))
         try:
             res = cur.fetchone()[0]
-        except TypeError:  ### generally meaning no result; we could log this
+        except TypeError:  # generally meaning no result; we could log this
             res = None
         except mariadb.Error as e:  # pragma: no cover
-            logger.error(e)  ### CUSTOMIZE: log-level
+            logger.error(e)
             res = None
         finally:
             cur.close()
@@ -140,7 +140,9 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
             cur.execute(query)
         else:
             query = self.quota_map_query + " " + self.quota_map_where
-            srch = str(users)[1:-1]  ### produces a string suitable for SQL "IN ()"
+            srch = str(users)[
+                1:-1
+            ]  # produces a string suitable for SQL "IN ()"
             cur.execute(query.format(srch=srch))
         return cur.fetchall()
 
@@ -177,7 +179,7 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
         "domain_id BIGINT NOT NULL,"
         "user_id BIGINT NOT NULL,"
         "PRIMARY KEY (domain_id, user_id),"  # comp. primary key allows more than one user per domain
-        "CONSTRAINT fk_user"
+        "CONSTRAINT fk_user_domain"
         " FOREIGN KEY (user_id) REFERENCES users (id)"
         " ON DELETE CASCADE"
         " ON UPDATE RESTRICT,"
