@@ -727,10 +727,6 @@ class Test_SenderDomainAuthPolicy:
         result = testing_policy_sda.approve_policy_request(sda_allowable_ppr)
         assert result == True
 
-    def test_unauthorized_user(self, sda_unauth_ppr, testing_policy_sda):
-        result = testing_policy_sda.approve_policy_request(sda_unauth_ppr)
-        assert result == False
-
     ### note that no clearing of Redis is going on
     def test_cached_authed_user(
         self, monkeypatch, sda_allowable_ppr, testing_policy_sda
@@ -744,6 +740,12 @@ class Test_SenderDomainAuthPolicy:
                 sda_allowable_ppr
             )
         mock_acq_pol_data.assert_not_called()
+
+    def test_unauthorized_user(
+        self, sda_unauth_ppr, testing_policy_sda, clear_redis_sda
+    ):
+        result = testing_policy_sda.approve_policy_request(sda_unauth_ppr)
+        assert result == False
 
     ### For completeness we will test both
     def test_cached_unauth_user(
