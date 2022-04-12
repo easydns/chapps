@@ -449,6 +449,24 @@ class Test_Domains_API:
             "version": verstr,
         }
 
+    @pytest.mark.timeout(2)
+    def test_domain_list_users(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.get("/domains/1/allowed/?skip=2&limit=2")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                {"id": 3, "name": "bigsender@chapps.io"},
+                {"id": 5, "name": "schmo2@chapps.io"},
+            ],
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
 
 class Test_Quotas_API:
     """Tests of the Quota CRUD API"""
