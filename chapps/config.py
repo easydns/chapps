@@ -158,12 +158,15 @@ class CHAPPSConfig:
         location = Path(location or self.chapps.config_file)
         config_file = self.chapps.config_file
         version = self.chapps.version
+        docpath = self.chapps.docpath
         self.configparser.remove_option("CHAPPS", "config_file")
         self.configparser.remove_option("CHAPPS", "version")
+        self.configparser.remove_option("CHAPPS", "docpath")
         result = CHAPPSConfig.write_config(self.configparser, location)
         if config_file:
             self.configparser["CHAPPS"]["config_file"] = config_file
         self.configparser["CHAPPS"]["version"] = version
+        self.configparser["CHAPPS"]["docpath"] = docpath
         return result
 
 
