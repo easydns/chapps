@@ -6,6 +6,7 @@ from chapps.rest.models import (
     Domain,
     DomainResp,
     DomainsResp,
+    UsersResp,
     DeleteResp,
     TextResp,
     AssocOperation,
@@ -17,6 +18,7 @@ from .common import (
     delete_item,
     update_item,
     adjust_associations,
+    list_associated,
 )
 import logging
 import chapps.logging
@@ -48,6 +50,12 @@ api.get("/", response_model=DomainsResp)(
 
 api.get("/{item_id}", response_model=DomainResp)(
     get_item_by_id(Domain, response_model=DomainResp, assoc=[(User, "users")])
+)
+
+api.get("/{item_id}/allowed/", response_model=UsersResp)(
+    list_associated(
+        Domain, assoc=domain_join_assoc[0], response_model=UsersResp
+    )
 )
 
 api.post(
