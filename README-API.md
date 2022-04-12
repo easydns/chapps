@@ -5,7 +5,7 @@ The bulk of the documentation is generated automatically via FastAPI.
 ### Conventions
 
  The primary answer to a query is always returned in the element named
-`response`.  So for example, when GETting a User object, that object
+`response`.  So for example, when GETting a **User** object, that object
 is the value of the `response` key, and there may be ancillary keys
 named for its associations, which are `quota` and `domains`.
 
@@ -36,4 +36,5 @@ API routes fall under a few different categories:
 - domain manipulation
 - quota manipulation
 - live interaction with CHAPPS Redis environment
-- system commands like rewriting CHAPPS config file, etc.
+- system commands like rewriting CHAPPS config file, etc. (lumped in
+  with live for now)
