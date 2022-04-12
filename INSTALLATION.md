@@ -44,8 +44,39 @@ The test suite has several more dependencies.  In order to run tests,
 or otherwise set up for development work, consider using `pip -r
 requirements.txt` to install the last set of frozen dependencies into
 a development venv created within a checkout of a fork of this repo.
-The tests are not as polished style-wise as the library code; you have
-been warned.
+The tests are not as polished style-wise as the library code; perhaps
+when the major features are finished they can be cleaned up some.
+
+## Database Setup
+
+Probably the most important thing to remember is that the CHAPPS
+config file path is consciously decoupled from the `venv`, and so it
+must be specified as a preface on the commandline, at the least.  It
+could also be set in your environment by using `export`, or in your
+session setup script (i.e. `.bashrc`).  In some way, it must be
+correct when the database setup script runs, in order to ensure that
+the proper config is used.
+
+As an example:
+```
+> CHAPPS_CONFIG=/home/chapps/venv/etc/chapps.ini chapps_database_init.py
+```
+
+If you haven't, launch the app once to cause it to create a config
+file.  If you have one you want to use, just put it in place.
+
+Another prerequisite is that the database and user named in the config
+exist, with proper GRANTs.  If the CHAPPS library is able to log into
+the database it is configured to use, the script will cause it to
+create the tables it expects to use during normal operation.
+
+That said, running the script is pretty easy.  If the `venv` is
+activated, then it is in the path.  If not, it may be invoked by its
+full path, something like
+`/home/chapps/venv/bin/chapps_database_init.py`.
+
+Once this is done, you can start CHAPPS services once more, and start
+configuring and using them.
 
 ## CHAPPS Services
 
