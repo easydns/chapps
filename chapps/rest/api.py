@@ -24,9 +24,9 @@ tags_metadata = [
         name="users",
         description=(
             "<h3>Create, list, fetch, update, and delete operations "
-            "involving users.</h3><p>Update a user "
-            "to assign a new quota.  There are some special routes "
-            "for adding/removing just some domains without "
+            "involving users.</h3><p>Use the User Replace Quota route "
+            "to assign a new <b>quota</b>.  There are some special routes "
+            "for listing, allowing, or denying just some <b>domains</b> without "
             "having to handle the entire set of associations.</p>"
         ),
     ),
@@ -34,10 +34,10 @@ tags_metadata = [
         name="domains",
         description=(
             "<h3>Create, list, fetch, update and delete operations for "
-            "domains.</h3><p>When creating a domain, "
-            "it is possible to specify a list of User IDs to "
+            "domains.</h3><p>When creating a <b>domain</b>, "
+            "it is possible to specify a list of <b>user</b> IDs to "
             "associate.  There are some special routes for managing"
-            " user associations (add/remove arbitrary) without having"
+            " <b>user</b> associations (list/allow/deny) without having"
             " to handle the entire set of associations.</p>"
         ),
     ),
@@ -46,10 +46,10 @@ tags_metadata = [
         description=(
             "<h3>Create, list, fetch, update and delete operations for "
             "quotas.</h3><p>Since there are very "
-            "few quotas compared to the number of users, there is "
-            "no support planned for managing users from their "
-            "associated quotas.  To change a quota for a user, "
-            "update the user.</p>"
+            "few <b>quotas</b> compared to the number of <b>users</b>, there is "
+            "no support planned for managing <b>users</b> from their "
+            "associated <b>quotas</b>.  To change a <b>quota</b> for a <b>user</b>, "
+            "make use of the User Replace Quota route.</p>"
         ),
     ),
     dict(

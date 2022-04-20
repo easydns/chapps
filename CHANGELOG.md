@@ -1,5 +1,7 @@
 # Change Log
 
+##v0.4.4:
+	- Polish documentation.
 ##v0.4.3:
     - Correct error preventing automatic table building by provided
       setup script.

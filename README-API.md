@@ -5,18 +5,24 @@ The bulk of the documentation is generated automatically via FastAPI.
 ### Conventions
 
  The primary answer to a query is always returned in the element named
-`response`.  So for example, when GETting a **User** object, that object
+`response`.  So for example, when GETting a **user** object, that object
 is the value of the `response` key, and there may be ancillary keys
 named for its associations, which are `quota` and `domains`.
 
 In general, a parameter named `q` indicates a string which will be
 used in a basic substring match against the `name` attribute (column)
 of the object.  The `skip` and `limit` parameters may be used to
-paginate through what might otherwise be long lists of associations.
+paginate through what might otherwise be long lists of objects.
 Since the objects are small in this case, the default is to skip none,
 and to limit to 1000 rows returned.  In many cases this may mean that
 the entire set of associated objects is returned: say, the list of
 users for a domain which has a lot of mailboxes.
+
+If an object (**user** or **domain**) has more than 1000 of the other
+type associated to it (e.g. someone is authorized to send from over
+1000 domains, or some domain has over 1000 authorized senders), there
+are special routes to list just those associated objects for a
+particular source: "User List Domains" and "Domain List Users".
 
 In the automatically-generated documents for the
 automatically-generated CRUD routes, the generic variable `item_id` is

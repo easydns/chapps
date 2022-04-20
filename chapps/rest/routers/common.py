@@ -134,6 +134,7 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
     the optional dict assoc maps the names of associated models
     onto the data model for the associated objects
     """
+    mname = model_name(cls)
 
     @db_interaction(cls=cls, engine=engine)
     async def get_i(item_id: int):
@@ -150,8 +151,8 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
 
     get_i.__name__ = f"get_{model_name(cls)}"
     get_i.__doc__ = (
-        f"Retrieve {cls.__name__} records by ID, "
-        "along with all associated records."
+        f"Retrieve **{mname}** records by ID, "
+        "along with all (up to 1000) associated records."
     )
     return get_i
 
@@ -163,6 +164,7 @@ def list_items(cls, *, response_model, engine=sql_engine):
     The returned closure expects to receive the query parameters as a dict,
     since that is what the dependency will yield.
     """
+    mname = model_name(cls)
 
     @db_interaction(cls=cls, engine=engine)
     async def list_i(qparams: dict = Depends(list_query_params)):
@@ -173,9 +175,9 @@ def list_items(cls, *, response_model, engine=sql_engine):
 
     list_i.__name__ = f"list_{model_name(cls)}"
     list_i.__doc__ = f"""
-        List {cls.__name__}s.<br/>
+        List **{mname}** records.<br/>
         Pass a substring to match as `q`.<br/>
-        Implement pagination by providing `skip` and `limit`.
+        Paginate by providing `skip` and `limit`.
         """
     return list_i
 
@@ -216,8 +218,8 @@ def list_associated(
     assoc_list.__annotations__ = params
     assoc_list.__name__ = fname
     assoc_list.__doc__ = (
-        f"List {assoc.assoc_name} objects associated with a particular {mname},"
-        " identified by ID.<br/>Supply standard query parameters for"
+        f"List **{assoc.assoc_name}** associated with a particular **{mname}**,"
+        " identified by ID.<br/>Supply standard query parameters for matching and"
         " pagination."
     )
     return assoc_list
@@ -245,8 +247,8 @@ def delete_item(
 
     delete_i.__name__ = f"delete_{mname}"
     delete_i.__doc__ = f"""
-        Accepts a list of {mname} object IDs in the body.
-        Deletes them."""
+        Accepts a list of **{mname}** object IDs.
+        Deletes the records with those IDs."""
     return delete_i
 
 
@@ -321,9 +323,9 @@ def adjust_associations(
     assoc_op_i.__name__ = fname
     assoc_op_i.__doc__ = f"""
         {str(assoc_op).capitalize()}
-        {', '.join([a.assoc_name for a in assoc])} objects
-        {'to' if assoc_op==AssocOperation.add else 'from'} {mname}<br/>
-        Accepts mname id as `item_id`.
+        **{', '.join([a.assoc_name for a in assoc])}** objects
+        {'to' if assoc_op==AssocOperation.add else 'from'} **{mname}**<br/>
+        Accepts **{mname}** ID as `item_id`.
     """
 
     return assoc_op_i
@@ -416,9 +418,9 @@ def update_item(cls, *, response_model, assoc=None, engine=sql_engine):
     update_i.__annotations__ = params
     update_i.__name__ = fname
     update_i.__doc__ = f"""
-        Update {cls.__name__} by id.<br/>
-        All {mname} attributes are required.<br/>
-        Associations are not required, but if provided, will
+        Update a **{mname}** record by ID.<br/>
+        All **{mname}** attributes are required.<br/>
+        Associations are not required, but if provided (by ID), will
         completely replace any existing association relationships
         of the same type.
         """
@@ -432,7 +434,8 @@ def create_item(
     Build a route to create items.
     """
     params = params or dict(name=str)
-    fname = f"create_{model_name(cls)}"
+    mname = model_name(cls)
+    fname = f"create_{mname}"
 
     @db_interaction(cls=cls, engine=engine)
     async def create_i(*pargs, **args):
@@ -452,7 +455,7 @@ def create_item(
         except IntegrityError:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Unique key conflict.",
+                detail=f"Unique key conflict creating {mname}.",
             )
         except Exception:
             logger.exception(f"{fname}: {args!r}")
@@ -506,9 +509,9 @@ def create_item(
     create_i.__annotations__ = params
     create_i.__name__ = fname
     create_i.__doc__ = f"""
-        Create a new {cls.__name__} record in the database.<br/>
+        Create a new **{mname}** record in the database.<br/>
         All attributes are required.<br/>
-        The new object will be returned, including its id.<br/>
+        The new object will be returned, including its ID.<br/>
         Raises descriptive errors on 409; checking the detail
           of the error may aid in debugging.
         """
