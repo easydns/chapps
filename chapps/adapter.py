@@ -174,7 +174,7 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
         "name VARCHAR(64) UNIQUE NOT NULL"
         ")"
     )
-    join_table = (
+    domain_join_table = (
         "CREATE TABLE IF NOT EXISTS domain_user ("  # pragma: no cover
         "domain_id BIGINT NOT NULL,"
         "user_id BIGINT NOT NULL,"
@@ -187,6 +187,27 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
         " FOREIGN KEY (domain_id) REFERENCES domains (id)"
         " ON DELETE CASCADE"
         " ON UPDATE CASCADE"  # allow replacement of domain defs
+        ")"
+    )
+    email_table = (
+        "CREATE TABLE IF NOT EXISTS emails ("
+        "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
+        "name VARCHAR(128) UNIQUE NOT NULL"
+        ")"
+    )
+    email_join_table = (
+        "CREATE TABLE IF NOT EXISTS email_user ("
+        "email_id BIGINT NOT NULL,"
+        "user_id BIGINT NOT NULL,"
+        "PRIMARY KEY (email_id, user_id),"
+        "CONSTRAINT fk_user_email"
+        " FOREIGN KEY (user_id) REFERENCES users (id)"
+        " ON DELETE CASCADE"
+        " ON UPDATE RESTRICT,"
+        "CONSTRAINT fk_email"
+        " FOREIGN KEY (email_id) REFERENCES emails (id)"
+        " ON DELETE CASCADE"
+        " ON UPDATE CASCADE"
         ")"
     )
     domain_query = (
@@ -209,12 +230,18 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
         " LEFT JOIN users AS u ON u.id = j.user_id"
         " WHERE d.name = '{domain}' AND u.name = '{user}'"
     )
+    check_email_query = (
+        "SELECT COUNT(e.name) FROM emails AS e"
+        " LEFT JOIN email_user AS j on e.id = j.email_id"
+        " LEFT JOIN users AS u ON u.id = j.user_id"
+        " WHERE e.name = '{email}' AND u.name = '{user}'"
+    )
 
     def _initialize_tables(self, *args, **kwargs):
         super()._initialize_tables()
         cur = self.conn.cursor()
         cur.execute(self.domain_table)
-        cur.execute(self.join_table)
+        cur.execute(self.domain_join_table)
         cur.close()
 
     def check_domain_for_user(self, user, domain):
@@ -222,6 +249,14 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
         cur = self.conn.cursor()
         cur.execute(self.check_domain_query.format(user=user, domain=domain))
         result = cur.fetchone()[0]  ### returns 1 if a domain matched, 0 if not
+        cur.close()
+        return result
+
+    def check_email_for_user(self, user, email):
+        """Returns true if the user is authorized to send as this email"""
+        cur = self.conn.cursor()
+        cur.execute(self.check_email_query.format(user=user, email=email))
+        result = cur.fetchone()[0]
         cur.close()
         return result
 

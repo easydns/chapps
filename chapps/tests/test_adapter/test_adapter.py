@@ -207,6 +207,13 @@ class Test_MariaDBSenderDomainAuthAdapter:
             "ccullen@easydns.com", "chapps.io"
         )
 
+    def test_check_email_for_user(
+        self, finalizing_mdbsdaadapter, populated_database_fixture
+    ):
+        assert finalizing_mdbsdaadapter.check_email_for_user(
+            "ccullen@easydns.com", "caleb@chapps.com"
+        )
+
     def test_check_domain_for_unauth_user(
         self, finalizing_mdbsdaadapter, populated_database_fixture
     ):

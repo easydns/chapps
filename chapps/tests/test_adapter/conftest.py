@@ -108,6 +108,12 @@ def _populated_database_fixture(database_fixture):
         "name VARCHAR(64) UNIQUE NOT NULL"
         ")"
     )
+    email_table = (
+        "CREATE TABLE IF NOT EXISTS emails ("
+        "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
+        "name VARCHAR(128) UNIQUE NOT NULL"
+        ")"
+    )
     quota_join_table = (  # pragma: no cover
         "CREATE TABLE IF NOT EXISTS quota_user ("
         "quota_id BIGINT NOT NULL,"
@@ -137,6 +143,21 @@ def _populated_database_fixture(database_fixture):
         " ON UPDATE CASCADE"  # allow replacement of domain defs
         ")"
     )
+    email_join_table = (
+        "CREATE TABLE IF NOT EXISTS email_user ("
+        "email_id BIGINT NOT NULL,"
+        "user_id BIGINT NOT NULL,"
+        "PRIMARY KEY (email_id, user_id),"
+        "CONSTRAINT fk_user_email"
+        " FOREIGN KEY (user_id) REFERENCES users (id)"
+        " ON DELETE CASCADE"
+        " ON UPDATE RESTRICT,"
+        "CONSTRAINT fk_email"
+        " FOREIGN KEY (email_id) REFERENCES emails (id)"
+        " ON DELETE CASCADE"
+        " ON UPDATE CASCADE"
+        ")"
+    )
     basic_quotas = (
         "INSERT INTO quotas ( name, quota ) VALUES "
         "('10eph', 240),"
@@ -149,6 +170,8 @@ def _populated_database_fixture(database_fixture):
         "SELECT LAST_INSERT_ID() INTO @userid;",
         "INSERT INTO domains ( name ) VALUES ( 'chapps.io' );",
         "SELECT LAST_INSERT_ID() INTO @chappsid;",
+        "INSERT INTO emails (name) VALUES ( 'caleb@chapps.com' );",
+        "SELECT LAST_INSERT_ID() INTO @emailid;",
         (
             "INSERT INTO quota_user ( quota_id, user_id ) VALUES"
             " ( (SELECT id FROM quotas WHERE name = '10eph'), @userid );"
@@ -156,6 +179,10 @@ def _populated_database_fixture(database_fixture):
         (
             "INSERT INTO domain_user ( domain_id, user_id ) VALUES"
             " ( @chappsid, @userid );"
+        ),
+        (
+            "INSERT INTO email_user ( email_id, user_id ) VALUES"
+            " ( @emailid, @userid );"
         ),
         "INSERT INTO users (name) VALUES ('somebody@chapps.io');",
         "SELECT LAST_INSERT_ID() INTO @userid;",
@@ -184,8 +211,10 @@ def _populated_database_fixture(database_fixture):
     cur.execute(user_table)
     cur.execute(quota_table)
     cur.execute(domain_table)
+    cur.execute(email_table)
     cur.execute(quota_join_table)
     cur.execute(domain_join_table)
+    cur.execute(email_join_table)
     cur.execute(count_users)
     usercount = cur.fetchone()[0]
     if usercount == 0:
