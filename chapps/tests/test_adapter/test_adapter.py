@@ -16,7 +16,10 @@ class Test_PolicyConfigAdapter:
         and attempts to open a database connection.
         """
         adapter = PolicyConfigAdapter(
-            db_host="mockhost", db_name="mockdb", db_user="mockuser", db_pass="mockpass"
+            db_host="mockhost",
+            db_name="mockdb",
+            db_user="mockuser",
+            db_pass="mockpass",
         )
 
         assert adapter.user == "mockuser"
@@ -41,7 +44,9 @@ class Test_PolicyConfigAdapter:
 
 
 class Test_MariaDBQuotaAdapter:
-    def test_initialize_tables_default(self, finalizing_mdbqadapter, database_fixture):
+    def test_initialize_tables_default(
+        self, finalizing_mdbqadapter, database_fixture
+    ):
         """
         Verify that MDBQA's table initialization works properly
         """
@@ -71,7 +76,9 @@ class Test_MariaDBQuotaAdapter:
         cur.execute("SELECT COUNT(name) FROM quotas")
         assert cur.fetchone()[0] == 3
 
-    def test_finalize(self, mdbqadapter_fixture):  # TODO: refactor to superclass tests
+    def test_finalize(
+        self, mdbqadapter_fixture
+    ):  # TODO: refactor to superclass tests
         """
         Verify that MDBQA's finalize routine closes the database connection
         """
@@ -79,7 +86,9 @@ class Test_MariaDBQuotaAdapter:
         with pytest.raises(mariadb.Error):
             assert mdbqadapter_fixture.conn.cursor()
 
-    def test_quota_for_user(self, populated_database_fixture, finalizing_mdbqadapter):
+    def test_quota_for_user(
+        self, populated_database_fixture, finalizing_mdbqadapter
+    ):
         """
         Verify that MDBQA.quota_for_user returns the expected quota for an email
         """
@@ -95,7 +104,9 @@ class Test_MariaDBQuotaAdapter:
         quota = finalizing_mdbqadapter.quota_for_user("nonexistent@chapps.io")
         assert quota == None
 
-    def test_quota_dump(self, populated_database_fixture, finalizing_mdbqadapter):
+    def test_quota_dump(
+        self, populated_database_fixture, finalizing_mdbqadapter
+    ):
         """
         Verify that MDBQA._quota_search returns rows for all entries in the quota_user table if no list is specified
         """
@@ -118,7 +129,10 @@ class Test_MariaDBQuotaAdapter:
         results = finalizing_mdbqadapter._quota_search(test_emails)
 
         assert len(results) == 2  # curly-brace lists are sets
-        assert {r[0] for r in results} == {"ccullen@easydns.com", "somebody@chapps.io"}
+        assert {r[0] for r in results} == {
+            "ccullen@easydns.com",
+            "somebody@chapps.io",
+        }
         assert {r[1] for r in results} == {240, 1200}
 
     def test_quota_search_accuracy(
@@ -143,7 +157,10 @@ class Test_MariaDBQuotaAdapter:
         """
         results = finalizing_mdbqadapter.quota_dict(test_emails)
 
-        assert results == {"ccullen@easydns.com": 240, "somebody@chapps.io": 1200}
+        assert results == {
+            "ccullen@easydns.com": 240,
+            "somebody@chapps.io": 1200,
+        }
 
     def test_quota_map(
         self,
@@ -157,7 +174,8 @@ class Test_MariaDBQuotaAdapter:
         results from the query
         """
         results = finalizing_mdbqadapter.quota_map(
-            mock_mapping, test_emails  # the mock mapping function, which we can query
+            mock_mapping,
+            test_emails,  # the mock mapping function, which we can query
         )  # the emails to test with
 
         ### trivial assertion that the mock fired twice, giving its True
@@ -184,7 +202,9 @@ class Test_MariaDBQuotaAdapter:
 
 
 class Test_MariaDBSenderDomainAuthAdapter:
-    def test_initialize_tables(self, finalizing_mdbsdaadapter, database_fixture):
+    def test_initialize_tables(
+        self, finalizing_mdbsdaadapter, database_fixture
+    ):
         """
         Verify that MDBSDAA's table initialization works properly
         """
