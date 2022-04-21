@@ -727,6 +727,18 @@ class Test_SenderDomainAuthPolicy:
         result = testing_policy_sda.approve_policy_request(sda_allowable_ppr)
         assert result == True
 
+    def test_whole_email_auth(self, sda_auth_email_ppr, testing_policy_sda):
+        result = testing_policy_sda.approve_policy_request(sda_auth_email_ppr)
+        assert result == True
+
+    def test_whole_email_unauth(
+        self, sda_unauth_email_ppr, testing_policy_sda
+    ):
+        result = testing_policy_sda.approve_policy_request(
+            sda_unauth_email_ppr
+        )
+        assert result == False
+
     ### note that no clearing of Redis is going on
     def test_cached_authed_user(
         self, monkeypatch, sda_allowable_ppr, testing_policy_sda
@@ -740,6 +752,21 @@ class Test_SenderDomainAuthPolicy:
                 sda_allowable_ppr
             )
         mock_acq_pol_data.assert_not_called()
+        assert result == True
+
+    def test_cached_whole_email(
+        self, monkeypatch, sda_auth_email_ppr, testing_policy_sda
+    ):
+        mock_acq_pol_data = Mock(result=True)
+        with monkeypatch.context() as m:
+            m.setattr(
+                testing_policy_sda, "acquire_policy_for", mock_acq_pol_data
+            )
+            result = testing_policy_sda.approve_policy_request(
+                sda_auth_email_ppr
+            )
+        mock_acq_pol_data.assert_not_called()
+        assert result == True
 
     def test_unauthorized_user(
         self, sda_unauth_ppr, testing_policy_sda, clear_redis_sda

@@ -101,6 +101,32 @@ def sda_allowable_ppr(postfix_policy_request_message):
 
 
 @fixture
+def sda_auth_email_ppr(postfix_policy_request_message):
+    return OutboundPPR(
+        postfix_policy_request_message(
+            "caleb@chapps.com",
+            None,
+            sasl_username="ccullen@easydns.com",
+            ccert_subject="",
+            instance="sda_whole_email_ppr",
+        )
+    )
+
+
+@fixture
+def sda_unauth_email_ppr(postfix_policy_request_message):
+    return OutboundPPR(
+        postfix_policy_request_message(
+            "ccullen@chapps.com",
+            None,
+            sasl_username="ccullen@easydns.com",
+            ccert_subject="",
+            instance="sda_whole_email_ppr",
+        )
+    )
+
+
+@fixture
 def sda_unauth_ppr(postfix_policy_request_message):
     return OutboundPPR(
         postfix_policy_request_message(
