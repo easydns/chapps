@@ -2,6 +2,7 @@
 
 ##v0.4.4:
 	- Polish documentation.
+	- Add full-email auth to SDA module.
 ##v0.4.3:
     - Correct error preventing automatic table building by provided
       setup script.

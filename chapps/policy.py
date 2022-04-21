@@ -578,6 +578,9 @@ class SenderDomainAuthPolicy(EmailPolicy):
         """Create a Redis key for each valid user->domain mapping, for speed"""
         return self._sender_domain_key(ppr.user, self._get_sender_domain(ppr))
 
+    def sender_email_key(self, ppr):
+        return self._sender_domain_key(ppr.user, ppr.sender)
+
     # factored out for use in API
     def _sender_domain_key(self, user, domain):
         return self._fmtkey(user, domain)
@@ -613,17 +616,22 @@ class SenderDomainAuthPolicy(EmailPolicy):
             res = self.redis.get(key)
         except redis.exceptions.ResponseError:  # pragma: no cover
             self.redis.delete(key)
-        return res
+        # logger.debug(f"Found {key} = {res!r} in Redis")
+        return res if res is None else int(res)
 
     def _get_control_data(self, ppr):
         return self._detect_control_data(
             ppr.user, self._get_sender_domain(ppr)
-        )
+        ) or self._detect_control_data(ppr.user, ppr.sender)
 
     # We will need to be able to store data in Redis
     def _store_control_data(self, ppr, allowed):
         with self._control_data_storage_context() as dsc:
             dsc(ppr.user, self._get_sender_domain(ppr), allowed)
+
+    def _store_email_control_data(self, ppr, allowed):
+        with self._control_data_storage_context() as dsc:
+            dsc(ppr.user, ppr.sender, allowed)
 
     # We will need a Redis storage context manager in order to mimic the structure of OQP
     @contextmanager
@@ -632,7 +640,9 @@ class SenderDomainAuthPolicy(EmailPolicy):
         fmtkey = self._fmtkey
 
         def _dsc(user, domain, allowed):
-            pipe.set(fmtkey(user, domain), allowed, ex=seconds_per_day)
+            key = fmtkey(user, domain)
+            # logger.debug(f"Storing {key} = {allowed} in Redis")
+            pipe.set(key, allowed, ex=seconds_per_day)
 
         try:
             yield _dsc
@@ -663,8 +673,12 @@ class SenderDomainAuthPolicy(EmailPolicy):
             allowed = adapter.check_domain_for_user(
                 ppr.user, self._get_sender_domain(ppr)
             )
-        if allowed is not None:
-            self._store_control_data(ppr, 1 if allowed else 0)
+            if allowed is not None:
+                self._store_control_data(ppr, 1 if allowed else 0)
+            if not allowed:  # domain not allowed, check email
+                allowed = adapter.check_email_for_user(ppr.user, ppr.sender)
+                if allowed is not None:
+                    self._store_email_control_data(ppr, 1 if allowed else 0)
         return allowed
 
     # This is the main purpose of the class, to answer this question
