@@ -106,6 +106,17 @@ class Domain(CHAPPSModel):
         orm_model = dbmodels.Domain
 
 
+class Email(CHAPPSModel):
+    """A model for emails"""
+
+    class Config:
+        orm_mode = True
+        schema_extra = dict(example=dict(id=0, name="someone@example.com"))
+
+    class Meta:
+        orm_model = dbmodels.Email
+
+
 class CHAPPSResponse(BaseModel):
     version: str
     timestamp: float
@@ -126,6 +137,7 @@ class CHAPPSResponse(BaseModel):
 class UserResp(CHAPPSResponse):
     response: User
     domains: Optional[List[Domain]] = None
+    emails: Optional[List[Email]] = None
     quota: Optional[Quota] = None
 
 
@@ -140,6 +152,15 @@ class DomainResp(CHAPPSResponse):
 
 class DomainsResp(CHAPPSResponse):
     response: List[Domain]
+
+
+class EmailResp(CHAPPSResponse):
+    response: Email
+    users: Optional[List[User]] = None
+
+
+class EmailsResp(CHAPPSResponse):
+    response: List[Email]
 
 
 class QuotaResp(CHAPPSResponse):
