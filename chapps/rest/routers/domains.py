@@ -52,7 +52,7 @@ api.get("/{item_id}", response_model=DomainResp)(
     get_item_by_id(Domain, response_model=DomainResp, assoc=domain_join_assoc)
 )
 
-api.get("/{item_id}/allowed/", response_model=UsersResp)(
+api.get("/{item_id}/users/", response_model=UsersResp)(
     list_associated(
         Domain, assoc=domain_join_assoc[0], response_model=UsersResp
     )
@@ -81,13 +81,13 @@ api.put("/", response_model=DomainResp)(
     update_item(Domain, response_model=DomainResp, assoc=domain_join_assoc)
 )
 
-api.put("/{item_id}/allow/", response_model=TextResp)(
+api.put("/{item_id}/users/", response_model=TextResp)(
     adjust_associations(
         Domain, assoc=domain_join_assoc, assoc_op=AssocOperation.add
     )
 )
 
-api.put("/{item_id}/deny/", response_model=TextResp)(
+api.delete("/{item_id}/users/", response_model=TextResp)(
     adjust_associations(
         Domain, assoc=domain_join_assoc, assoc_op=AssocOperation.subtract
     )
