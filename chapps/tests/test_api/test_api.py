@@ -780,7 +780,7 @@ class Test_Emails_API:
         testing_api_client,
         populated_database_fixture_with_extras,
     ):
-        response = testing_api_client.put("/emails/1/allow/", json=[4, 3])
+        response = testing_api_client.put("/emails/1/users/", json=[4, 3])
         assert response.status_code == 200
         assert response.json() == {
             "response": "Updated.",
@@ -807,7 +807,7 @@ class Test_Emails_API:
         testing_api_client,
         populated_database_fixture_with_extras,
     ):
-        response = testing_api_client.put("/emails/1/deny/", json=[1])
+        response = testing_api_client.delete("/emails/1/users/", json=[1])
         assert response.status_code == 200
         assert response.json() == {
             "response": "Updated.",
@@ -831,7 +831,7 @@ class Test_Emails_API:
         testing_api_client,
         populated_database_fixture_with_extras,
     ):
-        response = testing_api_client.get("/emails/2/allowed/?skip=2&limit=2")
+        response = testing_api_client.get("/emails/2/users/?skip=2&limit=2")
         assert response.status_code == 200
         assert response.json() == {
             "response": [

@@ -50,7 +50,7 @@ api.get("/{item_id}", response_model=EmailResp)(
     get_item_by_id(Email, response_model=EmailResp, assoc=email_join_assoc)
 )
 
-api.get("/{item_id}/allowed/", response_model=UsersResp)(
+api.get("/{item_id}/users/", response_model=UsersResp)(
     list_associated(Email, assoc=email_join_assoc[0], response_model=UsersResp)
 )
 
@@ -75,13 +75,13 @@ api.put("/", response_model=EmailResp)(
     update_item(Email, response_model=EmailResp, assoc=email_join_assoc)
 )
 
-api.put("/{item_id}/allow/", response_model=TextResp)(
+api.put("/{item_id}/users/", response_model=TextResp)(
     adjust_associations(
         Email, assoc=email_join_assoc, assoc_op=AssocOperation.add
     )
 )
 
-api.put("/{item_id}/deny/", response_model=TextResp)(
+api.delete("/{item_id}/users/", response_model=TextResp)(
     adjust_associations(
         Email, assoc=email_join_assoc, assoc_op=AssocOperation.subtract
     )
