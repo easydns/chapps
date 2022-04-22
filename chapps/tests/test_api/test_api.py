@@ -542,11 +542,184 @@ class Test_Emails_API:
     """Tests of whole-email sender authorization API routes"""
 
     @pytest.mark.timeout(2)
-    def test_get_email(self, fixed_time, testing_api_client):
+    def test_get_email(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
         response = testing_api_client.get("/emails/1")
         assert response.status_code == 200
         assert response.json() == {
             "response": {"id": 1, "name": "caleb@chapps.com"},
+            "users": [{"id": 1, "name": "ccullen@easydns.com"}],
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_list_emails(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.get("/emails/")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [{"id": 1, "name": "caleb@chapps.com"}],
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_create_email(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        # pudb.set_trace()
+        response = testing_api_client.post(
+            "/emails/", json={"name": "someone@chapps.com", "users": []}
+        )
+        assert response.status_code == 201
+        assert response.json() == {
+            "response": {"id": 2, "name": "someone@chapps.com"},
+            "users": None,
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(3)
+    def test_create_email_with_users(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.post(
+            "/emails/", json={"name": "someone@chapps.com", "users": [1]}
+        )
+        assert response.status_code == 201
+        assert response.json() == {
+            "response": {"id": 2, "name": "someone@chapps.com"},
+            "timestamp": fixed_time,
+            "users": [{"id": 1, "name": "ccullen@easydns.com"}],
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_delete_email(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.delete("/emails/", json=[1])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "deleted",
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+        response = testing_api_client.get("/emails/1")
+        assert response.status_code == 404
+        response = testing_api_client.get("/users/1")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {"id": 1, "name": "ccullen@easydns.com"},
+            "emails": [],
+            "domains": [{"id": 1, "name": "chapps.io"}],
+            "quota": {"id": 1, "name": "10eph", "quota": 240},
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_update_email(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.put(
+            "/emails/", json=dict(email=dict(id=1, name="caleb@crapps.io"))
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {"id": 1, "name": "caleb@crapps.io"},
+            "timestamp": fixed_time,
+            "users": None,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_update_email_with_users(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.put(
+            "/emails/",
+            json=dict(email=dict(id=1, name="caleb@chapps.com"), users=[2, 3]),
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {"id": 1, "name": "caleb@chapps.com"},
+            "timestamp": fixed_time,
+            "users": [
+                {"id": 2, "name": "somebody@chapps.io"},
+                {"id": 3, "name": "bigsender@chapps.io"},
+            ],
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_update_email_add_users(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.put("/emails/1/allow/", json=[4, 3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "Updated.",
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+        response = testing_api_client.get("/users/4")
+        assert response.json() == {
+            "response": {"id": 4, "name": "schmo1@chapps.io"},
+            "emails": [
+                {"id": 1, "name": "caleb@chapps.com"},
+                {"id": 2, "name": "roleaccount@chapps.com"},
+            ],
+            "domains": [],
+            "quota": None,
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_update_email_remove_users(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.put("/emails/1/deny/", json=[1])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "Updated.",
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+        response = testing_api_client.get("/users/1")
+        assert response.json() == {
+            "response": {"id": 1, "name": "ccullen@easydns.com"},
+            "emails": [],
+            "domains": [{"id": 1, "name": "chapps.io"}],
+            "quota": {"id": 1, "name": "10eph", "quota": 240},
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_email_list_users(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.get("/emails/2/allowed/?skip=2&limit=2")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                {"id": 4, "name": "schmo1@chapps.io"},
+                {"id": 5, "name": "schmo2@chapps.io"},
+            ],
             "timestamp": fixed_time,
             "version": verstr,
         }

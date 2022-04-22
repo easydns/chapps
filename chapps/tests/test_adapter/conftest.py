@@ -238,6 +238,9 @@ def _populated_database_fixture_with_extras(database_fixture):
         "INSERT INTO users (name) VALUES "
         "('schmo1@chapps.io'), ('schmo2@chapps.io');"
     )
+    extra_emails = (
+        "INSERT INTO emails (name) VALUES " "('roleaccount@chapps.com');"
+    )
 
     extra_assoc = [
         (
@@ -245,9 +248,14 @@ def _populated_database_fixture_with_extras(database_fixture):
             " (2, 3), (1, 5), (2, 5), (3, 5), (4, 5);"
         ),
         ("INSERT INTO quota_user (quota_id, user_id) VALUES (1, 5);"),
+        (
+            "INSERT INTO email_user (email_id, user_id) VALUES"
+            " (2, 2), (2, 3), (2, 4), (2, 5)"
+        ),
     ]
     cur.execute(extra_domains)
     cur.execute(extra_users)
+    cur.execute(extra_emails)
     for q in extra_assoc:
         cur.execute(q)
     return cur
