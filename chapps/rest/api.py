@@ -5,7 +5,7 @@
 
 from chapps.config import config
 from chapps._version import __version__
-from chapps.rest.routers import users, domains, quotas, live
+from chapps.rest.routers import users, domains, quotas, emails, live
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -80,6 +80,7 @@ verstr = config.chapps.version
 api.include_router(users.api)
 api.include_router(domains.api)
 api.include_router(quotas.api)
+api.include_router(emails.api)
 api.include_router(live.api)
 
 
