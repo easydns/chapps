@@ -239,7 +239,8 @@ def _populated_database_fixture_with_extras(database_fixture):
         "('schmo1@chapps.io'), ('schmo2@chapps.io');"
     )
     extra_emails = (
-        "INSERT INTO emails (name) VALUES " "('roleaccount@chapps.com');"
+        "INSERT INTO emails (name) VALUES ('roleaccount@chapps.com'),"
+        " ('admin@chapps.com'), ('abuse@chapps.com'), ('info@chapps.com');"
     )
 
     extra_assoc = [
@@ -250,7 +251,8 @@ def _populated_database_fixture_with_extras(database_fixture):
         ("INSERT INTO quota_user (quota_id, user_id) VALUES (1, 5);"),
         (
             "INSERT INTO email_user (email_id, user_id) VALUES"
-            " (2, 2), (2, 3), (2, 4), (2, 5)"
+            " (2, 2), (2, 3), (2, 4), (2, 5),"
+            " (3, 3), (4, 3), (5, 3);"
         ),
     ]
     cur.execute(extra_domains)
