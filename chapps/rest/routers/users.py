@@ -8,6 +8,7 @@ from ..models import (
     UserResp,
     UsersResp,
     DomainsResp,
+    EmailsResp,
     DeleteResp,
     IntResp,
     TextResp,
@@ -86,17 +87,34 @@ api.get("/{item_id}/domains/", response_model=DomainsResp)(
     list_associated(User, assoc=user_domains_assoc, response_model=DomainsResp)
 )
 
+api.get("/{item_id}/emails/", response_model=EmailsResp)(
+    list_associated(User, assoc=user_emails_assoc, response_model=EmailsResp)
+)
+
 api.put("/", response_model=UserResp)(
     update_item(User, response_model=UserResp, assoc=user_join_assoc)
 )
 
-api.put("/{item_id}/domains/allow/", response_model=TextResp)(
+api.put("/{item_id}/domains/", response_model=TextResp)(
     adjust_associations(
         User, assoc=[user_domains_assoc], assoc_op=AssocOperation.add
     )
 )
 
-api.put("/{item_id}/domains/deny/", response_model=TextResp)(
+api.put("/{item_id}/emails/", response_model=TextResp)(
+    adjust_associations(
+        User, assoc=[user_emails_assoc], assoc_op=AssocOperation.add
+    )
+)
+
+api.delete("/{item_id}/emails/")(
+    adjust_associations(
+        User, assoc=[user_emails_assoc], assoc_op=AssocOperation.subtract
+    )
+)
+
+
+api.delete("/{item_id}/domains/", response_model=TextResp)(
     adjust_associations(
         User, assoc=[user_domains_assoc], assoc_op=AssocOperation.subtract
     )
