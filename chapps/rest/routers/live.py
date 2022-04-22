@@ -145,7 +145,9 @@ async def sda_peek(domain_name: str, user_name: str):
     i.e. is this user allowed to transmit email apparently from this domain
     """
     sda = SenderDomainAuthPolicy()
-    return TextResp.send(sda.check_policy_cache(user_name, domain_name))
+    result = sda.check_policy_cache(user_name, domain_name)
+    # logger.debug(f"Peeking at {domain_name} auth for {user_name}: {result!r}")
+    return TextResp.send(result)
 
 
 @api.delete("/sda/", response_model=TextResp)

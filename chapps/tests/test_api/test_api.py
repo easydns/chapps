@@ -996,7 +996,29 @@ class Test_Live_API:
         )
         assert response.status_code == 200
         assert response.json() == {
-            "response": "AUTHORIZED",
+            "response": SDAStatus.AUTH.value,
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    def test_sda_cache_peek_email(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_sda,
+        sda_auth_email_ppr,
+        populated_database_fixture,
+    ):
+        result = testing_policy_sda.approve_policy_request(sda_auth_email_ppr)
+        response = testing_api_client.get(
+            "/live/sda/"
+            + urlencode(sda_auth_email_ppr.sender)
+            + "/for/"
+            + urlencode(sda_auth_email_ppr.user)
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": SDAStatus.AUTH.value,
             "timestamp": fixed_time,
             "version": verstr,
         }
