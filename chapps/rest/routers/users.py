@@ -4,6 +4,7 @@ from ..models import (
     User,
     Quota,
     Domain,
+    Email,
     UserResp,
     UsersResp,
     DomainsResp,
@@ -48,7 +49,15 @@ user_domains_assoc = User.join_assoc(
     table=User.Meta.orm_model.metadata.tables["domain_user"],
 )
 
-user_join_assoc = [user_quota_assoc, user_domains_assoc]
+user_emails_assoc = User.join_assoc(
+    assoc_name="emails",
+    assoc_type=List[int],
+    assoc_model=Email,
+    assoc_id=Email.id_name(),
+    table=User.Meta.orm_model.metadata.tables["email_user"],
+)
+
+user_join_assoc = [user_quota_assoc, user_domains_assoc, user_emails_assoc]
 
 api.post(
     "/",
