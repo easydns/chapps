@@ -217,6 +217,20 @@ domain_user = Table(
         primary_key=True,
     ),
 )
+email_user = Table(
+    "email_user",
+    DB_Base.metadata,
+    Column(
+        "user_id",
+        ForeignKey("users.id", ondelete="CASCADE", onupdate="RESTRICT"),
+        primary_key=True,
+    ),
+    Column(
+        "email_id",
+        ForeignKey("emails.id", ondelete="CASCADE", onupdate="CASCADE"),
+        primary_key=True,
+    ),
+)
 
 
 class Quota(DB_Base):
@@ -244,6 +258,18 @@ class Domain(DB_Base):
         return f"Domain[ORM](id={self.id!r}, name={self.name!r})"
 
 
+class Email(DB_Base):
+    """ORM Model for email definitions"""
+
+    __tablename__ = "emails"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(128))
+
+    def __repr__(self):
+        return f"Email[ORM](id={self.id!r}, name={self.name!r})"
+
+
 class User(DB_Base):
     """ORM model for user entities within CHAPPS"""
 
@@ -267,6 +293,13 @@ class User(DB_Base):
         backref=backref("users", order_by="User.id"),  # reverse associate
         order_by=Domain.id,  # order by id
         passive_deletes=True,  # protect domains
+    )
+    emails = relationship(
+        Email,
+        secondary=email_user,
+        backref=backref("users", order_by="User.id"),
+        order_by=Email.id,
+        passive_deletes=True,
     )
 
     def __repr__(self):
