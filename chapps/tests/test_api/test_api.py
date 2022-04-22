@@ -538,6 +538,20 @@ class Test_Quotas_API:
         }
 
 
+class Test_Emails_API:
+    """Tests of whole-email sender authorization API routes"""
+
+    @pytest.mark.timeout(2)
+    def test_get_email(self, fixed_time, testing_api_client):
+        response = testing_api_client.get("/emails/1")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {"id": 1, "name": "caleb@chapps.com"},
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+
 class Test_Live_API:
     """Tests of API routes which interact with Redis"""
 
