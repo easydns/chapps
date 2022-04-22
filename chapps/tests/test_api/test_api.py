@@ -34,6 +34,7 @@ class Test_Users_API:
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "domains": [{"id": 1, "name": "chapps.io"}],
+            "emails": [{"id": 1, "name": "caleb@chapps.com"}],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
             "version": verstr,
@@ -65,6 +66,7 @@ class Test_Users_API:
         assert response.status_code == 201
         assert response.json() == {
             "response": {"id": 4, "name": "schmo1@chapps.io"},
+            "emails": None,
             "domains": None,
             "quota": None,
             "timestamp": fixed_time,
@@ -84,6 +86,7 @@ class Test_Users_API:
         assert response.json() == {
             "response": {"id": 4, "name": "schmo1@chapps.io"},
             "domains": [{"id": 1, "name": "chapps.io"}],
+            "emails": None,
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
             "version": verstr,
@@ -116,6 +119,7 @@ class Test_Users_API:
             "response": {"id": 1, "name": "ccruller@easydonuts.com"},
             "domains": None,
             "quota": None,
+            "emails": None,
             "timestamp": fixed_time,
             "version": verstr,
         }
@@ -132,6 +136,7 @@ class Test_Users_API:
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "domains": None,
+            "emails": None,
             "quota": {"id": 2, "name": "50eph", "quota": 1200},
             "timestamp": fixed_time,
             "version": verstr,
@@ -151,6 +156,25 @@ class Test_Users_API:
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "domains": [{"id": 1, "name": "chapps.io"}],
+            "emails": None,
+            "quota": None,
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_update_user_emails(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.put(
+            "/users/",
+            json=dict(user=dict(id=1, name="ccullen@easydns.com"), emails=[1]),
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {"id": 1, "name": "ccullen@easydns.com"},
+            "domains": None,
+            "emails": [{"id": 1, "name": "caleb@chapps.com"}],
             "quota": None,
             "timestamp": fixed_time,
             "version": verstr,
@@ -169,6 +193,7 @@ class Test_Users_API:
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "domains": None,  # no value detected, no change, no value returned
             "quota": None,  # nothing provided, no change, no value returned
+            "emails": None,
             "timestamp": fixed_time,
             "version": verstr,
         }
@@ -189,6 +214,7 @@ class Test_Users_API:
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "domains": [{"id": 1, "name": "chapps.io"}],
+            "emails": None,
             "quota": {"id": 2, "name": "50eph", "quota": 1200},
             "timestamp": fixed_time,
             "version": verstr,
@@ -215,6 +241,7 @@ class Test_Users_API:
                 {"id": 1, "name": "chapps.io"},
                 {"id": 2, "name": "easydns.com"},
             ],
+            "emails": [{"id": 1, "name": "caleb@chapps.com"}],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
             "version": verstr,
@@ -239,6 +266,7 @@ class Test_Users_API:
             "response": {"id": 3, "name": "bigsender@chapps.io"},
             "domains": [{"id": 2, "name": "easydns.com"}],
             "quota": {"id": 3, "name": "200eph", "quota": 4800},
+            "emails": [{"id": 2, "name": "roleaccount@chapps.com"}],
             "timestamp": fixed_time,
             "version": verstr,
         }
@@ -261,6 +289,7 @@ class Test_Users_API:
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "domains": [{"id": 1, "name": "chapps.io"}],
+            "emails": [{"id": 1, "name": "caleb@chapps.com"}],
             "quota": {"id": 2, "name": "50eph", "quota": 1200},
             "timestamp": fixed_time,
             "version": verstr,
@@ -364,6 +393,7 @@ class Test_Domains_API:
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "domains": [],
+            "emails": [{"id": 1, "name": "caleb@chapps.com"}],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
             "version": verstr,
@@ -421,6 +451,7 @@ class Test_Domains_API:
         assert response.json() == {
             "response": {"id": 4, "name": "schmo1@chapps.io"},
             "domains": [{"id": 2, "name": "easydns.com"}],
+            "emails": [{"id": 2, "name": "roleaccount@chapps.com"}],
             "quota": None,
             "timestamp": fixed_time,
             "version": verstr,
@@ -444,6 +475,7 @@ class Test_Domains_API:
         assert response.json() == {
             "response": {"id": 3, "name": "bigsender@chapps.io"},
             "domains": [{"id": 2, "name": "easydns.com"}],
+            "emails": [{"id": 2, "name": "roleaccount@chapps.com"}],
             "quota": {"id": 3, "name": "200eph", "quota": 4800},
             "timestamp": fixed_time,
             "version": verstr,
