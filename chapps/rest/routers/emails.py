@@ -47,7 +47,7 @@ api.get("/", response_model=EmailsResp)(
 )
 
 api.get("/{item_id}", response_model=EmailResp)(
-    get_item_by_id(Email, response_model=EmailResp, assoc=[(User, "users")])
+    get_item_by_id(Email, response_model=EmailResp, assoc=email_join_assoc)
 )
 
 api.get("/{item_id}/allowed/", response_model=UsersResp)(

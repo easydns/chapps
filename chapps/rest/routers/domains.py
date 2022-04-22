@@ -49,7 +49,7 @@ api.get("/", response_model=DomainsResp)(
 )
 
 api.get("/{item_id}", response_model=DomainResp)(
-    get_item_by_id(Domain, response_model=DomainResp, assoc=[(User, "users")])
+    get_item_by_id(Domain, response_model=DomainResp, assoc=domain_join_assoc)
 )
 
 api.get("/{item_id}/allowed/", response_model=UsersResp)(

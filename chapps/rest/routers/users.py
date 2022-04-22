@@ -70,11 +70,7 @@ api.get("/", response_model=UsersResp)(
 
 
 api.get("/{item_id}", response_model=UserResp)(
-    get_item_by_id(
-        User,
-        response_model=UserResp,
-        assoc=[(Quota, "quota"), (Domain, "domains")],
-    )
+    get_item_by_id(User, response_model=UserResp, assoc=user_join_assoc)
 )
 
 api.get("/{item_id}/allowed/", response_model=DomainsResp)(

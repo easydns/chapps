@@ -143,7 +143,10 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
         if item:
             if assoc:
                 extra_args = {
-                    key: model.wrap(getattr(item, key)) for model, key in assoc
+                    a.assoc_name: a.assoc_model.wrap(
+                        getattr(item, a.assoc_name)
+                    )
+                    for a in assoc
                 }
                 return response_model.send(cls.wrap(item), **extra_args)
             else:
