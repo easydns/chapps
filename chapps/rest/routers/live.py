@@ -5,7 +5,14 @@ from sqlalchemy.orm import sessionmaker
 from .users import user_quota_assoc, user_domains_assoc
 from .common import load_model_with_assoc
 from ..dbsession import sql_engine
-from ..models import User, Domain, LiveQuotaResp, TextResp, DomainUserMapResp
+from ..models import (
+    User,
+    Domain,
+    Email,
+    LiveQuotaResp,
+    TextResp,
+    SourceUserMapResp,
+)
 from ...policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
 from ...config import config
 import hashlib
@@ -114,7 +121,7 @@ async def refresh_config_on_disk(passcode: str = Body(...)):
     )
 
 
-@api.get("/sda/", response_model=DomainUserMapResp)
+@api.get("/sda/", response_model=SourceUserMapResp)
 async def sda_batch_peek(
     user_ids: List[int], domain_ids: List[int] = [], email_ids: List[int] = []
 ):
@@ -145,7 +152,7 @@ async def sda_batch_peek(
                 detail="No domains or emails were specified.",
             )
         user_names = list(sess.scalars(User.select_names_by_id(user_ids)))
-    return DomainUserMapResp.send(
+    return SourceUserMapResp.send(
         sda.bulk_check_policy_cache(user_names, domain_names, email_names)
     )
 
@@ -190,7 +197,7 @@ async def sda_batch_clear(
                 detail="No domains or emails specified.",
             )
         user_names = list(sess.scalars(User.select_names_by_id(user_ids)))
-    sda.bulk_clear_policy_cache(user_names, domain_names)
+    sda.bulk_clear_policy_cache(user_names, domain_names, email_names)
     return TextResp.send(
         "SDA cache cleared for specified domains and/or emails x users."
     )

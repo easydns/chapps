@@ -184,10 +184,10 @@ class LiveQuotaResp(CHAPPSResponse):
     remarks: List[str] = []
 
 
-class DomainUserMapResp(CHAPPSResponse):
+class SourceUserMapResp(CHAPPSResponse):
     """
     A dict-of-dicts:
-      top level key is domain name
+      top level key is domain or email name
       second key is user
       value is SDAStatus
     """
@@ -199,6 +199,6 @@ class DeleteResp(TextResp):
     response: str = "deleted"
 
 
-### the following classes are somewhat speculative for now
+# the following classes are somewhat speculative for now
 class FloatResp(CHAPPSResponse):
     response: float

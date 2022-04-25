@@ -746,12 +746,15 @@ class SenderDomainAuthPolicy(EmailPolicy):
             self.redis.delete(self._sender_domain_key(user, domain))
         return prev
 
-    def bulk_clear_policy_cache(self, users, domains):
+    def bulk_clear_policy_cache(self, users, domains=None, emails=None):
         # there seems to be no max pipeline size
         # but if things get sketchy, we can chunk this
+        domains = domains or []
+        emails = emails or []
         with self.redis.pipeline() as pipe:
-            for d in domains:
+            for d in domains + emails:
                 for u in users:
+                    logger.debug(f"bulk_clear: erasing {u}:{d}")
                     pipe.delete(self._sender_domain_key(u, d))
             pipe.execute()
             pipe.reset()
