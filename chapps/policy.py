@@ -694,7 +694,12 @@ class SenderDomainAuthPolicy(EmailPolicy):
             result = self._get_control_data(ppr)
             if result is None:
                 result = self.acquire_policy_for(ppr)
+                logger.debug(f"Obtained {result!r} from RDBMS.")
+            else:
+                logger.debug(f"Returning {result!r} from Redis.")
             self.instance_cache[ppr.instance] = result
+        else:
+            logger.debug(f"Returning {result!r} from instance cache.")
         return bool(int(result))
 
     def _decode_policy_cache(self, result):

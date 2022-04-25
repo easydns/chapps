@@ -1108,6 +1108,7 @@ class Test_Live_API:
         assert result == True
         result = testing_policy_sda.approve_policy_request(sda_unauth_ppr)
         assert result == False
+        assert sda_unauth_ppr.user == "somebody@chapps.io"
         response = testing_api_client.get(
             "/live/sda/", json={"user_ids": [1, 2], "domain_ids": [1, 2]}
         )
