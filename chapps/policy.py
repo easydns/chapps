@@ -23,6 +23,11 @@ seconds_per_day = 3600 * 24
 SENTINEL_TIMEOUT = 0.1
 TIME_FORMAT = "%d %b %Y %H:%M:%S %z"
 
+# There are a number of commented debug statements in this module
+# This is for convenience, because in production these routines need
+# to be as performant as possible, but these messages are often very
+# helpful for diagnosing problems during testing and debugging
+
 
 class EmailPolicy:
     redis_key_prefix = "chapps"
@@ -454,6 +459,7 @@ class OutboundQuotaPolicy(EmailPolicy):
         instance = ppr.instance
         cached_response = self.instance_cache.get(instance, None)
         if cached_response is not None:
+            logger.debug(f"apr: returning instance cache {cached_response}")
             return cached_response
         if not self._detect_control_data(
             user
@@ -626,14 +632,20 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     # We will need to be able to store data in Redis
     def _store_control_data(self, ppr, allowed):
+        # logger.debug(
+        #     f"store request: {ppr.user} {self._get_sender_domain(ppr)}"
+        #     f" {allowed!r}"
+        # )
         with self._control_data_storage_context() as dsc:
             dsc(ppr.user, self._get_sender_domain(ppr), allowed)
 
     def _store_email_control_data(self, ppr, allowed):
+        # logger.debug(f"store request: {ppr.user} {ppr.sender} {allowed!r}")
         with self._control_data_storage_context() as dsc:
             dsc(ppr.user, ppr.sender, allowed)
 
-    # We will need a Redis storage context manager in order to mimic the structure of OQP
+    # We will need a Redis storage context manager in order to mimic
+    # the structure of OQP -- metaprogramming opportunity
     @contextmanager
     def _control_data_storage_context(self, expire_time=seconds_per_day):
         pipe = self.redis.pipeline()
@@ -673,12 +685,20 @@ class SenderDomainAuthPolicy(EmailPolicy):
             allowed = adapter.check_domain_for_user(
                 ppr.user, self._get_sender_domain(ppr)
             )
-            if allowed is not None:
-                self._store_control_data(ppr, 1 if allowed else 0)
+            self._store_control_data(ppr, 1 if allowed else 0)
+            # logger.debug(
+            #     f"RDBMS: policy {allowed!r} for {ppr.user} from domain"
+            #     f" {self._get_sender_domain(ppr)}"
+            # )
             if not allowed:  # domain not allowed, check email
                 allowed = adapter.check_email_for_user(ppr.user, ppr.sender)
                 if allowed is not None:
                     self._store_email_control_data(ppr, 1 if allowed else 0)
+                    # logger.debug(
+                    #     f"RDBMS: policy {allowed!r} for {ppr.user} as"
+                    #     f" {self._get_sender_domain(ppr)}"
+                    # )
+
         return allowed
 
     # This is the main purpose of the class, to answer this question
@@ -694,12 +714,14 @@ class SenderDomainAuthPolicy(EmailPolicy):
             result = self._get_control_data(ppr)
             if result is None:
                 result = self.acquire_policy_for(ppr)
-                logger.debug(f"Obtained {result!r} from RDBMS.")
+                # logger.debug(f"Obtained {result!r} from RDBMS.")
             else:
-                logger.debug(f"Returning {result!r} from Redis.")
+                # logger.debug(f"Returning {result!r} from Redis.")
+                pass
             self.instance_cache[ppr.instance] = result
         else:
-            logger.debug(f"Returning {result!r} from instance cache.")
+            # logger.debug(f"Returning {result!r} from instance cache.")
+            pass
         return bool(int(result))
 
     def _decode_policy_cache(self, result):
@@ -741,10 +763,11 @@ class SenderDomainAuthPolicy(EmailPolicy):
         with self.redis.pipeline() as pipe:
             for d in domains + emails:
                 for u in users:
-                    logger.debug(f"bcpc seeking SDA for {u} from {d}")
+                    # logger.debug(f"bcpc seeking SDA for {u} from {d}")
                     pipe.get(self._sender_domain_key(u, d))
             results = deque(pipe.execute())
             pipe.reset()
+        # logger.debug(f"bcpc results: {results!r}")
         return {
             d: {u: self._decode_policy_cache(results.popleft()) for u in users}
             for d in domains
