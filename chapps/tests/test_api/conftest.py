@@ -27,6 +27,7 @@ from chapps.tests.test_policy.conftest import (
     sda_allowable_ppr,
     sda_unauth_ppr,
     sda_auth_email_ppr,
+    sda_unauth_email_ppr,
     testing_policy_sda,
 )
 import chapps.config
