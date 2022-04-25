@@ -26,7 +26,8 @@ tags_metadata = [
             "<h3>Create, list, fetch, update, and delete operations "
             "involving users.</h3><p>Use the User Replace Quota route "
             "to assign a new <b>quota</b>.  There are some special routes "
-            "for listing, allowing, or denying just some <b>domains</b> without "
+            "for listing, allowing, or denying just some <b>domains</b>"
+            " or <b>emails</b> without "
             "having to handle the entire set of associations.</p>"
         ),
     ),
@@ -37,7 +38,7 @@ tags_metadata = [
             "domains.</h3><p>When creating a <b>domain</b>, "
             "it is possible to specify a list of <b>user</b> IDs to "
             "associate.  There are some special routes for managing"
-            " <b>user</b> associations (list/allow/deny) without having"
+            " <b>user</b> associations without having"
             " to handle the entire set of associations.</p>"
         ),
     ),
@@ -50,6 +51,17 @@ tags_metadata = [
             "no support planned for managing <b>users</b> from their "
             "associated <b>quotas</b>.  To change a <b>quota</b> for a <b>user</b>, "
             "make use of the User Replace Quota route.</p>"
+        ),
+    ),
+    dict(
+        name="emails",
+        description=(
+            "<h3>Create, list, fetch, update and delete operations for "
+            "email address objects.</h3>"
+            "<p>When creating an <b>email</b>, it is possible to specify "
+            "a list of <b>user</b> IDs to associate.  There are some special"
+            " routes for managing <b>user</b> associations without having to"
+            " handle the entire set of associations.</p>"
         ),
     ),
     dict(

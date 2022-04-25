@@ -68,7 +68,7 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
 
 
 class User(CHAPPSModel):
-    """API model to represent users"""
+    """User objects have a name and ID"""
 
     class Config:
         orm_mode = True
@@ -81,7 +81,7 @@ class User(CHAPPSModel):
 
 
 class Quota(CHAPPSModel):
-    """API model to represent quotas"""
+    """Quota objects have ID, string `name` and integer `quota`"""
 
     quota: int
 
@@ -96,7 +96,7 @@ class Quota(CHAPPSModel):
 
 
 class Domain(CHAPPSModel):
-    """A model to represent domains"""
+    """Domain objects have a name and ID; the name never contains an `@`"""
 
     class Config:
         orm_mode = True
@@ -107,7 +107,7 @@ class Domain(CHAPPSModel):
 
 
 class Email(CHAPPSModel):
-    """A model for emails"""
+    """Email objects have a name and ID; the name always contains an `@`"""
 
     class Config:
         orm_mode = True
