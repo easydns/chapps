@@ -20,10 +20,7 @@ api = APIRouter(
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "Resource not found."},
         status.HTTP_400_BAD_REQUEST: {
-            "description": (
-                "One of either user_id or name must be provided. "
-                "If both are present, user_id is preferred"
-            )
+            "description": ("The request was missing some required data.")
         },
     },
 )
@@ -118,7 +115,9 @@ async def refresh_config_on_disk(passcode: str = Body(...)):
 
 
 @api.get("/sda/", response_model=DomainUserMapResp)
-async def sda_batch_peek(domain_ids: List[int], user_ids: List[int]):
+async def sda_batch_peek(
+    user_ids: List[int], domain_ids: List[int] = [], email_ids: List[int] = []
+):
     """
     Accepts `domain_ids` and `user_ids` as body arguments: lists of
     integer object ids.<br/>
@@ -128,12 +127,26 @@ async def sda_batch_peek(domain_ids: List[int], user_ids: List[int]):
     """
     sda = SenderDomainAuthPolicy()
     with Session() as sess:
-        domain_names = list(
-            sess.scalars(Domain.select_names_by_id(domain_ids))
-        )
+        if domain_ids:
+            domain_names = list(
+                sess.scalars(Domain.select_names_by_id(domain_ids))
+            )
+        else:
+            domain_names = []
+        if email_ids:
+            email_names = list(
+                sess.scalars(Email.select_names_by_id(email_ids))
+            )
+        else:
+            email_names = []
+        if not domain_names and not email_names:
+            raise HTTPException(
+                status=status.HTTP_400_BAD_REQUEST,
+                detail="No domains or emails were specified.",
+            )
         user_names = list(sess.scalars(User.select_names_by_id(user_ids)))
     return DomainUserMapResp.send(
-        sda.bulk_check_policy_cache(user_names, domain_names)
+        sda.bulk_check_policy_cache(user_names, domain_names, email_names)
     )
 
 
@@ -151,18 +164,36 @@ async def sda_peek(domain_name: str, user_name: str):
 
 
 @api.delete("/sda/", response_model=TextResp)
-async def sda_batch_clear(domain_ids: List[int], user_ids: List[int]):
+async def sda_batch_clear(
+    user_ids: List[int], domain_ids: List[int] = [], email_ids: List[int] = []
+):
     """
     Clears all domain - user mappings by iterating through both lists.
     """
     sda = SenderDomainAuthPolicy()
     with Session() as sess:
-        domain_names = list(
-            sess.scalars(Domain.select_names_by_id(domain_ids))
-        )
+        if domain_ids:
+            domain_names = list(
+                sess.scalars(Domain.select_names_by_id(domain_ids))
+            )
+        else:
+            domain_names = []
+        if email_ids:
+            email_names = list(
+                sess.scalars(Email.select_names_by_id(email_ids))
+            )
+        else:
+            email_names = []
+        if not domain_names and not email_names:
+            raise HTTPException(
+                status=status.HTTP_400_BAD_REQUEST,
+                detail="No domains or emails specified.",
+            )
         user_names = list(sess.scalars(User.select_names_by_id(user_ids)))
     sda.bulk_clear_policy_cache(user_names, domain_names)
-    return TextResp.send("SDA cache cleared for specified domains x users.")
+    return TextResp.send(
+        "SDA cache cleared for specified domains and/or emails x users."
+    )
 
 
 @api.delete("/sda/{domain_name}/for/{user_name}", response_model=TextResp)

@@ -1131,7 +1131,7 @@ class Test_Live_API:
         )
         assert response.status_code == 200
         assert response.json() == {
-            "response": "SDA cache cleared for specified domains x users.",
+            "response": "SDA cache cleared for specified domains and/or emails x users.",
             "timestamp": fixed_time,
             "version": verstr,
         }

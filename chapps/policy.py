@@ -729,10 +729,12 @@ class SenderDomainAuthPolicy(EmailPolicy):
             pipe.execute()
             pipe.reset()
 
-    def bulk_check_policy_cache(self, users, domains):
+    def bulk_check_policy_cache(self, users, domains=None, emails=None):
         """Build a map based on domain, full of maps from username to status"""
+        emails = emails or []
+        domains = domains or []
         with self.redis.pipeline() as pipe:
-            for d in domains:
+            for d in domains + emails:
                 for u in users:
                     logger.debug(f"bcpc seeking SDA for {u} from {d}")
                     pipe.get(self._sender_domain_key(u, d))
