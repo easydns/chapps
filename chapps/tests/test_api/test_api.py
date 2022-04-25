@@ -1031,8 +1031,7 @@ class Test_Live_API:
         sda_allowable_ppr,
         sda_unauth_ppr,
         populated_database_fixture_with_extras,
-        populate_redis,
-        well_spaced_attempts,
+        clear_redis_sda,
     ):
         result = testing_policy_sda.approve_policy_request(sda_allowable_ppr)
         assert result == True
@@ -1101,8 +1100,7 @@ class Test_Live_API:
         sda_allowable_ppr,
         sda_unauth_ppr,
         populated_database_fixture_with_extras,
-        populate_redis,
-        well_spaced_attempts,
+        clear_redis_sda,
     ):
         result = testing_policy_sda.approve_policy_request(sda_allowable_ppr)
         assert result == True
