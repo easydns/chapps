@@ -157,16 +157,17 @@ async def sda_batch_peek(
     )
 
 
-@api.get("/sda/{domain_name}/for/{user_name}", response_model=TextResp)
-async def sda_peek(domain_name: str, user_name: str):
+@api.get("/sda/{source_name}/for/{user_name}", response_model=TextResp)
+async def sda_peek(source_name: str, user_name: str):
     """
-    Accepts url-encoded domain name and user name as path arguments.<br/>
-    Returns status of cached SDA for the named user and domain,
-    i.e. is this user allowed to transmit email apparently from this domain
+    Accepts url-encoded domain name or email address and user name as path
+    arguments.<br/> Returns status of cached SDA for the named user and
+    source, i.e. is this user allowed to transmit email apparently from this
+    domain or email address
     """
     sda = SenderDomainAuthPolicy()
-    result = sda.check_policy_cache(user_name, domain_name)
-    # logger.debug(f"Peeking at {domain_name} auth for {user_name}: {result!r}")
+    result = sda.check_policy_cache(user_name, source_name)
+    # logger.debug(f"Peeking at {source_name} auth for {user_name}: {result!r}")
     return TextResp.send(result)
 
 
@@ -175,7 +176,8 @@ async def sda_batch_clear(
     user_ids: List[int], domain_ids: List[int] = [], email_ids: List[int] = []
 ):
     """
-    Clears all domain - user mappings by iterating through both lists.
+    Clears all domain - user mappings by iterating through both lists:
+    users and domains+emails.
     """
     sda = SenderDomainAuthPolicy()
     with Session() as sess:
@@ -203,11 +205,11 @@ async def sda_batch_clear(
     )
 
 
-@api.delete("/sda/{domain_name}/for/{user_name}", response_model=TextResp)
-async def sda_clear(domain_name: str, user_name: str):
+@api.delete("/sda/{source_name}/for/{user_name}", response_model=TextResp)
+async def sda_clear(source_name: str, user_name: str):
     """
-    Accepts url-encoded domain name and user name of SDA to clear.</br>
-    Returns the status of the SDA prior to clearing.
+    Accepts url-encoded domain name or email address and user name of SDA
+    to clear.</br>Returns the status of the SDA prior to clearing.
     """
     sda = SenderDomainAuthPolicy()
-    return TextResp.send(sda.clear_policy_cache(user_name, domain_name))
+    return TextResp.send(sda.clear_policy_cache(user_name, source_name))
