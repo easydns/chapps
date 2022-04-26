@@ -1,13 +1,23 @@
 # Change Log
 
 ##v0.4.4:
-	- Polish documentation.
-	- Add full-email auth to SDA module.
+    - Corrected incorrect homepage URL in setup.py
+    - Polish documentation.
+    - Added full-email auth to SDA module.
+    - Added full-email auth object CRUD routes to API.
+    - Changes to signature of route path for association-list management:
+	  routes are now named for the association and use GET/PUT/DELETE
+    - Add full-email checking cache maintenance routines to Live API
+    - Live routes for bulk peeking and clearing of Redis cache now
+      accept lists of both domain IDs and email IDs, and if both are
+      provided, will provide all the output combined in a single dict.
+
 ##v0.4.3:
     - Correct error preventing automatic table building by provided
       setup script.
     - Provide better documentation about setting up the database.
     - Minor adjustments to API README
+
 ##v0.4.2:
 	- Paginate associated objects
 	  (paginate domains for users, and users for domains)
@@ -15,6 +25,7 @@
 	- Adding VenvDetector util class, to help find API README after installation
 	- Adding CHANGELOG to PyPI package
 	- Add a little extra documentation about **syslog** message configuration
+
 ##v0.4.1:
 	- Improved Swagger/OpenAPI documentation.  Handling assignment of
 	  path closure docstrings explicitly fixes the problem.  Various

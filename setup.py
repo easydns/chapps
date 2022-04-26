@@ -234,7 +234,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Caleb S. Cullen",
     author_email="ccullen@easydns.com",
-    url="https://gitlab.int.easydns.net/ccullen/chapps",
+    url="https://github.com/easydns/chapps",
     download_url=f"https://github.com/easydns/chapps/tree/main/dist/chapps-{verstr}.tar.gz",
     keywords=["Postfix", "Policy", "Daemon"],
 )
