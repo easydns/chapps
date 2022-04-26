@@ -149,9 +149,9 @@ class GreylistingPolicy(EmailPolicy):
 
     def _evaluate_policy_request(self, ppr):
         try:
-            logger.debug(f"Getting control data for {self.tuple_key( ppr )}")
+            # logger.debug(f"Getting control data for {self.tuple_key( ppr )}")
             tuple_seen, client_tally = self._get_control_data(ppr)
-            logger.debug(f"Got values ({tuple_seen}, {client_tally})")
+            # logger.debug(f"Got values ({tuple_seen}, {client_tally})")
         except Exception:  # pragma: no cover
             logger.exception("UNEXPECTED")
             logger.debug(
@@ -459,7 +459,7 @@ class OutboundQuotaPolicy(EmailPolicy):
         instance = ppr.instance
         cached_response = self.instance_cache.get(instance, None)
         if cached_response is not None:
-            logger.debug(f"apr: returning instance cache {cached_response}")
+            # logger.debug(f"apr: returning instance cache {cached_response}")
             return cached_response
         if not self._detect_control_data(
             user
@@ -489,7 +489,6 @@ class OutboundQuotaPolicy(EmailPolicy):
             recipients_offset = 0 - len(ppr.recipients)
             delta_index = [d + recipients_offset for d in delta_index]
         else:
-            logger.debug()
             return float("inf")  # automatically wins
         logger.debug(
             f"Looking at time-delta for {ppr}: indices {delta_index!r}"
@@ -622,7 +621,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
             res = self.redis.get(key)
         except redis.exceptions.ResponseError:  # pragma: no cover
             self.redis.delete(key)
-        logger.debug(f"Found {key} = {res!r} in Redis")
+        # logger.debug(f"Found {key} = {res!r} in Redis")
         return res if res is None else int(res)
 
     def _get_control_data(self, ppr):
@@ -632,15 +631,15 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     # We will need to be able to store data in Redis
     def _store_control_data(self, ppr, allowed):
-        logger.debug(
-            f"store request: {ppr.user} {self._get_sender_domain(ppr)}"
-            f" {allowed!r}"
-        )
+        # logger.debug(
+        #     f"store request: {ppr.user} {self._get_sender_domain(ppr)}"
+        #     f" {allowed!r}"
+        # )
         with self._control_data_storage_context() as dsc:
             dsc(ppr.user, self._get_sender_domain(ppr), allowed)
 
     def _store_email_control_data(self, ppr, allowed):
-        logger.debug(f"store request: {ppr.user} {ppr.sender} {allowed!r}")
+        # logger.debug(f"store request: {ppr.user} {ppr.sender} {allowed!r}")
         with self._control_data_storage_context() as dsc:
             dsc(ppr.user, ppr.sender, allowed)
 
@@ -653,7 +652,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
         def _dsc(user, domain, allowed):
             key = fmtkey(user, domain)
-            logger.debug(f"Storing {key} = {allowed} in Redis")
+            # logger.debug(f"Storing {key} = {allowed} in Redis")
             pipe.set(key, allowed, ex=seconds_per_day)
 
         try:
@@ -681,24 +680,24 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     # How to obtain control data
     def acquire_policy_for(self, ppr):
-        logger.debug(f"acq pol for {ppr!r}")
+        # logger.debug(f"acq pol for {ppr!r}")
         with self._adapter_handle() as adapter:
             allowed = adapter.check_domain_for_user(
                 ppr.user, self._get_sender_domain(ppr)
             )
             self._store_control_data(ppr, 1 if allowed else 0)
-            logger.debug(
-                f"RDBMS: policy {allowed!r} for {ppr.user} from domain"
-                f" {self._get_sender_domain(ppr)}"
-            )
+            # logger.debug(
+            #     f"RDBMS: policy {allowed!r} for {ppr.user} from domain"
+            #     f" {self._get_sender_domain(ppr)}"
+            # )
             if not allowed:  # domain not allowed, check email
                 allowed = adapter.check_email_for_user(ppr.user, ppr.sender)
                 if allowed is not None:
                     self._store_email_control_data(ppr, 1 if allowed else 0)
-                    logger.debug(
-                        f"RDBMS: policy {allowed!r} for {ppr.user} as"
-                        f" {ppr.sender}"
-                    )
+                    # logger.debug(
+                    #     f"RDBMS: policy {allowed!r} for {ppr.user} as"
+                    #     f" {ppr.sender}"
+                    # )
         return allowed
 
     # This is the main purpose of the class, to answer this question
@@ -714,15 +713,15 @@ class SenderDomainAuthPolicy(EmailPolicy):
             result = self._get_control_data(ppr)
             if result is None:
                 result = self.acquire_policy_for(ppr)
-                logger.debug(f"Obtained {result!r} from RDBMS.")
+                # logger.debug(f"Obtained {result!r} from RDBMS.")
             else:
-                logger.debug(f"Returning {result!r} from Redis.")
+                # logger.debug(f"Returning {result!r} from Redis.")
                 pass
             self.instance_cache[ppr.instance] = result
         else:
-            logger.debug(
-                f"Returning {result!r} from instance {ppr.instance} cache."
-            )
+            # logger.debug(
+            #     f"Returning {result!r} from instance {ppr.instance} cache."
+            # )
             pass
         return bool(int(result))
 
@@ -756,7 +755,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
         with self.redis.pipeline() as pipe:
             for d in domains + emails:
                 for u in users:
-                    logger.debug(f"bulk_clear: erasing {u}:{d}")
+                    # logger.debug(f"bulk_clear: erasing {u}:{d}")
                     pipe.delete(self._sender_domain_key(u, d))
             pipe.execute()
             pipe.reset()
@@ -768,11 +767,11 @@ class SenderDomainAuthPolicy(EmailPolicy):
         with self.redis.pipeline() as pipe:
             for d in domains + emails:
                 for u in users:
-                    logger.debug(f"bcpc seeking SDA for {u} from {d}")
+                    # logger.debug(f"bcpc seeking SDA for {u} from {d}")
                     pipe.get(self._sender_domain_key(u, d))
             results = deque(pipe.execute())
             pipe.reset()
-        logger.debug(f"bcpc results: {results!r}")
+        # logger.debug(f"bcpc results: {results!r}")
         return {
             d: {u: self._decode_policy_cache(results.popleft()) for u in users}
             for d in domains + emails
