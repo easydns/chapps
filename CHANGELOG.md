@@ -1,5 +1,11 @@
 # Change Log
 
+##v0.4.5:
+    - Corrected missing statements which caused new email tables not to be
+	  created by `chapps_database_init.py`
+	- added more acknowledgements to INSTALLATION
+	- added whole-email matching related docs to README.md
+
 ##v0.4.4:
     - Corrected incorrect homepage URL in setup.py
     - Polish documentation.
