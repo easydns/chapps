@@ -18,7 +18,7 @@ A number of community packages are used:
  - and `expiring-dict`: [**py-expiring-dict** by David Parker](https://pypi.org/project/expiring-dict/)
 
 For SPF:
- - `pyspf`: [by Stuart Gathman, et al.](https://pypi.org/project/pyspf/) for SPF enforcement
+ - `pyspf`: [by Stuart Gathman, Terence Way, et al.](https://pypi.org/project/pyspf/) for SPF enforcement
  - `dnspython`: [by Bob Halley](https://pypi.org/project/dnspython/) for **pyspf**, or `py3dns`
 
 For the API:

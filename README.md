@@ -15,7 +15,9 @@ a decision about it, and then sending a response back to Postfix.
 There are some projects which have provided smaller-scale solutions to
 this issue.  We handle rather a large volume of email, so we need
 something more performant than a script which makes a database access
-on every email.
+on every email.  In order to simplify the language, the term "customer"
+is used herein to mean a person who logs into an SMTP server in order
+to send email.
 
 My decision was to use Redis, since with Redis Sentinel it should be
 possible to achieve a degree of high-availability using Redis as a
@@ -34,7 +36,7 @@ policy might be implemented in the future.
 
 ## Configuration
 
-The library will create a config file for itself if does not find one
+The library will create a config file for itself if it does not find one
 at its default config path, `/etc/chapps/chapps.ini`, or the value of
 the environment variable `CHAPPS_CONFIG` if it is set.  Note that
 default settings for all available submodules will be produced.  At
@@ -48,10 +50,6 @@ handlers, the first handler specified will be the one whose network
 settings are used.  It is recommended to configure those elements only
 on that policy, or to keep them in sync on all policies which are
 handled together.
-
-(The global CHAPPS listener config will be used in the future to
-configure an API for other components to query CHAPPS on the status of
-quotas, etc.)
 
 Example Postfix configs are included in the `postfix` directory,
 classified by which service they are for.  Most access control policy
@@ -103,11 +101,8 @@ Without a venv, they go to various system locations,
 with the ancillary `chapps` directory usually showing up at
 `/usr/local/chapps`.  YMMV.  A venv will keep things organized.
 
-For more information about installing, see the
-[INSTALLATION](INSTALLATION.md) file.
-
-There is a Python script in the install directory, the purpose of
-which is to create the database schema required by the library.  It
+A Python script called `chapps_database_init.py` is included
+to create the database schema required by the library.  It
 does not create the database itself.  Before running this script,
 ensure that the CHAPPS configuration file contains the correct
 credentials and other control data to be able to connect to the
@@ -116,6 +111,9 @@ config has been created on the server.  The script will connect to the
 database and create the tables.  It uses `IF EXISTS` and does not
 contain any kind of data deletion, so it should be safe to use at any
 time.
+
+For more information about installing, see the
+[INSTALLATION](INSTALLATION.md) file.
 
 ### Redis configuration
 
@@ -169,25 +167,28 @@ it is set in one place, at the top of `chapps.logging`.
 
 Starting with version 0.4.0, a REST API service is included, based on
 FastAPI, and using SQLAlchemy with the MySQLclient backend.  A service
-template for the API is provided, as well as a socket template and
-an **nginx** example config, for using a UDS to proxy between the web
-and the application.  Alternatively, Gunicorn can be used to launch
-Uvicorn workers and serve the API directly.
+template for the API is provided, as well as a socket unit and an
+**nginx** example config, for using a UDS to proxy between the web and
+the application.  By default, Gunicorn is used to launch Uvicorn
+workers which serve the API directly on port 8080.  The precise
+details may be adjusted in the `chapps-api-gunicorn.service` unit
+file.
 
 It is also possible that other approaches are preferred at other sites.
 The extra files, provided in the `install` directory, are provided in
 the hope that they may be useful.
 
-The API is self-documenting.  Once it is running, visit it at `/docs/`
-to browse the documentation.
+The API is self-documenting.  Once it is running, visit it at
+`<server>:8080/redoc/` or `<server>:8080/docs/` to browse the
+documentation.
 
 The API service needs to have the same configuration as the other
 CHAPPS services it is meant to manage.  Since it instantiates policy
 objects, it is best to simply provide the same copy of the config to
 all related nodes.  Please note that the API service is completely
 separate from the policy service(s), and need not run on the same
-server, and in fact, probably should not run on the same server, with
-the policy service.
+server -- and in fact probably _should_ not run on the same server --
+with the policy service.
 
 ## Outbound Services
 
@@ -216,20 +217,20 @@ interesting.
 
 Current versions of the software allow the config file to specify what
 element of that delegation request payload to use, defaulting to
-`sasl_username`.  This is because our customers use a password auth
-process, so the `sasl_username` directly corresponds to the entity
-which is paying for the email quota.  In
-certain circumstances (when authentication fails), the `sasl_username`
-field is blank.  Since v0.3.11, when we find it
-blank we attribute that to authentication failure, and
-we provide some extra config elements to control this behavior.
+`sasl_username`.  This is because when customers use a password auth
+process, the `sasl_username` corresponds to the customer whose
+email quota is being checked.  In certain circumstances (when
+authentication fails), the `sasl_username` field is blank.  Since
+v0.3.11, when we find it blank we attribute that to authentication
+failure, and we provide some extra config elements to control this
+behavior.
 
-If the config key `require_user_key` is set to **True**, then only
-that key will be checked for contents to identify the user, and if
-it is empty, an `AuthenticationFailedException` will be raised,
-which will cause the `no_user_key_response` to be sent back via
-Postfix.  If `require_user_key` is **False**, then a series of fields
-will be searched as outlined below.
+If the config key `require_user_key` is set to **True**, then only the
+key specified in `user_key` will be checked for contents to identify
+the customer, and if it is empty, an `AuthenticationFailedException`
+will be raised, which will cause the `no_user_key_response` to be sent
+back via Postfix.  If `require_user_key` is **False**, then a series
+of fields will be searched as outlined below.
 
 At present, there is little sanitation on the `user_key` field.  It is
 never evaluated as code, but it is used directly as the attribute name
@@ -238,38 +239,40 @@ specified, CHAPPS looks for `sasl_username` first, then
 `ccert_subject`, and if there is none, it falls back to `sender`,
 which can also be blank. In that extreme case, CHAPPS uses
 `client_address`.  This will not work very well long-term if a lot of
-real senders share a mail gateway, so it is recommended to make sure
+real customers share a mail gateway, so it is recommended to make sure
 that the field specified is being populated.
 
-Incidentally, this may be a reason for permitting senders which don't
-appear in the user-list, since system-generated messages which don't
-have a sender listed will end up quota'd on their client address, and
-probably most of them will be denied by quota, potentially generating
-a large number of confusing secondary error messages.  CHAPPS
-currently expects any permitted sender to appear in the `users` table.
-Note that the name which appears in this table needs to match what
-will be discovered in the specified key field.  For sites which use
-the user's email address as their login name for email access, this is
-easy.  For cert issuers, it may simplify things to use the email
-address as the subject of the cert, but any unique string will work.
+Incidentally, this may be a reason for permitting customers which
+don't appear in the user-list, since system-generated messages which
+don't have a `sender` listed will end up quota'd on their client
+address, and probably most of them will be denied by quota,
+potentially generating a large number of confusing secondary error
+messages.  CHAPPS currently expects any permitted sender to appear in
+the `users` table.  Note that the name which appears in this table
+needs to match what will be discovered in the specified key field.
+For sites which use the customer's email address as their login name
+for email access, this is easy.  For cert issuers, it may simplify
+things to use the email address as the subject of the cert, but any
+unique string will work.
 
 ## Outbound Quota Policy Service
 
 The service is designed to run locally side-by-side with the Postfix
-server, and connect to a Redis instance, possibly via Sentinel.  As
+server, and connect to a Redis instance, optionally via Sentinel.  As
 such it listens on 127.0.0.1, and on port 10225 by default, though
 both may be adjusted in the config file.  It obtains quota policy data
-on a per-sender basis, from a relational database, and caches that
+on a per-customer basis, from a relational database, and caches that
 data in Redis for operational use.  Once a user's quota data has been
 stored, it will be cached for a day, so that database accesses may be
 avoided.
 
 Current quota usage is **not** kept in a relational database.
 
-TODO: There is a plan to provide both CLI (scripted) and API access to
+TODO: There is a plan to provide both CLI (scripted) access to
 data about current quota usage, and to provide facilities for updating
 quota policy information immediately: clearing quotas, upgrading them,
-adding new users, adding new quotas, etc.
+adding new users, adding new quotas, etc.  At present the REST API
+may be used to do any of these tasks, using cURL or similar.
 
 In order to set up Postfix for policy delegation, consult [Postfix
 documentation](http://www.postfix.org/SMTPD_POLICY_README.html) to
@@ -277,16 +280,17 @@ gain a complete understanding of how policy delegation works.  In
 short, the `smtpd_recipient_restrictions` block should contain the
 setting `check_policy_service inet:127.0.0.1:10225`.  In addition, it
 is necessary to ensure that the service itself, the script
-`chapps_outbound_quota.py` is running.  This should be accomplished
-using `systemd` or similar; scripts/file assets to assist with that
-are to be found in the install directory.  For now, according to
+`chapps_outbound_quota.py` or `chapps_outbound_multi.py` is running.
+This should be accomplished
+using SystemD or similar; scripts/unit file assets to assist with that
+are to be found in the `install` directory.  (For now, according to
 current wisdom, Postfix's own `spawn` functionality from `master.cf`
-should be avoided.
+should be avoided.)
 
 ### Outbound Quota Policy Configuration: Database Setup
 
 At present, the service expects to obtain quota policy enforcement
-parameters from a relational database, in particular, MariaDB.  The
+parameters from a relational database (MariaDB).  The
 framework has been designed to make it easy to write adapters to any
 particular backend datasource regarding quota information.
 
@@ -318,8 +322,8 @@ CREATE TABLE `quota_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-The `users` table contains a record for each authorized user who is
-allowed to send email.  Users without entries will not be able to send
+The `users` table contains a record for each authorized customer who is
+allowed to send email.  Customers without entries will not be able to send
 email, despite authenticating with Postfix.
 
 The `quotas` table contains quota definitions, the `name` is meant to
@@ -341,9 +345,9 @@ The application sets cached quota limit data to expire after 24 hours,
 so it will occasionally refresh quota policy settings, in case they
 get changed.  In order to flush the quota information, all that is
 required is to delete that user's policy tracking data from Redis.
-TODO: A tool will be provided to do this.
+Routes for doing so are provided by the REST API.
 
-**Please note:** Users with no `users` entry will not be able to send
+**Please note:** Customers with no `users` entry will not be able to send
 outbound email.
 
 ### Quota policy settings (non-database)
@@ -351,19 +355,20 @@ outbound email.
 #### Counting all outbound messages against the quota
 
 Some quota systems count any email as a single email regardless of the
-number of recipients included in the envelope To: recipients list.
-This software can operate that way, but it can also count an email for
-each recipient in the list.  Whether it does so is governed by the
-boolean setting "counting_recipients": setting this to True will cause
-CHAPPS OutboundQuotaPolicy to count a sent email for each recipient.
+number of recipients included in the envelope recipients list
+(RCPT&nbsp;TO).  This software can operate that way, but it can also
+count an email for each recipient in the list.  Whether it does so is
+governed by the boolean setting `counting_recipients`: setting this to
+True will cause CHAPPS OutboundQuotaPolicy to count a sent email for
+each recipient.
 
 #### Outbound quota grace margins
 
-There is a "margin" setting which will allow for some fuzziness over
-the established quota for multi-recipient emails, allowing a user to
-go over their quota on a single (multi-recipient) email as long as the
-total number of mails sent fits within the margin.  This obviously has
-no meaning if recipients aren't being counted, since no email will
+There is a `margin` setting which will allow for some fuzziness over
+the established quota for multi-recipient emails, allowing a customer
+to go over their quota on a single (multi-recipient) email as long as
+the total number of mails sent fits within the margin.  This obviously
+has no meaning if recipients aren't being counted, since no email will
 ever represent more than a single outbound message.
 
 Margins specified in **integers** are absolute message counts.
@@ -371,7 +376,7 @@ Margins specified in **integers** are absolute message counts.
 Those specified as **floats** represent a proportion of the total
 margin.  If a float value is less than 1 it is assumed to be the
 ratio.  If it is larger than 1 and less than 100, it is assumed to be
-a percentage, and it is divided by 100.0 and used as the ratio.
+a percentage, and it divided by 100.0 is used as the ratio.
 
 ## Sender Domain Authorization (Outbound multi-policy service)
 
@@ -380,31 +385,29 @@ available as part of the outbound multi-policy service, consisting of
 SDA followed by outbound quota.  There is a plan (TODO:) to produce a
 standalone SDA service script.
 
-The SDA policy allows an email service provider to specify exactly
-which domains may appear after the @ in the sender address, the
-"sender" field in the Postfix policy delegation data packet.  User
-identification for outbound emails is covered in a previous section of
-this document (see: 'Setting the user key').  The pool of users is all
-those entities which authenticate with unique name/password pairs (via
-SASL); or the set of all `ccert_subject`s in the case of client-side
-cert authentication.
+The SDA policy allows an email service provider to specify on a
+per-customer basis exactly which domains may appear after the @ in the
+MAIL FROM address, the `sender` field in the Postfix policy delegation
+data packet.  Customer identification for outbound emails is covered
+in a previous section of this document (see: ['Setting the user
+key'](#setting-the-user-key)).
 
 It is generally possible to configure vanilla Postfix to limit
 outbound domains for users, but we encountered some difficulty getting
 it to work reliably, and this method opens the door to a great deal of
 additional nuance which would not otherwise be available to us.
 
-CHAPPS expects to find SDA policy control data in its RDBMS (or other
-policy-config source), in a fairly simple, normalized scheme.  This
-feature uses a new table to store source domains, and a new join table
-to link users with domains they are allowed to use for outbound mail.
+CHAPPS stores SDA policy control data in its database, in a fairly
+simple, normalized scheme.  This feature uses a table each to store
+source domains and email addresses, and a new join table for each to
+link customers with domains and whole-email addresses they are allowed to
+use for outbound mail.
 
-The service has room to grow, but should already be useful for real
-applications.  The domain matching is intentionally inflexible -- the
+The domain matching is intentionally inflexible -- the
 entire string after the @ sign must match a domain in the table.  That
 is to say: in order to allow users to send from subdomains, those
 subdomains must have entries in the domains table, and those entries
-must be linked to the logged-in (email-sending) user via the
+must be linked to the logged-in (email-sending) customer via the
 `domain_user` join table.
 
 Here is the schema, for reference:
@@ -446,14 +449,14 @@ CREATE TABLE `email_user` (
 ```
 
 As with the quota policy, the logic used is inherently conservative.
-If a user has no entry in the `users` table, that user will not be
-able to send mail (even though they have authenticated).  If a user is
-trying to send an email from an address (the `sender` address) which
-has a domain string (everything after the @ sign) which does not
-appear in the `domains` table, or for which that user lacks a join
-record in `domain_user`, the email will be denied.
+If a customer has no entry in the `users` table, that customer will
+not be able to send mail (even though they have authenticated).  If a
+customer is trying to send an email from an address (the `sender`
+address) which has a domain string (everything after the @ sign) which
+does not appear in the `domains` table, or for which that user lacks a
+join record in `domain_user`, the email will be denied.
 
-In practice, this will mean that when a new email customer signs up,
+In practice, this will mean that when a new customer signs up,
 the domain(s) included in that service agreement should be added to
 the `domains` table.  Any users which are authorized to send email
 appearing to originate from that domain should be added to the `users`
@@ -466,7 +469,7 @@ As a fallback to domain authorization, the SDA module also compares
 the entire `sender` field with the whole-email entries associated to
 the user.  This allows an email provider to specify specific email
 addresses which may be used for outbound masquerading.  This helps to
-prevent people from pretending to be other customers, and helps to
+prevent customers from pretending to be other customers, and helps to
 create a specification for possible scanning tools which might
 otherwise react negatively to the logs of such activity.
 
@@ -537,12 +540,11 @@ check results.  The [SPF specification in RFC
 exactly what response to take in each case, saying that it is a site's
 prerogative to decide the fates of those emails.
 
-There is currently no local configuration of SPF.  As of this writing,
-there is no completed SPF service, though there is a completed SPF
-enforcement handler, which needs only a script wrapper to become a
-service.  However, I am more interested in writing a multi-policy
-service for inbound email, because of the odd interaction of
-greylisting with SPF.
+As of this writing, there is no completed SPF service, though there is
+a completed SPF enforcement handler, which needs only a script wrapper
+to become a service.  However, it seems better to create a unified
+inbound service offering SPF with integrated greylisting, because of
+the odd interaction of greylisting with SPF.
 
 ## Inbound Multi-policy Service (SPF + Greylisting)
 
@@ -578,14 +580,15 @@ or possibly tag them and/or quarantine them.  So far, this software
 does not address any of those possible outcomes.  But we can provide
 the interesting option of using greylisting for grey areas.
 
-By default, CHAPPS SPF policy enforcement service uses *greylisting*
-for emails which receive `softfail` and `none`/`neutral` responses on
-their SPF checks.  The plan, as it becomes possible for domain admins
-to control whether greylisting and/or SPF are applied to their inbound
-email, is to greylist even emails which receive `pass` from SPF,
+By default, CHAPPS SPF policy enforcement service uses greylisting for
+emails which receive `softfail` and `none`/`neutral` responses on
+their SPF checks.  The plan, as it becomes possible to control whether
+greylisting and/or SPF are applied to the inbound email of particular
+domains, is to greylist even emails which receive `pass` from SPF,
 meaning that any "deliverable" email will be deferred unless it is
-already coming from a recognized source (tuple) when both are enabled.
-(Non-deliverable categories are: `fail`, `temperror`, `permerror`.)
+already coming from a recognized source (tuple), when both are
+enabled.  (Non-deliverable categories are: `fail`, `temperror`,
+`permerror`.)
 
 ## Upcoming features
 
@@ -593,17 +596,15 @@ A mini-roadmap of upcoming changes:
 
 minor:
 
+  - Switch older code from using the `mariadb` package to using
+    `mysqlclient` in order to remove extra dependency
   - SDA Redis keys will have tunable expiry times
   - Look into specifying log facility and level in the config file
 
 major:
 
-  - CHAPPS services will present an API listener on a configurable
-    half-socket, and be able to perform REST operations against its
-    own config database, as well as perform live queries against the
-    Redis environment in order to report on a user's available quota
-    in real-time, and perform other real-time adjustment functions,
-    such as quota reset, user policy flushing, etc.
+  - Adapt older database code to use SQLAlchemy rather than a low-level
+    package such as `mariadb` or `mysqlclient`
   - CHAPPS will also offer a multipolicy-inbound service as described
     above, with SPF+Greylisting.  It will allow for a per-domain
     option indicating whether to apply each of greylisting and SPF.
