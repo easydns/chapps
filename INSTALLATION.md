@@ -30,16 +30,16 @@ For the API:
  - 'mysqlclient': [by Inada Naoki](https://github.com/PyMySQL/mysqlclient)
 
 For testing and development:
- - 'pytest':
- - 'coverage':
- - 'pytest-cov':
- - 'pytest-services':
- - 'pytest-order':
- - 'pytest-asyncio':
- - 'pytest-timeout':
- - 'aiosmtpd':
- - 'python-dotenv':
- - 'pylint-pytest':
+ - 'pytest': [by Holger Krekel and others](https://docs.pytest.org/)
+ - 'coverage': [Ned Batchelder](https://coverage.readthedocs.io/)
+ - 'pytest-cov': [Marc Schlaich](https://pypi.org/project/pytest-cov/)
+ - 'pytest-services': [pytest-dev](https://pypi.org/project/pytest-services/)
+ - 'pytest-order': [mrbean-bremen](https://pypi.org/project/pytest-order/)
+ - 'pytest-asyncio': [Tin Tvrtković](https://pypi.org/project/pytest-asyncio/)
+ - 'pytest-timeout': [Floris Bruynooghe](https://pypi.org/project/pytest-timeout/)
+ - 'aiosmtpd': [The aiosmtpd developers](https://pypi.org/project/aiosmtpd/)
+ - 'python-dotenv': [Saurabh Kumar](https://pypi.org/project/python-dotenv/)
+ - 'pylint-pytest': [Reverb Chu](https://pypi.org/project/pylint-pytest/)
 
 MariaDB (or MySQL; support for others is planned) is used as a source of
 policy config data.  At present, no other mechanisms are included to
