@@ -3,8 +3,10 @@
 Welcome to the CHAPPS REST API.  It is implemented in Python using
 FastAPI and SQLAlchemy.
 
-This document starts by discussing the naming conventions used
-througout the API, and lists the various categories of API
+This document starts with a brief synopsis of the meaning and
+interactions of the various config objects managed by this API,
+followed by a discussion of the naming conventions used througout the
+API documentation, and finally a list the various categories of API
 routes.  The API routes themselves are documented in the sections
 which follow.  (These do not appear in the README-API.md file as they
 are generated automatically.)
@@ -17,12 +19,43 @@ there may be occasional lapses of grammar, etc.  Please excuse any
 awkwardness; where the documentation is ambiguous,
 please feel free to file an issue about it.
 
-### Conventions
+## Configuration Synopsis
+
+In order to control the flow of email which corresponds to a
+particular user or domain, CHAPPS needs to know how those two kinds of
+entities are connected to one another.  Additionally, as a fallback
+for domain matching, entire email addresses may be associated with a
+user, to permit that user to send mail with the MAIL FROM set to that
+email (or possibly for inbound purposes to come).
+
+### The Rules
+
+A **user** object may only have one **quota** object associated to it.
+
+The **user** to **domain** and **user** to **email** mappings are both
+many-to-many.
+
+If a **user** is associated to a **domain**, CHAPPS will allow that
+**user** to send email which has a MAIL FROM address that matches it
+exactly from the `@`-sign to the end.
+
+If a **user** has no matching **domain** associations, and the entire
+MAIL FROM address exactly matches an associated **email** record, then
+CHAPPS will permit that email.
+
+### Implementation notes
+
+An email quota as implemented here is a count of outbound messages per
+24hr.  All objects have auto-incrementing integer `id` attributes and
+string `name` attributes.  The **quota** object has an additional
+integer `quota` attribute.
+
+## Conventions
 
  The primary answer to a query is always returned in the element named
 `response`.  So for example, when GETting a **user** object, that object
 is the value of the `response` key, and there may be ancillary keys
-named for its associations, which are `quota` and `domains`.
+named for its associations, which are `quota`, `domains` and `emails`.
 
 In general, a parameter named `q` indicates a string which will be
 used in a basic substring match against the `name` attribute (column)
@@ -48,7 +81,7 @@ concerned by the route in question.  In other words, an instance of
 the object type named in the first node of the API route path will be
 looked up by its ID using the value provided to `item_id`, and then
 that object will be affected or reported by the API.  This seems
-fairly intuitive but seems worth stating since it is not worth the
+fairly intuitive but also worth stating since it is not worth the
 effort to make the variable name match the name of the model.  Maybe
 in a future revision.
 
@@ -56,8 +89,8 @@ In the examples, square brackets have been used to indicate portions
 which may or may not occur; in general, **no brackets of any kind**
 should actually be included in any names.
 
+## Categories
 
-### Categories
 API routes fall under a few different categories:
 - user manipulation
 - domain manipulation
