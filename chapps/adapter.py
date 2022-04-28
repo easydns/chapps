@@ -241,7 +241,9 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
         super()._initialize_tables()
         cur = self.conn.cursor()
         cur.execute(self.domain_table)
+        cur.execute(self.email_table)
         cur.execute(self.domain_join_table)
+        cur.execute(self.email_join_table)
         cur.close()
 
     def check_domain_for_user(self, user, domain):
