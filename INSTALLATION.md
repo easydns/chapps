@@ -16,11 +16,32 @@ A number of community packages are used:
  - `mariadb`: [**MariaDB Connector/Python** by Georg Richter](https://pypi.org/project/mariadb/)
  - `python-pidfile`: [**PIDFile** by Dmitry Orlov](https://pypi.org/project/python-pidfile/)
  - and `expiring-dict`: [**py-expiring-dict** by David Parker](https://pypi.org/project/expiring-dict/)
- for the service itself.
+
+For SPF:
  - `pyspf`: [by Stuart Gathman, et al.](https://pypi.org/project/pyspf/) for SPF enforcement
  - `dnspython`: [by Bob Halley](https://pypi.org/project/dnspython/) for **pyspf**, or `py3dns`
 
-MariaDB (or some other relational database) is used as a source of
+For the API:
+ - 'fastapi': [by Sebastián Ramírez](https://fastapi.tiangolo.com/)
+ - 'sqlalchemy': [by Michael Bayer and SQLAlchemy contributors](https://www.sqlalchemy.org/)
+ - 'pydantic': [by Samuel Colvin](https://pydantic-docs.helpmanual.io/)
+ - 'uvicorn': [by Encode](https://www.uvicorn.org/)
+ - 'gunicorn': [by Benoit Chesneau](https://gunicorn.org/)
+ - 'mysqlclient': [by Inada Naoki](https://github.com/PyMySQL/mysqlclient)
+
+For testing and development:
+ - 'pytest': [by Holger Krekel and others](https://docs.pytest.org/)
+ - 'coverage': [Ned Batchelder](https://coverage.readthedocs.io/)
+ - 'pytest-cov': [Marc Schlaich](https://pypi.org/project/pytest-cov/)
+ - 'pytest-services': [pytest-dev](https://pypi.org/project/pytest-services/)
+ - 'pytest-order': [mrbean-bremen](https://pypi.org/project/pytest-order/)
+ - 'pytest-asyncio': [Tin Tvrtković](https://pypi.org/project/pytest-asyncio/)
+ - 'pytest-timeout': [Floris Bruynooghe](https://pypi.org/project/pytest-timeout/)
+ - 'aiosmtpd': [The aiosmtpd developers](https://pypi.org/project/aiosmtpd/)
+ - 'python-dotenv': [Saurabh Kumar](https://pypi.org/project/python-dotenv/)
+ - 'pylint-pytest': [Reverb Chu](https://pypi.org/project/pylint-pytest/)
+
+MariaDB (or MySQL; support for others is planned) is used as a source of
 policy config data.  At present, no other mechanisms are included to
 provide this data.  However, some effort was made to design the
 adapter mechanism within the service in such a way that other adapters

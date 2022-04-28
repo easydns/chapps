@@ -427,6 +427,22 @@ CREATE TABLE `domains` (
   CONSTRAINT `fk_user_domain`
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `emails` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `email_user` (
+  `email_id` bigint(20) NOT NULL,
+  `user_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`email_id`,`user_id`),
+  KEY `fk_user_email` (`user_id`),
+  CONSTRAINT `fk_email` FOREIGN KEY (`email_id`) REFERENCES `emails` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_user_email` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 As with the quota policy, the logic used is inherently conservative.
@@ -443,6 +459,16 @@ the `domains` table.  Any users which are authorized to send email
 appearing to originate from that domain should be added to the `users`
 table, with join records linking their IDs to the IDs of the domain(s)
 they can send for, in `domain_user`.
+
+### Whole-Email Matching
+
+As a fallback to domain authorization, the SDA module also compares
+the entire `sender` field with the whole-email entries associated to
+the user.  This allows an email provider to specify specific email
+addresses which may be used for outbound masquerading.  This helps to
+prevent people from pretending to be other customers, and helps to
+create a specification for possible scanning tools which might
+otherwise react negatively to the logs of such activity.
 
 TODO: Currently, CHAPPS causes cached policy data to have an expiry
 timer of a day.  For outbound quota, this makes a great deal of sense
