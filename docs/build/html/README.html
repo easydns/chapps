@@ -1,0 +1,689 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>CHAPPS &#8212; CHAPPS 0.4.5 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Caching, Highly-Available Postfix Policy Service" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="chapps">
+<h1>CHAPPS<a class="headerlink" href="#chapps" title="Permalink to this headline">¶</a></h1>
+<section id="the-caching-highly-available-postfix-policy-service">
+<h2>the Caching, Highly-Available Postfix Policy Service<a class="headerlink" href="#the-caching-highly-available-postfix-policy-service" title="Permalink to this headline">¶</a></h2>
+<section id="requires-python-3-8-10">
+<h3>requires Python 3.8.10+<a class="headerlink" href="#requires-python-3-8-10" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="makes-use-of-redis-eventually-sentinel-and-a-relational-database-mariadb">
+<h3>makes use of Redis, (eventually Sentinel) and a relational database (MariaDB)<a class="headerlink" href="#makes-use-of-redis-eventually-sentinel-and-a-relational-database-mariadb" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>There is a need for a highly-available, high-performance, concurrent,
+clusterable solution for handling various aspects of email policy.
+Postfix farms out the job of policy decisions to a delegate over a
+socket, so we can provide a framework for receiving that data, making
+a decision about it, and then sending a response back to Postfix.
+There are some projects which have provided smaller-scale solutions to
+this issue.  We handle rather a large volume of email, so we need
+something more performant than a script which makes a database access
+on every email.  In order to simplify the language, the term “customer”
+is used herein to mean a person who logs into an SMTP server in order
+to send email.</p>
+<p>My decision was to use Redis, since with Redis Sentinel it should be
+possible to achieve a degree of high-availability using Redis as a
+common datastore between the various email servers in the farm(s)
+which will run local instances of the policy server, which will itself
+use Redis to cache data and keep track of email quotas, etc.</p>
+<p>In the first iteration, we propose to provide functionality for:</p>
+<ul class="simple">
+<li><p>outbound quota tracking on a continuous, rolling, per-interval basis;</p></li>
+<li><p>outbound sender domain authorization</p></li>
+<li><p>inbound email greylisting;</p></li>
+<li><p>inbound SPF checking</p></li>
+</ul>
+<p>The framework is meant to be extensible, so that any conceivable email
+policy might be implemented in the future.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>The library will create a config file for itself if it does not find one
+at its default config path, <code class="docutils literal notranslate"><span class="pre">/etc/chapps/chapps.ini</span></code>, or the value of
+the environment variable <code class="docutils literal notranslate"><span class="pre">CHAPPS_CONFIG</span></code> if it is set.  Note that
+default settings for all available submodules will be produced.  At
+the time of writing, each script runs its own type of policy handler,
+so only the settings for the policies of that handler will be needed,
+plus the general CHAPPS settings and the Redis settings.</p>
+<p>Policies may each specify separate listening addresses and ports, so
+that they may run simultaneously on the same server.  For multi-policy
+handlers, the first handler specified will be the one whose network
+settings are used.  It is recommended to configure those elements only
+on that policy, or to keep them in sync on all policies which are
+handled together.</p>
+<p>Example Postfix configs are included in the <code class="docutils literal notranslate"><span class="pre">postfix</span></code> directory,
+classified by which service they are for.  Most access control policy
+services will be implemented in a very similar way in <code class="docutils literal notranslate"><span class="pre">main.cf</span></code>,
+probably in combination with other policies.  The examples provided
+are the same configs used for testing, and are necessarily stripped
+down to focus just on that particular service.</p>
+<p>An example <strong>rsyslog</strong> config is also included; modification is
+encouraged.  If you wish to keep the debug logs in their special
+destination, ensure that you create a log-rotation profile for it.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Please ensure that MariaDB Connector/C is installed before attempting
+installation of this package.  The Debian packages recommended are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mariadb-client</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">libmariadb-dev-compat</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">redis</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">python3-pip</span></code>
+The package contains a dependency on the <code class="docutils literal notranslate"><span class="pre">mariadb</span></code>
+package; it will not install properly without Connector/C installed,
+which is not a Python package.  (Perhaps this dependency should be
+left out.)</p></li>
+</ul>
+<p>It is highly recommended to install CHAPPS into a venv.  You may need
+to install the system package <code class="docutils literal notranslate"><span class="pre">python3-venv</span></code> in order for this to
+work:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="n">chapps</span><span class="o">-</span><span class="n">venv</span>
+<span class="o">.</span> <span class="n">chapps</span><span class="o">-</span><span class="n">venv</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
+</pre></div>
+</div>
+<p>The package may be installed via PyPI, using the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">chapps</span>
+</pre></div>
+</div>
+<p>With a venv, the SystemD service files are installed to a folder
+called <code class="docutils literal notranslate"><span class="pre">chapps/install</span></code> inside the venv directory, and Postfix
+example/testing configs are located in the <code class="docutils literal notranslate"><span class="pre">chapps/postfix</span></code> folder.  Scripts
+and package go to <code class="docutils literal notranslate"><span class="pre">bin</span></code> and <code class="docutils literal notranslate"><span class="pre">lib/.../chapps</span></code> as expected.  Use of a
+venv is recommended, as the SystemD service description files provided
+are formatted during the install process to launch the services correctly
+within their venv.</p>
+<p>Without a venv, they go to various system locations,
+with the ancillary <code class="docutils literal notranslate"><span class="pre">chapps</span></code> directory usually showing up at
+<code class="docutils literal notranslate"><span class="pre">/usr/local/chapps</span></code>.  YMMV.  A venv will keep things organized.</p>
+<p>A Python script called <code class="docutils literal notranslate"><span class="pre">chapps_database_init.py</span></code> is included
+to create the database schema required by the library.  It
+does not create the database itself.  Before running this script,
+ensure that the CHAPPS configuration file contains the correct
+credentials and other control data to be able to connect to the
+database server, and also ensure that the database named in that
+config has been created on the server.  The script will connect to the
+database and create the tables.  It uses <code class="docutils literal notranslate"><span class="pre">IF</span> <span class="pre">EXISTS</span></code> and does not
+contain any kind of data deletion, so it should be safe to use at any
+time.</p>
+<p>For more information about installing, see the
+<span class="xref myst">INSTALLATION</span> file.</p>
+<section id="redis-configuration">
+<h3>Redis configuration<a class="headerlink" href="#redis-configuration" title="Permalink to this headline">¶</a></h3>
+<p>Redis is used to store the real-time state of every active user’s
+outbound quota, sender-domain authorization status cache, and also to
+keep track of greylisting status for greylisted emails.  An active
+user is one who has sent email in the last <em>interval</em>, that interval
+defaulting to a day, since most quotas are expressed as
+messages-per-day.</p>
+<p>If your Redis deployment is on a different server and/or if CHAPPS is
+sharing a Redis instance with some other services it may be necessary
+to adjust the Redis-related settings in the config file, to adjust the
+address and/or port to connect to, or what database to use.  By
+default, CHAPPS tries to connect to Redis on localhost, using the
+standard port assignment and db 0.</p>
+<p>If Sentinel is in use, populate the Sentinel-oriented configuration
+elements <code class="docutils literal notranslate"><span class="pre">sentinel_servers</span></code> and <code class="docutils literal notranslate"><span class="pre">sentinel_dataset</span></code>.  The servers list
+should be a space-separated list of each Sentinel server half-socket;
+for example, “10.1.9.10:26379 10.1.9.12:26379”.  The dataset name is
+the one you specified to Sentinel when setting up the Sentinel
+cluster.  Sentinel’s default dataset name is <code class="docutils literal notranslate"><span class="pre">mymaster</span></code>.  We, of
+course, recommend <code class="docutils literal notranslate"><span class="pre">chapps</span></code>, or perhaps <code class="docutils literal notranslate"><span class="pre">chapps-outbound</span></code> at a site
+with a large volume of email.  Since SPF doesn’t make much use of
+Redis, the inbound load may be lighter than the outbound load,
+depending on which things happen more at a particular site.</p>
+</section>
+<section id="logging">
+<h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
+<p>At this time, CHAPPS uses <strong>syslog</strong>, and transmits logs on the
+<code class="docutils literal notranslate"><span class="pre">local0</span></code> facility.  CHAPPS sends a fair amount of debug information at
+the DEBUG level.  Right now, the application’s facility and level may
+not be adjusted via the config file; later this may be implemented.
+For the time being, it seems sufficient to control logging via the
+<strong>rsyslog</strong> configuration used to control log entries on <code class="docutils literal notranslate"><span class="pre">local0</span></code>.</p>
+<p>The example provided (in the <code class="docutils literal notranslate"><span class="pre">install</span></code> directory) sends all logs to a
+special log (the path needs to exist and belong to the syslog user,
+whether that be <code class="docutils literal notranslate"><span class="pre">syslog</span></code> (as on Ubuntu) or <code class="docutils literal notranslate"><span class="pre">root</span></code> under Debian).  As
+long as the path exists and is writable by <strong>rsyslog</strong>, it will create
+the log.  The example also sends logs at INFO level or above to
+<code class="docutils literal notranslate"><span class="pre">/var/log/mail.log</span></code>, which generally is the destination that
+<strong>rsyslog</strong> uses for mail-related logs.</p>
+<p>Of course, site operators are encouraged to alter this example config
+to their needs.  For those who wish to monkeypatch facility and level,
+it is set in one place, at the top of <code class="docutils literal notranslate"><span class="pre">chapps.logging</span></code>.</p>
+</section>
+</section>
+<section id="rest-api-service">
+<h2>REST API Service<a class="headerlink" href="#rest-api-service" title="Permalink to this headline">¶</a></h2>
+<p>Starting with version 0.4.0, a REST API service is included, based on
+FastAPI, and using SQLAlchemy with the MySQLclient backend.  A service
+template for the API is provided, as well as a socket unit and an
+<strong>nginx</strong> example config, for using a UDS to proxy between the web and
+the application.  By default, Gunicorn is used to launch Uvicorn
+workers which serve the API directly on port 8080.  The precise
+details may be adjusted in the <code class="docutils literal notranslate"><span class="pre">chapps-api-gunicorn.service</span></code> unit
+file.</p>
+<p>It is also possible that other approaches are preferred at other sites.
+The extra files, provided in the <code class="docutils literal notranslate"><span class="pre">install</span></code> directory, are provided in
+the hope that they may be useful.</p>
+<p>The API is self-documenting.  Once it is running, visit it at
+<code class="docutils literal notranslate"><span class="pre">&lt;server&gt;:8080/redoc/</span></code> or <code class="docutils literal notranslate"><span class="pre">&lt;server&gt;:8080/docs/</span></code> to browse the
+documentation.</p>
+<p>The API service needs to have the same configuration as the other
+CHAPPS services it is meant to manage.  Since it instantiates policy
+objects, it is best to simply provide the same copy of the config to
+all related nodes.  Please note that the API service is completely
+separate from the policy service(s), and need not run on the same
+server – and in fact probably <em>should</em> not run on the same server –
+with the policy service.</p>
+</section>
+<section id="outbound-services">
+<h2>Outbound Services<a class="headerlink" href="#outbound-services" title="Permalink to this headline">¶</a></h2>
+<p>Policy services can be divided into those which work on outbound mail,
+and those which work on inbound mail.  Some, possibly, might be
+applied to either flow, but none such are part of this project yet.
+Outbound items share some characteristics.</p>
+<p>Outbound mail, for our purposes, is assumed to originate with an
+authenticated user.  That user may authenticate with Postfix using a
+username/password or a client-side SSL cert, in which case the
+username or subject name (of the cert) will be passed along by Postfix
+to the policy service.</p>
+<p>In order to allow sites to specify exactly what field of the Postfix
+policy data they would like to use to identify users, the
+configuration allows the user to specify the first field to check.</p>
+<section id="setting-the-user-key">
+<h3>Setting the user key<a class="headerlink" href="#setting-the-user-key" title="Permalink to this headline">¶</a></h3>
+<p>Postfix submits a fairly large packet of data on each policy
+delegation request.  One prominent element of this data is the MAIL
+FROM address, which is labelled as <code class="docutils literal notranslate"><span class="pre">sender</span></code>.  This is perhaps the
+obvious element to use to count quotas, but some other fields are more
+interesting.</p>
+<p>Current versions of the software allow the config file to specify what
+element of that delegation request payload to use, defaulting to
+<code class="docutils literal notranslate"><span class="pre">sasl_username</span></code>.  This is because when customers use a password auth
+process, the <code class="docutils literal notranslate"><span class="pre">sasl_username</span></code> corresponds to the customer whose
+email quota is being checked.  In certain circumstances (when
+authentication fails), the <code class="docutils literal notranslate"><span class="pre">sasl_username</span></code> field is blank.  Since
+v0.3.11, when we find it blank we attribute that to authentication
+failure, and we provide some extra config elements to control this
+behavior.</p>
+<p>If the config key <code class="docutils literal notranslate"><span class="pre">require_user_key</span></code> is set to <strong>True</strong>, then only the
+key specified in <code class="docutils literal notranslate"><span class="pre">user_key</span></code> will be checked for contents to identify
+the customer, and if it is empty, an <code class="docutils literal notranslate"><span class="pre">AuthenticationFailedException</span></code>
+will be raised, which will cause the <code class="docutils literal notranslate"><span class="pre">no_user_key_response</span></code> to be sent
+back via Postfix.  If <code class="docutils literal notranslate"><span class="pre">require_user_key</span></code> is <strong>False</strong>, then a series
+of fields will be searched as outlined below.</p>
+<p>At present, there is little sanitation on the <code class="docutils literal notranslate"><span class="pre">user_key</span></code> field.  It is
+never evaluated as code, but it is used directly as the attribute name
+for the value dereference.  If that yields no value, or if it is not
+specified, CHAPPS looks for <code class="docutils literal notranslate"><span class="pre">sasl_username</span></code> first, then
+<code class="docutils literal notranslate"><span class="pre">ccert_subject</span></code>, and if there is none, it falls back to <code class="docutils literal notranslate"><span class="pre">sender</span></code>,
+which can also be blank. In that extreme case, CHAPPS uses
+<code class="docutils literal notranslate"><span class="pre">client_address</span></code>.  This will not work very well long-term if a lot of
+real customers share a mail gateway, so it is recommended to make sure
+that the field specified is being populated.</p>
+<p>Incidentally, this may be a reason for permitting customers which
+don’t appear in the user-list, since system-generated messages which
+don’t have a <code class="docutils literal notranslate"><span class="pre">sender</span></code> listed will end up quota’d on their client
+address, and probably most of them will be denied by quota,
+potentially generating a large number of confusing secondary error
+messages.  CHAPPS currently expects any permitted sender to appear in
+the <code class="docutils literal notranslate"><span class="pre">users</span></code> table.  Note that the name which appears in this table
+needs to match what will be discovered in the specified key field.
+For sites which use the customer’s email address as their login name
+for email access, this is easy.  For cert issuers, it may simplify
+things to use the email address as the subject of the cert, but any
+unique string will work.</p>
+</section>
+</section>
+<section id="outbound-quota-policy-service">
+<h2>Outbound Quota Policy Service<a class="headerlink" href="#outbound-quota-policy-service" title="Permalink to this headline">¶</a></h2>
+<p>The service is designed to run locally side-by-side with the Postfix
+server, and connect to a Redis instance, optionally via Sentinel.  As
+such it listens on 127.0.0.1, and on port 10225 by default, though
+both may be adjusted in the config file.  It obtains quota policy data
+on a per-customer basis, from a relational database, and caches that
+data in Redis for operational use.  Once a user’s quota data has been
+stored, it will be cached for a day, so that database accesses may be
+avoided.</p>
+<p>Current quota usage is <strong>not</strong> kept in a relational database.</p>
+<p>TODO: There is a plan to provide both CLI (scripted) access to
+data about current quota usage, and to provide facilities for updating
+quota policy information immediately: clearing quotas, upgrading them,
+adding new users, adding new quotas, etc.  At present the REST API
+may be used to do any of these tasks, using cURL or similar.</p>
+<p>In order to set up Postfix for policy delegation, consult <a class="reference external" href="http://www.postfix.org/SMTPD_POLICY_README.html">Postfix
+documentation</a> to
+gain a complete understanding of how policy delegation works.  In
+short, the <code class="docutils literal notranslate"><span class="pre">smtpd_recipient_restrictions</span></code> block should contain the
+setting <code class="docutils literal notranslate"><span class="pre">check_policy_service</span> <span class="pre">inet:127.0.0.1:10225</span></code>.  In addition, it
+is necessary to ensure that the service itself, the script
+<code class="docutils literal notranslate"><span class="pre">chapps_outbound_quota.py</span></code> or <code class="docutils literal notranslate"><span class="pre">chapps_outbound_multi.py</span></code> is running.
+This should be accomplished
+using SystemD or similar; scripts/unit file assets to assist with that
+are to be found in the <code class="docutils literal notranslate"><span class="pre">install</span></code> directory.  (For now, according to
+current wisdom, Postfix’s own <code class="docutils literal notranslate"><span class="pre">spawn</span></code> functionality from <code class="docutils literal notranslate"><span class="pre">master.cf</span></code>
+should be avoided.)</p>
+<section id="outbound-quota-policy-configuration-database-setup">
+<h3>Outbound Quota Policy Configuration: Database Setup<a class="headerlink" href="#outbound-quota-policy-configuration-database-setup" title="Permalink to this headline">¶</a></h3>
+<p>At present, the service expects to obtain quota policy enforcement
+parameters from a relational database (MariaDB).  The
+framework has been designed to make it easy to write adapters to any
+particular backend datasource regarding quota information.</p>
+<p>The database schema used has been kept as simple as possible:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>CREATE TABLE `users` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `quotas` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) NOT NULL,
+  `quota` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  UNIQUE KEY `quota` (`quota`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `quota_user` (
+  `quota_id` bigint(20) NOT NULL,
+  `user_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`user_id`)
+  KEY `fk_quota` (`quota_id`),
+  CONSTRAINT `fk_quota_user` FOREIGN KEY (`quota_id`) REFERENCES `quotas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_user_quota` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">users</span></code> table contains a record for each authorized customer who is
+allowed to send email.  Customers without entries will not be able to send
+email, despite authenticating with Postfix.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quotas</span></code> table contains quota definitions, the <code class="docutils literal notranslate"><span class="pre">name</span></code> is meant to
+hold a user-readable tag for the quota and max outbound email count
+(<code class="docutils literal notranslate"><span class="pre">quota</span></code>) of that quota.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quota_user</span></code> table joins the <code class="docutils literal notranslate"><span class="pre">users</span></code> table with the <code class="docutils literal notranslate"><span class="pre">quotas</span></code>
+table.  The <code class="docutils literal notranslate"><span class="pre">quota_user.user_id</span></code> column joins with <code class="docutils literal notranslate"><span class="pre">users.id</span></code> to map
+usernames onto IDs.  Usernames may be email addresses, but they also
+may not.  How they are obtained is configurable as <code class="docutils literal notranslate"><span class="pre">user_key</span></code> – the
+specified field will be extracted from the policy request payload
+presented by Postfix.</p>
+<p>Once the <code class="docutils literal notranslate"><span class="pre">quotas</span></code> table has been populated with the desired quota
+policies, the <code class="docutils literal notranslate"><span class="pre">quota_user</span></code> table may then be populated to reflect each
+user’s quota.</p>
+<p>The application sets cached quota limit data to expire after 24 hours,
+so it will occasionally refresh quota policy settings, in case they
+get changed.  In order to flush the quota information, all that is
+required is to delete that user’s policy tracking data from Redis.
+Routes for doing so are provided by the REST API.</p>
+<p><strong>Please note:</strong> Customers with no <code class="docutils literal notranslate"><span class="pre">users</span></code> entry will not be able to send
+outbound email.</p>
+</section>
+<section id="quota-policy-settings-non-database">
+<h3>Quota policy settings (non-database)<a class="headerlink" href="#quota-policy-settings-non-database" title="Permalink to this headline">¶</a></h3>
+<section id="counting-all-outbound-messages-against-the-quota">
+<h4>Counting all outbound messages against the quota<a class="headerlink" href="#counting-all-outbound-messages-against-the-quota" title="Permalink to this headline">¶</a></h4>
+<p>Some quota systems count any email as a single email regardless of the
+number of recipients included in the envelope recipients list
+(RCPT TO).  This software can operate that way, but it can also
+count an email for each recipient in the list.  Whether it does so is
+governed by the boolean setting <code class="docutils literal notranslate"><span class="pre">counting_recipients</span></code>: setting this to
+True will cause CHAPPS OutboundQuotaPolicy to count a sent email for
+each recipient.</p>
+</section>
+<section id="outbound-quota-grace-margins">
+<h4>Outbound quota grace margins<a class="headerlink" href="#outbound-quota-grace-margins" title="Permalink to this headline">¶</a></h4>
+<p>There is a <code class="docutils literal notranslate"><span class="pre">margin</span></code> setting which will allow for some fuzziness over
+the established quota for multi-recipient emails, allowing a customer
+to go over their quota on a single (multi-recipient) email as long as
+the total number of mails sent fits within the margin.  This obviously
+has no meaning if recipients aren’t being counted, since no email will
+ever represent more than a single outbound message.</p>
+<p>Margins specified in <strong>integers</strong> are absolute message counts.</p>
+<p>Those specified as <strong>floats</strong> represent a proportion of the total
+margin.  If a float value is less than 1 it is assumed to be the
+ratio.  If it is larger than 1 and less than 100, it is assumed to be
+a percentage, and it divided by 100.0 is used as the ratio.</p>
+</section>
+</section>
+</section>
+<section id="sender-domain-authorization-outbound-multi-policy-service">
+<h2>Sender Domain Authorization (Outbound multi-policy service)<a class="headerlink" href="#sender-domain-authorization-outbound-multi-policy-service" title="Permalink to this headline">¶</a></h2>
+<p>As of this writing, sender-domain authorization (SDA) is only
+available as part of the outbound multi-policy service, consisting of
+SDA followed by outbound quota.  There is a plan (TODO:) to produce a
+standalone SDA service script.</p>
+<p>The SDA policy allows an email service provider to specify on a
+per-customer basis exactly which domains may appear after the &#64; in the
+MAIL FROM address, the <code class="docutils literal notranslate"><span class="pre">sender</span></code> field in the Postfix policy delegation
+data packet.  Customer identification for outbound emails is covered
+in a previous section of this document (see: <span class="xref myst">‘Setting the user
+key’</span>).</p>
+<p>It is generally possible to configure vanilla Postfix to limit
+outbound domains for users, but we encountered some difficulty getting
+it to work reliably, and this method opens the door to a great deal of
+additional nuance which would not otherwise be available to us.</p>
+<p>CHAPPS stores SDA policy control data in its database, in a fairly
+simple, normalized scheme.  This feature uses a table each to store
+source domains and email addresses, and a new join table for each to
+link customers with domains and whole-email addresses they are allowed to
+use for outbound mail.</p>
+<p>The domain matching is intentionally inflexible – the
+entire string after the &#64; sign must match a domain in the table.  That
+is to say: in order to allow users to send from subdomains, those
+subdomains must have entries in the domains table, and those entries
+must be linked to the logged-in (email-sending) customer via the
+<code class="docutils literal notranslate"><span class="pre">domain_user</span></code> join table.</p>
+<p>Here is the schema, for reference:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>CREATE TABLE `domains` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ CREATE TABLE `domain_user` (
+  `domain_id` bigint(20) NOT NULL,
+  `user_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`domain_id`,`user_id`),
+  KEY `fk_user_domain` (`user_id`),
+  CONSTRAINT `fk_domain_user`
+    FOREIGN KEY (`domain_id`) REFERENCES `domains` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_user_domain`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `emails` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `email_user` (
+  `email_id` bigint(20) NOT NULL,
+  `user_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`email_id`,`user_id`),
+  KEY `fk_user_email` (`user_id`),
+  CONSTRAINT `fk_email` FOREIGN KEY (`email_id`) REFERENCES `emails` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_user_email` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+</pre></div>
+</div>
+<p>As with the quota policy, the logic used is inherently conservative.
+If a customer has no entry in the <code class="docutils literal notranslate"><span class="pre">users</span></code> table, that customer will
+not be able to send mail (even though they have authenticated).  If a
+customer is trying to send an email from an address (the <code class="docutils literal notranslate"><span class="pre">sender</span></code>
+address) which has a domain string (everything after the &#64; sign) which
+does not appear in the <code class="docutils literal notranslate"><span class="pre">domains</span></code> table, or for which that user lacks a
+join record in <code class="docutils literal notranslate"><span class="pre">domain_user</span></code>, the email will be denied.</p>
+<p>In practice, this will mean that when a new customer signs up,
+the domain(s) included in that service agreement should be added to
+the <code class="docutils literal notranslate"><span class="pre">domains</span></code> table.  Any users which are authorized to send email
+appearing to originate from that domain should be added to the <code class="docutils literal notranslate"><span class="pre">users</span></code>
+table, with join records linking their IDs to the IDs of the domain(s)
+they can send for, in <code class="docutils literal notranslate"><span class="pre">domain_user</span></code>.</p>
+<section id="whole-email-matching">
+<h3>Whole-Email Matching<a class="headerlink" href="#whole-email-matching" title="Permalink to this headline">¶</a></h3>
+<p>As a fallback to domain authorization, the SDA module also compares
+the entire <code class="docutils literal notranslate"><span class="pre">sender</span></code> field with the whole-email entries associated to
+the user.  This allows an email provider to specify specific email
+addresses which may be used for outbound masquerading.  This helps to
+prevent customers from pretending to be other customers, and helps to
+create a specification for possible scanning tools which might
+otherwise react negatively to the logs of such activity.</p>
+<p>TODO: Currently, CHAPPS causes cached policy data to have an expiry
+timer of a day.  For outbound quota, this makes a great deal of sense
+because the quotas are expressed in emails per day.  However, a day’s
+worth of authorized email senders’ Redis cache keys may actually cause
+quite a bit of memory usage for no particular reason.  Users don’t
+send an evenly-spaced stream of email throughout the day; they send
+some emails, often in clusters, separated by long pauses.  As such,
+the expiry time of SDA Redis caches should probably be a tunable
+parameter, in order to allow operators to tune how much RAM on their
+Redis servers ends up devoted to SDA caching.  6 or 8 hours seems like
+a reasonable trade-off between Redis-RAM bloat and RDBMS latency, but
+different sites are different.</p>
+</section>
+</section>
+<section id="greylisting-policy-service">
+<h2>Greylisting Policy Service<a class="headerlink" href="#greylisting-policy-service" title="Permalink to this headline">¶</a></h2>
+<p>Greylisting is an <a class="reference external" href="https://en.wikipedia.org/wiki/Greylisting_(email)">approach to spam
+prevention</a> based
+on the tendency of spammers to emit emails without using gateways.
+Spam is typically sent <em>to</em> one or more gateways by malware programs
+which amount to viral MUAs, able to connect to SMTP servers to send
+mail, but not capable of noting response codes and retrying deferred
+deliveries.  Because a large proportion of spam is (or was) sent this
+way, the simple act of deferring emails from unknown (untrusted)
+sources eliminates a large amount of spam.</p>
+<p>If greylisting is being performed then emails will be greylisted–that
+is, deferred–when they are associated with source tuples which are
+not recognized.  Tracking data regarding recognized tuples is stored
+in Redis.  Config data regarding which inbound domains request
+greylisting will be obtained from the database (feature TBD) and
+cached in Redis.</p>
+<p>Please note that in the context of comprehensive inbound email
+filtering, SPF and greylisting have an interesting relationship which
+is not entirely straightforward, and so a special combined, inbound
+multi-policy service is planned, which will combine the features of
+greylisting and SPF checking in a sane fashion, and provide a
+framework for adding further policies.</p>
+</section>
+<section id="spf-policy-enforcement">
+<h2>SPF Policy Enforcement<a class="headerlink" href="#spf-policy-enforcement" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="https://en.wikipedia.org/wiki/Sender_Policy_Framework">Sender Policy
+Framework</a> is a
+complicated and intricate beast, and so I will not try to describe it
+in great detail, but instead link to relevant documentation about what
+SPF is.  Important to note is the fact that SPF provides a framework
+for using DNS as the policy configuration source.</p>
+<p>There is no provision in the RFC for the caching of SPF results in
+order to apply them to other circumstances, such as another email with
+the same inputs.  It is possible that the policy itself, i.e. the TXT
+record containing the SPF policy string, could change between emails.
+As such, this module does not use Redis.</p>
+<p>There is a very widely-used and well-supported implementation of the
+SPF check itself in the Python community called
+<a class="reference external" href="https://pypi.org/project/pyspf/">pyspf</a>, by Stuart Gathman and
+Terence Way.  CHAPPS uses this library to get SPF check results.</p>
+<p>The SPF policy enforcement framework included in CHAPPS makes it
+possible for an operator to specify clearly and flexibly what they
+would like to have happen in response to any of the different SPF
+check results.  The <a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc7208">SPF specification in RFC
+7208</a> does not address
+exactly what response to take in each case, saying that it is a site’s
+prerogative to decide the fates of those emails.</p>
+<p>As of this writing, there is no completed SPF service, though there is
+a completed SPF enforcement handler, which needs only a script wrapper
+to become a service.  However, it seems better to create a unified
+inbound service offering SPF with integrated greylisting, because of
+the odd interaction of greylisting with SPF.</p>
+</section>
+<section id="inbound-multi-policy-service-spf-greylisting">
+<h2>Inbound Multi-policy Service (SPF + Greylisting)<a class="headerlink" href="#inbound-multi-policy-service-spf-greylisting" title="Permalink to this headline">¶</a></h2>
+<p>What does it mean to use both greylisting and SPF?  The trivial answer
+is to pass one filter, and then pass the next filter.  But which comes
+first?</p>
+<p>If one greylists first, a legitimate email may be deferred for ten
+minutes, then pass SPF checking; should emails which pass SPF be
+subject to greylisting?  Conversely, a greylisted email may also come
+from a server which is not allowed by its SPF record, and then be
+deferred only to be denied for an unrelated reason after ten minutes
+of taking up disk space and using up cycles needlessly.</p>
+<p>On the other hand, if one uses an SPF filter first, in a trivial
+fashion, then emails must pass muster on the SPF check first, which
+seems right and proper to me, certainly.  And if greylisting is to be
+used also, then it makes sense for emails which get <code class="docutils literal notranslate"><span class="pre">pass</span></code> from SPF to
+be deferred.  When they are sent again they will of course incur
+another SPF check, and then they will pass greylisting, provided that
+the SPF record they depend on has not changed in the meantime.</p>
+<p>In the realm of SPF, there are a couple of grey areas, no pun
+intended.  SPF can return <code class="docutils literal notranslate"><span class="pre">softfail</span></code> if it isn’t sure enough about the
+check failing to indicate a hard fail.  It can also return <code class="docutils literal notranslate"><span class="pre">none</span></code> or
+<code class="docutils literal notranslate"><span class="pre">neutral</span></code> which are required to be treated the same way.  In such
+cases, the SPF checker is saying that the SPF record either doesn’t
+exist or might as well not exist for all the good it does in this
+case.</p>
+<p>Generally, sites are left to determine whether to accept these emails,
+or possibly tag them and/or quarantine them.  So far, this software
+does not address any of those possible outcomes.  But we can provide
+the interesting option of using greylisting for grey areas.</p>
+<p>By default, CHAPPS SPF policy enforcement service uses greylisting for
+emails which receive <code class="docutils literal notranslate"><span class="pre">softfail</span></code> and <code class="docutils literal notranslate"><span class="pre">none</span></code>/<code class="docutils literal notranslate"><span class="pre">neutral</span></code> responses on
+their SPF checks.  The plan, as it becomes possible to control whether
+greylisting and/or SPF are applied to the inbound email of particular
+domains, is to greylist even emails which receive <code class="docutils literal notranslate"><span class="pre">pass</span></code> from SPF,
+meaning that any “deliverable” email will be deferred unless it is
+already coming from a recognized source (tuple), when both are
+enabled.  (Non-deliverable categories are: <code class="docutils literal notranslate"><span class="pre">fail</span></code>, <code class="docutils literal notranslate"><span class="pre">temperror</span></code>,
+<code class="docutils literal notranslate"><span class="pre">permerror</span></code>.)</p>
+</section>
+<section id="upcoming-features">
+<h2>Upcoming features<a class="headerlink" href="#upcoming-features" title="Permalink to this headline">¶</a></h2>
+<p>A mini-roadmap of upcoming changes:</p>
+<p>minor:</p>
+<ul class="simple">
+<li><p>Switch older code from using the <code class="docutils literal notranslate"><span class="pre">mariadb</span></code> package to using
+<code class="docutils literal notranslate"><span class="pre">mysqlclient</span></code> in order to remove extra dependency</p></li>
+<li><p>SDA Redis keys will have tunable expiry times</p></li>
+<li><p>Look into specifying log facility and level in the config file</p></li>
+</ul>
+<p>major:</p>
+<ul class="simple">
+<li><p>Adapt older database code to use SQLAlchemy rather than a low-level
+package such as <code class="docutils literal notranslate"><span class="pre">mariadb</span></code> or <code class="docutils literal notranslate"><span class="pre">mysqlclient</span></code></p></li>
+<li><p>CHAPPS will also offer a multipolicy-inbound service as described
+above, with SPF+Greylisting.  It will allow for a per-domain
+option indicating whether to apply each of greylisting and SPF.</p></li>
+<li><p>It seems inevitable that other features will also be added.  There
+is some skeletal code in the repo for building email content
+filters, which are not the same as policy delegates.</p></li>
+<li><p>Using Redis makes it possible to send pub/sub messages when
+certain sorts of conditions occur, such as a user making a large
+number of attempts to send mail in a short time while overquota,
+or when a user (repeatedly?) attempts to send email as being from
+a domain that user lacks authorization for.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">CHAPPS</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CHAPPS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-caching-highly-available-postfix-policy-service">the Caching, Highly-Available Postfix Policy Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rest-api-service">REST API Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#outbound-services">Outbound Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#outbound-quota-policy-service">Outbound Quota Policy Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sender-domain-authorization-outbound-multi-policy-service">Sender Domain Authorization (Outbound multi-policy service)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#greylisting-policy-service">Greylisting Policy Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spf-policy-enforcement">SPF Policy Enforcement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inbound-multi-policy-service-spf-greylisting">Inbound Multi-policy Service (SPF + Greylisting)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upcoming-features">Upcoming features</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Caching, Highly-Available Postfix Policy Service</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Caleb Cullen and EasyDNS Technologies Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/README.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
