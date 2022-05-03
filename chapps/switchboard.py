@@ -3,8 +3,11 @@
 Message multiplexing objects and/or routines for CHAPPS
 """
 from chapps.config import config  # the global instance of the config object
-from chapps.policy import OutboundQuotaPolicy, GreylistingPolicy, SenderDomainAuthPolicy
-from chapps.spf_policy import SPFEnforcementPolicy
+from chapps.policy import (
+    OutboundQuotaPolicy,
+    GreylistingPolicy,
+    SenderDomainAuthPolicy,
+)
 from chapps.util import AttrDict, PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
 from chapps.signals import (
@@ -54,7 +57,9 @@ class RequestHandler:
                 try:
                     policy_payload = await reader.readuntil(b"\n\n")
                 except ConnectionResetError:
-                    logger.debug("Postfix said goodbye. Terminating this thread.")
+                    logger.debug(
+                        "Postfix said goodbye. Terminating this thread."
+                    )
                     return
                 except asyncio.IncompleteReadError as e:
                     logger.debug(
@@ -71,8 +76,12 @@ class RequestHandler:
                         )
                         return
                     continue
-                logger.debug(f"Payload received: {policy_payload.decode('utf-8')}")
-                policy_data = pprclass(policy_payload.decode(encoding).split("\n"))
+                logger.debug(
+                    f"Payload received: {policy_payload.decode('utf-8')}"
+                )
+                policy_data = pprclass(
+                    policy_payload.decode(encoding).split("\n")
+                )
                 if policy.approve_policy_request(policy_data):
                     resp = ("action=" + accept + "\n\n").encode()
                     logger.debug(f"  .. Accepted.  Sending {resp}")
@@ -98,18 +107,22 @@ class CascadingPolicyHandler:
         self.pprclass = pprclass
         if not self.policies:
             raise ValueError("A list of policy objects must be provided.")
-        self.config = self.policies[0].config  # all copies of the config are the same
+        self.config = self.policies[
+            0
+        ].config  # all copies of the config are the same
 
     @cached_property
     def listen_address(self):
         return next(
-            (getattr(p.params, "listen_address", None) for p in self.policies), None
+            (getattr(p.params, "listen_address", None) for p in self.policies),
+            None,
         )
 
     @cached_property
     def listen_port(self):
         return next(
-            (getattr(p.params, "listen_port", None) for p in self.policies), None
+            (getattr(p.params, "listen_port", None) for p in self.policies),
+            None,
         )
 
     ### an asynchronous policy handler which cascades through all the policies; fails stop execution
@@ -130,7 +143,9 @@ class CascadingPolicyHandler:
                 try:
                     policy_payload = await reader.readuntil(b"\n\n")
                 except ConnectionResetError:
-                    logger.debug("Postfix said goodbye. Terminating this thread.")
+                    logger.debug(
+                        "Postfix said goodbye. Terminating this thread."
+                    )
                     return
                 except asyncio.IncompleteReadError as e:
                     logger.debug(
@@ -148,30 +163,60 @@ class CascadingPolicyHandler:
                     else:
                         logger.exception("UNEXPECTED ")
                     continue
-                logger.debug(f"Payload received: {policy_payload.decode( 'utf-8' )}")
-                policy_data = pprclass(policy_payload.decode(encoding).split("\n"))
+                logger.debug(
+                    f"Payload received: {policy_payload.decode( 'utf-8' )}"
+                )
+                policy_data = pprclass(
+                    policy_payload.decode(encoding).split("\n")
+                )
                 approval = True
                 for policy in policies:
                     try:
                         if policy.approve_policy_request(policy_data):
-                            resp = "action=" + policy.params.acceptance_message + "\n\n"
-                            logger.info(f"{type(policy).__name__} PASS {policy_data}")
+                            resp = (
+                                "action="
+                                + policy.params.acceptance_message
+                                + "\n\n"
+                            )
+                            logger.info(
+                                f"{type(policy).__name__} PASS {policy_data}"
+                            )
                         else:
-                            resp = "action=" + policy.params.rejection_message + "\n\n"
+                            resp = (
+                                "action="
+                                + policy.params.rejection_message
+                                + "\n\n"
+                            )
                             approval = False
-                            logger.info(f"{type(policy).__name__} FAIL {policy_data}")
+                            logger.info(
+                                f"{type(policy).__name__} FAIL {policy_data}"
+                            )
                     except NullSenderException:
                         if policy.params.null_sender_ok:
-                            resp = "action=" + policy.params.acceptance_message + "\n\n"
-                            logger.info(f"{type(policy).__name__} PASS NS {policy_data}")
+                            resp = (
+                                "action="
+                                + policy.params.acceptance_message
+                                + "\n\n"
+                            )
+                            logger.info(
+                                f"{type(policy).__name__} PASS NS {policy_data}"
+                            )
                         else:
-                            resp = "action=" + policy.params.rejection_message + "\n\n"
+                            resp = (
+                                "action="
+                                + policy.params.rejection_message
+                                + "\n\n"
+                            )
                             approval = False
-                            logger.info(f"{type(policy).__name__} FAIL NS {policy_data}")
+                            logger.info(
+                                f"{type(policy).__name__} FAIL NS {policy_data}"
+                            )
                     except AuthenticationFailureException:
                         resp = "action=" + config.no_user_key_response + "\n\n"
                         approval = False
-                        logger.info(f"{type(policy).__name__} FAIL NA {policy_data}")
+                        logger.info(
+                            f"{type(policy).__name__} FAIL NA {policy_data}"
+                        )
                     except CHAPPSException:
                         logger.exception("During policy evaluation:")
                     if not approval:
@@ -181,8 +226,11 @@ class CascadingPolicyHandler:
                 except asyncio.CancelledError:
                     pass
                 except Exception:
-                    logger.exception(f"Exception raised trying to send {resp.strip()}")
+                    logger.exception(
+                        f"Exception raised trying to send {resp.strip()}"
+                    )
                     return
+
         return handle_policy_request
 
 
