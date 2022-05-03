@@ -20,6 +20,14 @@ from functools import cached_property
 import logging
 import asyncio
 
+try:
+    from chapps.spf_policy import SPFEnforcementPolicy
+except:
+    HAVE_SPF = False
+    pass
+else:
+    HAVE_SPF = True
+
 logger = logging.getLogger(__name__)  # pragma: no cover
 
 
@@ -265,49 +273,59 @@ class SenderDomainAuthHandler(RequestHandler):
         super().__init__(p, pprclass=OutboundPPR)
 
 
-class SPFEnforcementHandler(RequestHandler):
-    def __init__(self, policy=None):
-        p = policy or SPFEnforcementPolicy()
-        super().__init__(p)
+if HAVE_SPF:
 
-    def async_policy_handler(self):
-        """Returns a coroutine which handles requests according to the policy"""
-        ### This override version for SPF enforcement does not assume a yes-or-no response pattern
-        logger.debug(f"Policy handler requested for {type(self.policy).__name__}.")
-        policy = self.policy
-        encoding = config.chapps.payload_encoding
+    class SPFEnforcementHandler(RequestHandler):
+        def __init__(self, policy=None):
+            p = policy or SPFEnforcementPolicy()
+            super().__init__(p)
 
-        async def handle_policy_request(reader, writer):
-            """Handles reading and writing the streams around policy approval messages"""
-            while True:
-                try:
-                    policy_payload = await reader.readuntil(b"\n\n")
-                except ConnectionResetError:
-                    logger.debug("Postfix said goodbye. Terminating this thread.")
-                    return
-                except CallableExhausted as e:
-                    raise e
-                except Exception:
-                    logger.exception("UNEXPECTED ")
-                    if reader.at_eof():
+        def async_policy_handler(self):
+            """Returns a coroutine which handles requests according to the policy"""
+            ### This override version for SPF enforcement does not assume a yes-or-no response pattern
+            logger.debug(
+                f"Policy handler requested for {type(self.policy).__name__}."
+            )
+            policy = self.policy
+            encoding = config.chapps.payload_encoding
+
+            async def handle_policy_request(reader, writer):
+                """Handles reading and writing the streams around policy approval messages"""
+                while True:
+                    try:
+                        policy_payload = await reader.readuntil(b"\n\n")
+                    except ConnectionResetError:
                         logger.debug(
-                            "Postfix said goodbye oddly. Terminating this thread."
+                            "Postfix said goodbye. Terminating this thread."
                         )
                         return
-                    continue
-                logger.debug(f"Payload received: {policy_payload.decode(encoding)}")
-                policy_data = PostfixPolicyRequest(
-                    policy_payload.decode(encoding).split("\n")
-                )
-                action = policy.approve_policy_request(policy_data)
-                resp = ("action=" + action + "\n\n").encode()
-                logger.debug(f"  .. SPF Enforcement sending {resp}")
-                try:
-                    writer.write(resp)
-                except asyncio.CancelledError:  # pragma: no cover
-                    pass
-                except Exception:
-                    logger.exception(f"Exception raised trying to send {resp}")
-                    return
+                    except CallableExhausted as e:
+                        raise e
+                    except Exception:
+                        logger.exception("UNEXPECTED ")
+                        if reader.at_eof():
+                            logger.debug(
+                                "Postfix said goodbye oddly. Terminating this thread."
+                            )
+                            return
+                        continue
+                    logger.debug(
+                        f"Payload received: {policy_payload.decode(encoding)}"
+                    )
+                    policy_data = PostfixPolicyRequest(
+                        policy_payload.decode(encoding).split("\n")
+                    )
+                    action = policy.approve_policy_request(policy_data)
+                    resp = ("action=" + action + "\n\n").encode()
+                    logger.debug(f"  .. SPF Enforcement sending {resp}")
+                    try:
+                        writer.write(resp)
+                    except asyncio.CancelledError:  # pragma: no cover
+                        pass
+                    except Exception:
+                        logger.exception(
+                            f"Exception raised trying to send {resp}"
+                        )
+                        return
 
-        return handle_policy_request
+            return handle_policy_request
