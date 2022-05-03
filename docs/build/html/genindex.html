@@ -106,11 +106,21 @@
 </li>
         <li><a href="chapps.actions.html#chapps.actions.PostfixSPFActions.__init__">(chapps.actions.PostfixSPFActions method)</a>
 </li>
+        <li><a href="chapps.adapter.html#chapps.adapter.PolicyConfigAdapter.__init__">(chapps.adapter.PolicyConfigAdapter method)</a>
+</li>
         <li><a href="chapps.config.html#chapps.config.CHAPPSConfig.__init__">(chapps.config.CHAPPSConfig method)</a>
 </li>
         <li><a href="chapps.logging.html#chapps.logging.LogSetup.__init__">(chapps.logging.LogSetup method)</a>
 </li>
         <li><a href="chapps.outbound.html#chapps.outbound.OutboundPPR.__init__">(chapps.outbound.OutboundPPR method)</a>
+</li>
+        <li><a href="chapps.policy.html#chapps.policy.EmailPolicy.__init__">(chapps.policy.EmailPolicy method)</a>
+</li>
+        <li><a href="chapps.policy.html#chapps.policy.GreylistingPolicy.__init__">(chapps.policy.GreylistingPolicy method)</a>
+</li>
+        <li><a href="chapps.policy.html#chapps.policy.OutboundQuotaPolicy.__init__">(chapps.policy.OutboundQuotaPolicy method)</a>
+</li>
+        <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.__init__">(chapps.policy.SenderDomainAuthPolicy method)</a>
 </li>
         <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.Domain.__init__">(chapps.rest.dbmodels.Domain method)</a>
 </li>
@@ -153,6 +163,12 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="chapps.policy.html#chapps.policy.OutboundQuotaPolicy.acquire_policy_for">acquire_policy_for() (chapps.policy.OutboundQuotaPolicy method)</a>
+
+      <ul>
+        <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.acquire_policy_for">(chapps.policy.SenderDomainAuthPolicy method)</a>
+</li>
+      </ul></li>
       <li><a href="chapps.actions.html#chapps.actions.PostfixActions.action_for">action_for() (chapps.actions.PostfixActions method)</a>
 
       <ul>
@@ -161,18 +177,30 @@
         <li><a href="chapps.actions.html#chapps.actions.PostfixSPFActions.action_for">(chapps.actions.PostfixSPFActions method)</a>
 </li>
       </ul></li>
+      <li><a href="chapps.adapter.html#chapps.adapter.PolicyConfigAdapter.adapter_context">adapter_context() (chapps.adapter.PolicyConfigAdapter method)</a>
+</li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.AssocOperation.add">add (chapps.rest.models.AssocOperation attribute)</a>
 </li>
       <li><a href="chapps.rest.routers.common.html#chapps.rest.routers.common.adjust_associations">adjust_associations() (in module chapps.rest.routers.common)</a>
 </li>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.allowable_ppr">allowable_ppr() (in module chapps.tests.test_policy.conftest)</a>
 </li>
-      <li><a href="chapps.spf_policy.html#chapps.spf_policy.SPFEnforcementPolicy.approve_policy_request">approve_policy_request() (chapps.spf_policy.SPFEnforcementPolicy method)</a>
+      <li><a href="chapps.policy.html#chapps.policy.EmailPolicy.approve_policy_request">approve_policy_request() (chapps.policy.EmailPolicy method)</a>
+
+      <ul>
+        <li><a href="chapps.policy.html#chapps.policy.GreylistingPolicy.approve_policy_request">(chapps.policy.GreylistingPolicy method)</a>
 </li>
-      <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.JoinAssoc.assoc_col">assoc_col (chapps.rest.dbmodels.JoinAssoc property)</a>
+        <li><a href="chapps.policy.html#chapps.policy.OutboundQuotaPolicy.approve_policy_request">(chapps.policy.OutboundQuotaPolicy method)</a>
 </li>
+        <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.approve_policy_request">(chapps.policy.SenderDomainAuthPolicy method)</a>
+</li>
+        <li><a href="chapps.spf_policy.html#chapps.spf_policy.SPFEnforcementPolicy.approve_policy_request">(chapps.spf_policy.SPFEnforcementPolicy method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.JoinAssoc.assoc_col">assoc_col (chapps.rest.dbmodels.JoinAssoc property)</a>
+</li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.AssocOperation">AssocOperation (class in chapps.rest.models)</a>
 </li>
       <li><a href="chapps.switchboard.html#chapps.switchboard.CascadingPolicyHandler.async_policy_handler">async_policy_handler() (chapps.switchboard.CascadingPolicyHandler method)</a>
@@ -197,7 +225,17 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.base_adapter_fixture">base_adapter_fixture() (in module chapps.tests.test_adapter.conftest)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter.basic_quotas">basic_quotas (chapps.adapter.MariaDBQuotaAdapter attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.util.html#chapps.util.AttrDict.boolean_pattern">boolean_pattern (chapps.util.AttrDict attribute)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.bulk_check_policy_cache">bulk_check_policy_cache() (chapps.policy.SenderDomainAuthPolicy method)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.bulk_clear_policy_cache">bulk_clear_policy_cache() (chapps.policy.SenderDomainAuthPolicy method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -224,6 +262,13 @@
 </li>
       </ul></li>
       <li>
+    chapps.adapter
+
+      <ul>
+        <li><a href="chapps.adapter.html#module-chapps.adapter">module</a>
+</li>
+      </ul></li>
+      <li>
     chapps.config
 
       <ul>
@@ -242,6 +287,13 @@
 
       <ul>
         <li><a href="chapps.outbound.html#module-chapps.outbound">module</a>
+</li>
+      </ul></li>
+      <li>
+    chapps.policy
+
+      <ul>
+        <li><a href="chapps.policy.html#module-chapps.policy">module</a>
 </li>
       </ul></li>
       <li>
@@ -389,6 +441,20 @@
 
       <ul>
         <li><a href="chapps.tests.test_adapter.html#module-chapps.tests.test_adapter">module</a>
+</li>
+      </ul></li>
+      <li>
+    chapps.tests.test_adapter.conftest
+
+      <ul>
+        <li><a href="chapps.tests.test_adapter.conftest.html#module-chapps.tests.test_adapter.conftest">module</a>
+</li>
+      </ul></li>
+      <li>
+    chapps.tests.test_adapter.test_adapter
+
+      <ul>
+        <li><a href="chapps.tests.test_adapter.test_adapter.html#module-chapps.tests.test_adapter.test_adapter">module</a>
 </li>
       </ul></li>
       <li>
@@ -555,7 +621,19 @@
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.CHAPPSResponse.Config">CHAPPSResponse.Config (class in chapps.rest.models)</a>
 </li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.check_domain_for_user">check_domain_for_user() (chapps.adapter.MariaDBSenderDomainAuthAdapter method)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.check_domain_query">check_domain_query (chapps.adapter.MariaDBSenderDomainAuthAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.check_email_for_user">check_email_for_user() (chapps.adapter.MariaDBSenderDomainAuthAdapter method)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.check_email_query">check_email_query (chapps.adapter.MariaDBSenderDomainAuthAdapter attribute)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.check_policy_cache">check_policy_cache() (chapps.policy.SenderDomainAuthPolicy method)</a>
+</li>
       <li><a href="chapps.outbound.html#chapps.outbound.OutboundPPR.clear_memoized_routines">clear_memoized_routines() (chapps.outbound.OutboundPPR class method)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.clear_policy_cache">clear_policy_cache() (chapps.policy.SenderDomainAuthPolicy method)</a>
 </li>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.clear_redis">clear_redis() (in module chapps.tests.test_policy.conftest)</a>
 </li>
@@ -563,11 +641,15 @@
 </li>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.clear_redis_sda">clear_redis_sda() (in module chapps.tests.test_policy.conftest)</a>
 </li>
+      <li><a href="chapps.policy.html#chapps.policy.GreylistingPolicy.client_key">client_key() (chapps.policy.GreylistingPolicy method)</a>
+</li>
       <li><a href="chapps.signals.html#chapps.signals.ConfigurationError">ConfigurationError</a>
 </li>
       <li><a href="chapps.rest.dbsession.html#chapps.rest.dbsession.create_db_url">create_db_url() (in module chapps.rest.dbsession)</a>
 </li>
       <li><a href="chapps.rest.routers.common.html#chapps.rest.routers.common.create_item">create_item() (in module chapps.rest.routers.common)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.OutboundQuotaPolicy.current_quota">current_quota() (chapps.policy.OutboundQuotaPolicy method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -575,6 +657,8 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.database_fixture">database_fixture() (in module chapps.tests.test_adapter.conftest)</a>
+</li>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.DB_Base">DB_Base (in module chapps.rest.dbmodels)</a>
 </li>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.DB_Customizations">DB_Customizations (class in chapps.rest.dbmodels)</a>
@@ -593,8 +677,6 @@
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.DeleteResp">DeleteResp (class in chapps.rest.models)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.util.html#chapps.util.VenvDetector.docpath">docpath (chapps.util.VenvDetector property)</a>
 </li>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.Domain">Domain (class in chapps.rest.dbmodels)</a>
@@ -603,9 +685,21 @@
         <li><a href="chapps.rest.models.html#chapps.rest.models.Domain">(class in chapps.rest.models)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.rest.models.html#chapps.rest.models.Domain.Config">Domain.Config (class in chapps.rest.models)</a>
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.Domain.Meta">Domain.Meta (class in chapps.rest.models)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.domain_join_table">domain_join_table (chapps.adapter.MariaDBSenderDomainAuthAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.domain_map_query">domain_map_query (chapps.adapter.MariaDBSenderDomainAuthAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.domain_map_where">domain_map_where (chapps.adapter.MariaDBSenderDomainAuthAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.domain_query">domain_query (chapps.adapter.MariaDBSenderDomainAuthAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.domain_table">domain_table (chapps.adapter.MariaDBSenderDomainAuthAdapter attribute)</a>
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.DomainResp">DomainResp (class in chapps.rest.models)</a>
 </li>
@@ -635,8 +729,14 @@
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.Email.Meta">Email.Meta (class in chapps.rest.models)</a>
 </li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.email_join_table">email_join_table (chapps.adapter.MariaDBSenderDomainAuthAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter.email_table">email_table (chapps.adapter.MariaDBSenderDomainAuthAdapter attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="chapps.policy.html#chapps.policy.EmailPolicy">EmailPolicy (class in chapps.policy)</a>
+</li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.EmailResp">EmailResp (class in chapps.rest.models)</a>
 </li>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.User.emails">emails (chapps.rest.dbmodels.User attribute)</a>
@@ -657,9 +757,17 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.failing_helo_passing_mf">failing_helo_passing_mf() (in module chapps.tests.test_policy.conftest)</a>
 </li>
+      <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.failing_spf_query">failing_spf_query() (in module chapps.tests.test_policy.conftest)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.PolicyConfigAdapter.finalize">finalize() (chapps.adapter.PolicyConfigAdapter method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.failing_spf_query">failing_spf_query() (in module chapps.tests.test_policy.conftest)</a>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.finalizing_mdbqadapter">finalizing_mdbqadapter() (in module chapps.tests.test_adapter.conftest)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.finalizing_mdbsdaadapter">finalizing_mdbsdaadapter() (in module chapps.tests.test_adapter.conftest)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.finalizing_pcadapter">finalizing_pcadapter() (in module chapps.tests.test_adapter.conftest)</a>
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.FloatResp">FloatResp (class in chapps.rest.models)</a>
 </li>
@@ -684,6 +792,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.switchboard.html#chapps.switchboard.GreylistingHandler">GreylistingHandler (class in chapps.switchboard)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.GreylistingPolicy">GreylistingPolicy (class in chapps.policy)</a>
 </li>
       <li><a href="chapps.tests.test_actions.conftest.html#chapps.tests.test_actions.conftest.grl_actions">grl_actions() (in module chapps.tests.test_actions.conftest)</a>
 </li>
@@ -743,6 +853,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter.join_table">join_table (chapps.adapter.MariaDBQuotaAdapter attribute)</a>
+</li>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.JoinAssoc">JoinAssoc (class in chapps.rest.dbmodels)</a>
 </li>
   </ul></td>
@@ -785,6 +897,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.logging.html#chapps.logging.LogSetup.maillog_formatter">maillog_formatter (chapps.logging.LogSetup attribute)</a>
 </li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter">MariaDBQuotaAdapter (class in chapps.adapter)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBSenderDomainAuthAdapter">MariaDBSenderDomainAuthAdapter (class in chapps.adapter)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.mdbqadapter_fixture">mdbqadapter_fixture() (in module chapps.tests.test_adapter.conftest)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.mdbsdaadapter_fixture">mdbsdaadapter_fixture() (in module chapps.tests.test_adapter.conftest)</a>
+</li>
       <li><a href="chapps.outbound.html#chapps.outbound.OutboundPPR.memoized_routines">memoized_routines (chapps.outbound.OutboundPPR attribute)</a>
 </li>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.mock_client_tally">mock_client_tally() (in module chapps.tests.test_policy.conftest)</a>
@@ -792,6 +912,10 @@
       <li><a href="chapps.tests.test_util.conftest.html#chapps.tests.test_util.conftest.mock_config_dict">mock_config_dict() (in module chapps.tests.test_util.conftest)</a>
 </li>
       <li><a href="chapps.tests.test_switchboard.conftest.html#chapps.tests.test_switchboard.conftest.mock_exc_raising_writer">mock_exc_raising_writer() (in module chapps.tests.test_switchboard.conftest)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.mock_mapping">mock_mapping() (in module chapps.tests.test_adapter.conftest)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.mock_mariadb">mock_mariadb() (in module chapps.tests.test_adapter.conftest)</a>
 </li>
       <li><a href="chapps.tests.test_switchboard.conftest.html#chapps.tests.test_switchboard.conftest.mock_reader_factory">mock_reader_factory() (in module chapps.tests.test_switchboard.conftest)</a>
 </li>
@@ -821,11 +945,15 @@
 </li>
         <li><a href="chapps.actions.html#module-chapps.actions">chapps.actions</a>
 </li>
+        <li><a href="chapps.adapter.html#module-chapps.adapter">chapps.adapter</a>
+</li>
         <li><a href="chapps.config.html#module-chapps.config">chapps.config</a>
 </li>
         <li><a href="chapps.logging.html#module-chapps.logging">chapps.logging</a>
 </li>
         <li><a href="chapps.outbound.html#module-chapps.outbound">chapps.outbound</a>
+</li>
+        <li><a href="chapps.policy.html#module-chapps.policy">chapps.policy</a>
 </li>
         <li><a href="chapps.rest.html#module-chapps.rest">chapps.rest</a>
 </li>
@@ -868,6 +996,10 @@
         <li><a href="chapps.tests.test_actions.test_actions.html#module-chapps.tests.test_actions.test_actions">chapps.tests.test_actions.test_actions</a>
 </li>
         <li><a href="chapps.tests.test_adapter.html#module-chapps.tests.test_adapter">chapps.tests.test_adapter</a>
+</li>
+        <li><a href="chapps.tests.test_adapter.conftest.html#module-chapps.tests.test_adapter.conftest">chapps.tests.test_adapter.conftest</a>
+</li>
+        <li><a href="chapps.tests.test_adapter.test_adapter.html#module-chapps.tests.test_adapter.test_adapter">chapps.tests.test_adapter.test_adapter</a>
 </li>
         <li><a href="chapps.tests.test_config.html#module-chapps.tests.test_config">chapps.tests.test_config</a>
 </li>
@@ -996,6 +1128,8 @@
 </li>
       <li><a href="chapps.switchboard.html#chapps.switchboard.OutboundQuotaHandler">OutboundQuotaHandler (class in chapps.switchboard)</a>
 </li>
+      <li><a href="chapps.policy.html#chapps.policy.OutboundQuotaPolicy">OutboundQuotaPolicy (class in chapps.policy)</a>
+</li>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.overquota_ppr">overquota_ppr() (in module chapps.tests.test_policy.conftest)</a>
 </li>
   </ul></td>
@@ -1010,11 +1144,17 @@
 </li>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.permerror_spf_query">permerror_spf_query() (in module chapps.tests.test_policy.conftest)</a>
 </li>
+      <li><a href="chapps.adapter.html#chapps.adapter.PolicyConfigAdapter">PolicyConfigAdapter (class in chapps.adapter)</a>
+</li>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.populate_redis">populate_redis() (in module chapps.tests.test_policy.conftest)</a>
 </li>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.populate_redis_grl">populate_redis_grl() (in module chapps.tests.test_policy.conftest)</a>
 </li>
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.populate_redis_multi">populate_redis_multi() (in module chapps.tests.test_policy.conftest)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.populated_database_fixture">populated_database_fixture() (in module chapps.tests.test_adapter.conftest)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.populated_database_fixture_with_extras">populated_database_fixture_with_extras() (in module chapps.tests.test_adapter.conftest)</a>
 </li>
       <li><a href="chapps.tests.test_actions.conftest.html#chapps.tests.test_actions.conftest.postfix_actions">postfix_actions() (in module chapps.tests.test_actions.conftest)</a>
 </li>
@@ -1024,12 +1164,12 @@
 </li>
       <li><a href="chapps.tests.test_util.conftest.html#chapps.tests.test_util.conftest.postfix_sasl_username">postfix_sasl_username() (in module chapps.tests.test_util.conftest)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.actions.html#chapps.actions.PostfixActions">PostfixActions (class in chapps.actions)</a>
 </li>
       <li><a href="chapps.actions.html#chapps.actions.PostfixGRLActions">PostfixGRLActions (class in chapps.actions)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.actions.html#chapps.actions.PostfixOQPActions">PostfixOQPActions (class in chapps.actions)</a>
 </li>
       <li><a href="chapps.actions.html#chapps.actions.PostfixPassfailActions">PostfixPassfailActions (class in chapps.actions)</a>
@@ -1078,11 +1218,25 @@
         <li><a href="chapps.rest.models.html#chapps.rest.models.Quota">(class in chapps.rest.models)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.rest.models.html#chapps.rest.models.Quota.Config">Quota.Config (class in chapps.rest.models)</a>
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.Quota.Meta">Quota.Meta (class in chapps.rest.models)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter.quota_dict">quota_dict() (chapps.adapter.MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter.quota_for_user">quota_for_user() (chapps.adapter.MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter.quota_map">quota_map() (chapps.adapter.MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter.quota_map_query">quota_map_query (chapps.adapter.MariaDBQuotaAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter.quota_map_where">quota_map_where (chapps.adapter.MariaDBQuotaAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter.quota_query">quota_query (chapps.adapter.MariaDBQuotaAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.MariaDBQuotaAdapter.quota_table">quota_table (chapps.adapter.MariaDBQuotaAdapter attribute)</a>
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.QuotaResp">QuotaResp (class in chapps.rest.models)</a>
 </li>
@@ -1100,9 +1254,23 @@
 </li>
       <li><a href="chapps.util.html#chapps.util.PostfixPolicyRequest.recipients">recipients (chapps.util.PostfixPolicyRequest property)</a>
 </li>
-      <li><a href="chapps.spf_policy.html#chapps.spf_policy.SPFEnforcementPolicy.redis_key_prefix">redis_key_prefix (chapps.spf_policy.SPFEnforcementPolicy attribute)</a>
+      <li><a href="chapps.policy.html#chapps.policy.EmailPolicy.redis_key_prefix">redis_key_prefix (chapps.policy.EmailPolicy attribute)</a>
+
+      <ul>
+        <li><a href="chapps.policy.html#chapps.policy.GreylistingPolicy.redis_key_prefix">(chapps.policy.GreylistingPolicy attribute)</a>
+</li>
+        <li><a href="chapps.policy.html#chapps.policy.OutboundQuotaPolicy.redis_key_prefix">(chapps.policy.OutboundQuotaPolicy attribute)</a>
+</li>
+        <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.redis_key_prefix">(chapps.policy.SenderDomainAuthPolicy attribute)</a>
+</li>
+        <li><a href="chapps.spf_policy.html#chapps.spf_policy.SPFEnforcementPolicy.redis_key_prefix">(chapps.spf_policy.SPFEnforcementPolicy attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="chapps.policy.html#chapps.policy.EmailPolicy.rediskey">rediskey() (chapps.policy.EmailPolicy static method)</a>
 </li>
       <li><a href="chapps.rest.routers.live.html#chapps.rest.routers.live.refresh_config_on_disk">refresh_config_on_disk() (in module chapps.rest.routers.live)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.OutboundQuotaPolicy.refresh_policy_cache">refresh_policy_cache() (chapps.policy.OutboundQuotaPolicy method)</a>
 </li>
       <li><a href="chapps.rest.routers.live.html#chapps.rest.routers.live.refresh_quota_policy_for_user">refresh_quota_policy_for_user() (in module chapps.rest.routers.live)</a>
 </li>
@@ -1116,7 +1284,11 @@
 </li>
       <li><a href="chapps.switchboard.html#chapps.switchboard.RequestHandler">RequestHandler (class in chapps.switchboard)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.rest.routers.live.html#chapps.rest.routers.live.reset_live_quota_for_user">reset_live_quota_for_user() (in module chapps.rest.routers.live)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.OutboundQuotaPolicy.reset_quota">reset_quota() (chapps.policy.OutboundQuotaPolicy method)</a>
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.CHAPPSResponse.response">response (chapps.rest.models.CHAPPSResponse attribute)</a>
 
@@ -1192,17 +1364,23 @@
 </li>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.DB_Customizations.select_by_name">select_by_name() (chapps.rest.dbmodels.DB_Customizations method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.DB_Customizations.select_by_pattern">select_by_pattern() (chapps.rest.dbmodels.DB_Customizations method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.JoinAssoc.select_ids_by_source_id">select_ids_by_source_id() (chapps.rest.dbmodels.JoinAssoc method)</a>
 </li>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.DB_Customizations.select_names_by_id">select_names_by_id() (chapps.rest.dbmodels.DB_Customizations method)</a>
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.CHAPPSResponse.send">send() (chapps.rest.models.CHAPPSResponse class method)</a>
 </li>
+      <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.sender_domain_key">sender_domain_key() (chapps.policy.SenderDomainAuthPolicy method)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy.sender_email_key">sender_email_key() (chapps.policy.SenderDomainAuthPolicy method)</a>
+</li>
       <li><a href="chapps.switchboard.html#chapps.switchboard.SenderDomainAuthHandler">SenderDomainAuthHandler (class in chapps.switchboard)</a>
+</li>
+      <li><a href="chapps.policy.html#chapps.policy.SenderDomainAuthPolicy">SenderDomainAuthPolicy (class in chapps.policy)</a>
 </li>
       <li><a href="chapps.config.html#chapps.config.CHAPPSConfig.setup_config">setup_config() (chapps.config.CHAPPSConfig static method)</a>
 </li>
@@ -1237,6 +1415,8 @@
       <li><a href="chapps.tests.test_policy.conftest.html#chapps.tests.test_policy.conftest.temperror_spf_query">temperror_spf_query() (in module chapps.tests.test_policy.conftest)</a>
 </li>
       <li><a href="chapps.tests.test_actions.test_actions.html#chapps.tests.test_actions.test_actions.Test_PostfixActions.test_action_for_raises_not_implemented_error">test_action_for_raises_not_implemented_error() (chapps.tests.test_actions.test_actions.Test_PostfixActions method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_PolicyConfigAdapter.test_adapter_superclass">test_adapter_superclass() (chapps.tests.test_adapter.test_adapter.Test_PolicyConfigAdapter method)</a>
 </li>
       <li><a href="chapps.tests.test_policy.test_spf_policy.html#chapps.tests.test_policy.test_spf_policy.Test_SPFEnforcementPolicy.test_all_spf_query_result_permutations">test_all_spf_query_result_permutations() (chapps.tests.test_policy.test_spf_policy.Test_SPFEnforcementPolicy method)</a>
 </li>
@@ -1280,6 +1460,14 @@
 </li>
       <li><a href="chapps.tests.test_config.test_config.html#chapps.tests.test_config.test_config.Test_Config.test_chapps_config_defaults">test_chapps_config_defaults() (chapps.tests.test_config.test_config.Test_Config method)</a>
 </li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter.test_check_domain_for_nonexistent_user">test_check_domain_for_nonexistent_user() (chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter.test_check_domain_for_unauth_user">test_check_domain_for_unauth_user() (chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter.test_check_domain_for_user">test_check_domain_for_user() (chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter.test_check_email_for_user">test_check_email_for_user() (chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter method)</a>
+</li>
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_client_key">test_client_key() (chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base method)</a>
 </li>
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_client_tally_updated_when_unrecognized_tuple_passes">test_client_tally_updated_when_unrecognized_tuple_passes() (chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation method)</a>
@@ -1293,6 +1481,8 @@
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_connect_to_redis">test_connect_to_redis() (chapps.tests.test_policy.test_policy.Test_EmailPolicy method)</a>
 </li>
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_connect_to_sentinel">test_connect_to_sentinel() (chapps.tests.test_policy.test_policy.Test_EmailPolicy method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_PolicyConfigAdapter.test_create_user_table">test_create_user_table() (chapps.tests.test_adapter.test_adapter.Test_PolicyConfigAdapter method)</a>
 </li>
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_current_quota">test_current_quota() (chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy method)</a>
 </li>
@@ -1316,6 +1506,8 @@
 </li>
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_EmailPolicy">Test_EmailPolicy (class in chapps.tests.test_policy.test_policy)</a>
 </li>
+      <li><a href="chapps.tests.test_adapter.conftest.html#chapps.tests.test_adapter.conftest.test_emails">test_emails() (in module chapps.tests.test_adapter.conftest)</a>
+</li>
       <li><a href="chapps.tests.test_switchboard.test_switchboard.html#chapps.tests.test_switchboard.test_switchboard.Test_RequestHandler.test_exception_handling">test_exception_handling() (chapps.tests.test_switchboard.test_switchboard.Test_RequestHandler method)</a>
 </li>
       <li><a href="chapps.tests.test_actions.test_actions.html#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_fail_produces_reject">test_fail_produces_reject() (chapps.tests.test_actions.test_actions.Test_PostfixSPFActions method)</a>
@@ -1327,6 +1519,8 @@
 </li>
       </ul></li>
       <li><a href="chapps.tests.test_policy.test_spf_policy.html#chapps.tests.test_policy.test_spf_policy.Test_SPFEnforcementPolicy.test_failing_emails_get_reject">test_failing_emails_get_reject() (chapps.tests.test_policy.test_spf_policy.Test_SPFEnforcementPolicy method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_finalize">test_finalize() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
 </li>
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_first_encounter_false">test_first_encounter_false() (chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation method)</a>
 </li>
@@ -1376,20 +1570,32 @@
 </li>
       <li><a href="chapps.tests.test_switchboard.test_switchboard.html#chapps.tests.test_switchboard.test_switchboard.Test_SenderDomainAuthHandler.test_handle_unauth_user">test_handle_unauth_user() (chapps.tests.test_switchboard.test_switchboard.Test_SenderDomainAuthHandler method)</a>
 </li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter.test_initialize_tables">test_initialize_tables() (chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_initialize_tables_default">test_initialize_tables_default() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_initialize_tables_with_quotas">test_initialize_tables_with_quotas() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
+</li>
       <li><a href="chapps.tests.test_util.test_util.html#chapps.tests.test_util.test_util.Test_PostfixPolicyRequest.test_instantiate_ppr">test_instantiate_ppr() (chapps.tests.test_util.test_util.Test_PostfixPolicyRequest method)</a>
 </li>
       <li><a href="chapps.tests.test_util.test_util.html#chapps.tests.test_util.test_util.Test_PostfixPolicyRequest.test_iterable">test_iterable() (chapps.tests.test_util.test_util.Test_PostfixPolicyRequest method)</a>
 </li>
       <li><a href="chapps.tests.test_util.test_util.html#chapps.tests.test_util.test_util.Test_PostfixPolicyRequest.test_len">test_len() (chapps.tests.test_util.test_util.Test_PostfixPolicyRequest method)</a>
 </li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter">Test_MariaDBQuotaAdapter (class in chapps.tests.test_adapter.test_adapter)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBSenderDomainAuthAdapter">Test_MariaDBSenderDomainAuthAdapter (class in chapps.tests.test_adapter.test_adapter)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_MDBQA_quota_dict">test_MDBQA_quota_dict() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.tests.test_config.test_config.html#chapps.tests.test_config.test_config.Test_Config.test_mock_config_file">test_mock_config_file() (chapps.tests.test_config.test_config.Test_Config method)</a>
 </li>
       <li><a href="chapps.tests.test_actions.test_actions.html#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_neutral_produces_greylist">test_neutral_produces_greylist() (chapps.tests.test_actions.test_actions.Test_PostfixSPFActions method)</a>
 </li>
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_new_tuple_client_tally_present">test_new_tuple_client_tally_present() (chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.tests.test_policy.test_spf_policy.html#chapps.tests.test_policy.test_spf_policy.Test_SPFEnforcementPolicy.test_no_helo_passing_mf_gets_prepend">test_no_helo_passing_mf_gets_prepend() (chapps.tests.test_policy.test_spf_policy.Test_SPFEnforcementPolicy method)</a>
 </li>
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_no_keys_yet_exist">test_no_keys_yet_exist() (chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data method)</a>
@@ -1430,6 +1636,8 @@
 </li>
       <li><a href="chapps.tests.test_policy.test_policy.html#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_policy_request_instance_cache">test_policy_request_instance_cache() (chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base method)</a>
 </li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_PolicyConfigAdapter">Test_PolicyConfigAdapter (class in chapps.tests.test_adapter.test_adapter)</a>
+</li>
       <li><a href="chapps.tests.test_actions.test_actions.html#chapps.tests.test_actions.test_actions.Test_PostfixActions">Test_PostfixActions (class in chapps.tests.test_actions.test_actions)</a>
 </li>
       <li><a href="chapps.tests.test_actions.test_actions.html#chapps.tests.test_actions.test_actions.Test_PostfixGRLActions">Test_PostfixGRLActions (class in chapps.tests.test_actions.test_actions)</a>
@@ -1439,6 +1647,20 @@
       <li><a href="chapps.tests.test_util.test_util.html#chapps.tests.test_util.test_util.Test_PostfixPolicyRequest">Test_PostfixPolicyRequest (class in chapps.tests.test_util.test_util)</a>
 </li>
       <li><a href="chapps.tests.test_actions.test_actions.html#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions">Test_PostfixSPFActions (class in chapps.tests.test_actions.test_actions)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_quota_dump">test_quota_dump() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_quota_for_nonexistent_user">test_quota_for_nonexistent_user() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_quota_for_user">test_quota_for_user() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_quota_map">test_quota_map() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_quota_map_noncallable">test_quota_map_noncallable() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_quota_search">test_quota_search() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
+</li>
+      <li><a href="chapps.tests.test_adapter.test_adapter.html#chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter.test_quota_search_accuracy">test_quota_search_accuracy() (chapps.tests.test_adapter.test_adapter.Test_MariaDBQuotaAdapter method)</a>
 </li>
       <li><a href="chapps.tests.test_util.test_util.html#chapps.tests.test_util.test_util.Test_PostfixPolicyRequest.test_recipients">test_recipients() (chapps.tests.test_util.test_util.Test_PostfixPolicyRequest method)</a>
 </li>
@@ -1536,6 +1758,8 @@
 </li>
       <li><a href="chapps.signals.html#chapps.signals.TooManyAtsException">TooManyAtsException</a>
 </li>
+      <li><a href="chapps.policy.html#chapps.policy.GreylistingPolicy.tuple_key">tuple_key() (chapps.policy.GreylistingPolicy method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1560,10 +1784,10 @@
 </li>
       <li><a href="chapps.rest.routers.common.html#chapps.rest.routers.common.update_item">update_item() (in module chapps.rest.routers.common)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.outbound.html#chapps.outbound.OutboundPPR.user">user (chapps.outbound.OutboundPPR property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.User">User (class in chapps.rest.dbmodels)</a>
 
       <ul>
@@ -1573,6 +1797,10 @@
       <li><a href="chapps.rest.models.html#chapps.rest.models.User.Config">User.Config (class in chapps.rest.models)</a>
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.User.Meta">User.Meta (class in chapps.rest.models)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.PolicyConfigAdapter.user_table">user_table (chapps.adapter.PolicyConfigAdapter attribute)</a>
+</li>
+      <li><a href="chapps.adapter.html#chapps.adapter.PolicyConfigAdapter.userid_query">userid_query (chapps.adapter.PolicyConfigAdapter attribute)</a>
 </li>
       <li><a href="chapps.rest.models.html#chapps.rest.models.UserResp">UserResp (class in chapps.rest.models)</a>
 </li>

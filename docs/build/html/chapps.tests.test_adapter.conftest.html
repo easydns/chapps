@@ -84,8 +84,70 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="chapps-tests-test-adapter-conftest-module">
-<h1>chapps.tests.test_adapter.conftest module<a class="headerlink" href="#chapps-tests-test-adapter-conftest-module" title="Permalink to this headline"></a></h1>
+  <section id="module-chapps.tests.test_adapter.conftest">
+<span id="chapps-tests-test-adapter-conftest-module"></span><h1>chapps.tests.test_adapter.conftest module<a class="headerlink" href="#module-chapps.tests.test_adapter.conftest" title="Permalink to this headline"></a></h1>
+<p>Fixtures for testing CHAPPS adapters module</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.base_adapter_fixture">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">base_adapter_fixture</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.base_adapter_fixture" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.database_fixture">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">database_fixture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">finalizing_pcadapter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.database_fixture" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.finalizing_mdbqadapter">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">finalizing_mdbqadapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mdbqadapter_fixture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.finalizing_mdbqadapter" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.finalizing_mdbsdaadapter">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">finalizing_mdbsdaadapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mdbsdaadapter_fixture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.finalizing_mdbsdaadapter" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.finalizing_pcadapter">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">finalizing_pcadapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_adapter_fixture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.finalizing_pcadapter" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.mdbqadapter_fixture">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">mdbqadapter_fixture</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.mdbqadapter_fixture" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.mdbsdaadapter_fixture">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">mdbsdaadapter_fixture</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.mdbsdaadapter_fixture" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.mock_mapping">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">mock_mapping</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.mock_mapping" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.mock_mariadb">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">mock_mariadb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.mock_mariadb" title="Permalink to this definition"></a></dt>
+<dd><p>Patch the mariadb module’s connect function with a mock</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.populated_database_fixture">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">populated_database_fixture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database_fixture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.populated_database_fixture" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.populated_database_fixture_with_extras">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">populated_database_fixture_with_extras</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database_fixture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.populated_database_fixture_with_extras" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="chapps.tests.test_adapter.conftest.test_emails">
+<span class="sig-prename descclassname"><span class="pre">chapps.tests.test_adapter.conftest.</span></span><span class="sig-name descname"><span class="pre">test_emails</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_adapter.conftest.test_emails" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 
 

@@ -39,7 +39,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="README.html">CHAPPS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">the Caching, Highly-Available Postfix Policy Service</a></li>
 <li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">CHAPPS Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">chapps</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="chapps.html">chapps package</a><ul class="current">
@@ -94,9 +94,9 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>assoc</strong> (<em>List</em><em>[</em><a class="reference internal" href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.JoinAssoc" title="chapps.rest.dbmodels.JoinAssoc"><em>chapps.rest.dbmodels.JoinAssoc</em></a><em>]</em>) – </p></li>
+<li><p><strong>assoc</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><em>List</em></a><em>[</em><a class="reference internal" href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.JoinAssoc" title="chapps.rest.dbmodels.JoinAssoc"><em>chapps.rest.dbmodels.JoinAssoc</em></a><em>]</em>) – </p></li>
 <li><p><strong>assoc_op</strong> (<a class="reference internal" href="chapps.rest.models.html#chapps.rest.models.AssocOperation" title="chapps.rest.models.AssocOperation"><em>chapps.rest.models.AssocOperation</em></a>) – </p></li>
-<li><p><strong>params</strong> (<em>Optional</em><em>[</em><em>dict</em><em>]</em>) – </p></li>
+<li><p><strong>params</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>]</em>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -122,8 +122,8 @@ either of two eventualities:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>exception_message</strong> (<em>str</em>) – </p></li>
-<li><p><strong>empty_set_message</strong> (<em>str</em>) – </p></li>
+<li><p><strong>exception_message</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – </p></li>
+<li><p><strong>empty_set_message</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -171,9 +171,9 @@ since that is what the dependency will yield.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>skip</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
-<li><p><strong>q</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>skip</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – </p></li>
+<li><p><strong>limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – </p></li>
+<li><p><strong>q</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -184,7 +184,7 @@ since that is what the dependency will yield.</p>
 <span class="sig-prename descclassname"><span class="pre">chapps.rest.routers.common.</span></span><span class="sig-name descname"><span class="pre">load_model_with_assoc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">engine=Engine(mysql://chapps_test:***&#64;localhost:3306/chapps_test)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.routers.common.load_model_with_assoc" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>assoc</strong> (<em>List</em><em>[</em><a class="reference internal" href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.JoinAssoc" title="chapps.rest.dbmodels.JoinAssoc"><em>chapps.rest.dbmodels.JoinAssoc</em></a><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>assoc</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><em>List</em></a><em>[</em><a class="reference internal" href="chapps.rest.dbmodels.html#chapps.rest.dbmodels.JoinAssoc" title="chapps.rest.dbmodels.JoinAssoc"><em>chapps.rest.dbmodels.JoinAssoc</em></a><em>]</em>) – </p>
 </dd>
 </dl>
 </dd></dl>

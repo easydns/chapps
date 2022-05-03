@@ -39,7 +39,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="README.html">CHAPPS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">the Caching, Highly-Available Postfix Policy Service</a></li>
 <li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">CHAPPS Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">chapps</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="chapps.html">chapps package</a><ul class="current">
@@ -92,13 +92,38 @@
              
   <section id="module-chapps.config">
 <span id="chapps-config-module"></span><h1>chapps.config module<a class="headerlink" href="#module-chapps.config" title="Permalink to this headline"></a></h1>
-<p>chapps.config</p>
-<p>An easy way to encapsulate library-wide defaults and settings for CHAPPS</p>
+<section id="config">
+<h2>Config<a class="headerlink" href="#config" title="Permalink to this headline"></a></h2>
+<p>CHAPPS configures itself at the library level.  When it is first launched,
+the library will create a config file for itself if it does not find one
+at its default config path, <code class="docutils literal notranslate"><span class="pre">/etc/chapps/chapps.ini</span></code>, or the value of
+the environment variable <code class="docutils literal notranslate"><span class="pre">CHAPPS_CONFIG</span></code> if it is set.  When it does,
+default settings for all available submodules will be produced.</p>
+<p>Any instance of CHAPPS requires the general CHAPPS settings, adapter settings,
+and the Redis settings.  These control basic features of CHAPPS and tell it
+how to access its brains.</p>
+<p>Each service script most likely runs a unique policy handler.  If only one
+service is being used, only the settings for the policies of that handler will
+be needed, plus the ones mentioned above.</p>
+<p>Policy handlers (from <a class="reference internal" href="chapps.switchboard.html#module-chapps.switchboard" title="chapps.switchboard"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chapps.switchboard</span></code></a>) take their listener
+configuration from that of their related policy.  Each may each be configured
+to use separate listening addresses and ports, so that they may run
+simultaneously on the same server.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For multi-policy handlers, the settings used are taken from the first
+handler found to have config elements named <code class="docutils literal notranslate"><span class="pre">listen_address</span></code> and
+<code class="docutils literal notranslate"><span class="pre">listen_port</span></code>.  It is recommended to configure those elements only on one
+active policy, or to keep them in sync on all policies which are handled
+together.</p>
+</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.config.</span></span><span class="sig-name descname"><span class="pre">CHAPPSConfig</span></span><a class="headerlink" href="#chapps.config.CHAPPSConfig" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Class wrapper around config logic makes testing easier</p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The configuation object</p>
+<p>Mostly a wrapper around <a class="reference external" href="https://docs.python.org/3/library/configparser.html#module-configparser" title="(in Python v3.10)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">configparser</span></code></a>, with the most
+commonly used portions wrapped in <a class="reference internal" href="chapps.util.html#chapps.util.AttrDict" title="chapps.util.AttrDict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chapps.util.AttrDict</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.config.CHAPPSConfig.__init__" title="Permalink to this definition"></a></dt>
@@ -113,13 +138,30 @@
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig.setup_config">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">setup_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.config.CHAPPSConfig.setup_config" title="Permalink to this definition"></a></dt>
 <dd><p>Setup default config pattern on the parser passed in</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cp</strong> (<a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser" title="(in Python v3.10)"><em>configparser.ConfigParser</em></a>) – a
+<a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">configparser.ConfigParser</span></code></a> instance to establish the
+default config upon.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser" title="(in Python v3.10)">configparser.ConfigParser</a></p>
+</dd>
+</dl>
+<p>This routine establishes the default configuration.  It returns
+the same object which was passed to it.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig.what_config_file">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">what_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.config.CHAPPSConfig.what_config_file" title="Permalink to this definition"></a></dt>
-<dd><dl class="simple">
-<dt>Determine what config file to read.  This is to allow for easier</dt><dd><p>addition of a command-line option.</p>
+<dd><p>Determine what config file to read.</p>
+<p>This is to allow for easier addition of a command-line option.
+Also encapsulates search for possible file pointed to by the
+environment setting <code class="docutils literal notranslate"><span class="pre">CHAPPS_CONFIG</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)">pathlib.Path</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -139,6 +181,7 @@ object pointing at the config file</p>
 
 </dd></dl>
 
+</section>
 </section>
 
 
