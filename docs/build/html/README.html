@@ -1,50 +1,110 @@
-
 <!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-    <title>CHAPPS &#8212; CHAPPS 0.4.5 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>the Caching, Highly-Available Postfix Policy Service &mdash; CHAPPS 0.4.5 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Caching, Highly-Available Postfix Policy Service" href="index.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+    <link rel="next" title="CHAPPS Installation" href="INSTALLATION.html" />
+    <link rel="prev" title="Caching, Highly-Available Postfix Policy Service" href="index.html" /> 
+</head>
 
-  </head><body>
-  
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> CHAPPS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">the Caching, Highly-Available Postfix Policy Service</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-overview">Installation Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#redis-configuration">Redis configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging">Logging</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rest-api-service">REST API Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#outbound-services">Outbound Services</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setting-the-user-key">Setting the user key</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#outbound-quota-policy-service">Outbound Quota Policy Service</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#outbound-quota-policy-configuration-database-setup">Outbound Quota Policy Configuration: Database Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quota-policy-settings-non-database">Quota policy settings (non-database)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#counting-all-outbound-messages-against-the-quota">Counting all outbound messages against the quota</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#outbound-quota-grace-margins">Outbound quota grace margins</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sender-domain-authorization-outbound-multi-policy-service">Sender Domain Authorization (Outbound multi-policy service)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#whole-email-matching">Whole-Email Matching</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#greylisting-policy-service">Greylisting Policy Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spf-policy-enforcement">SPF Policy Enforcement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inbound-multi-policy-service-spf-greylisting">Inbound Multi-policy Service (SPF + Greylisting)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upcoming-features">Upcoming features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">CHAPPS Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">chapps</a></li>
+</ul>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          
+        </div>
+      </div>
+    </nav>
 
-          <div class="body" role="main">
-            
-  <section id="chapps">
-<h1>CHAPPS<a class="headerlink" href="#chapps" title="Permalink to this headline">¶</a></h1>
-<section id="the-caching-highly-available-postfix-policy-service">
-<h2>the Caching, Highly-Available Postfix Policy Service<a class="headerlink" href="#the-caching-highly-available-postfix-policy-service" title="Permalink to this headline">¶</a></h2>
-<section id="requires-python-3-8-10">
-<h3>requires Python 3.8.10+<a class="headerlink" href="#requires-python-3-8-10" title="Permalink to this headline">¶</a></h3>
-</section>
-<section id="makes-use-of-redis-eventually-sentinel-and-a-relational-database-mariadb">
-<h3>makes use of Redis, (eventually Sentinel) and a relational database (MariaDB)<a class="headerlink" href="#makes-use-of-redis-eventually-sentinel-and-a-relational-database-mariadb" title="Permalink to this headline">¶</a></h3>
-</section>
-</section>
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CHAPPS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>the Caching, Highly-Available Postfix Policy Service</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/README.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-caching-highly-available-postfix-policy-service">
+<h1>the Caching, Highly-Available Postfix Policy Service<a class="headerlink" href="#the-caching-highly-available-postfix-policy-service" title="Permalink to this headline"></a></h1>
+<p>| <strong>requires Python 3.8.10+</strong>
+| <strong>makes use of Redis (or Sentinel) and a relational database (MariaDB)</strong></p>
 <section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline"></a></h2>
 <p>There is a need for a highly-available, high-performance, concurrent,
 clusterable solution for handling various aspects of email policy.
 Postfix farms out the job of policy decisions to a delegate over a
@@ -72,7 +132,7 @@ use Redis to cache data and keep track of email quotas, etc.</p>
 policy might be implemented in the future.</p>
 </section>
 <section id="configuration">
-<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline"></a></h2>
 <p>The library will create a config file for itself if it does not find one
 at its default config path, <code class="docutils literal notranslate"><span class="pre">/etc/chapps/chapps.ini</span></code>, or the value of
 the environment variable <code class="docutils literal notranslate"><span class="pre">CHAPPS_CONFIG</span></code> if it is set.  Note that
@@ -96,8 +156,8 @@ down to focus just on that particular service.</p>
 encouraged.  If you wish to keep the debug logs in their special
 destination, ensure that you create a log-rotation profile for it.</p>
 </section>
-<section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<section id="installation-overview">
+<h2>Installation Overview<a class="headerlink" href="#installation-overview" title="Permalink to this headline"></a></h2>
 <p>Please ensure that MariaDB Connector/C is installed before attempting
 installation of this package.  The Debian packages recommended are:</p>
 <ul class="simple">
@@ -142,9 +202,9 @@ database and create the tables.  It uses <code class="docutils literal notransla
 contain any kind of data deletion, so it should be safe to use at any
 time.</p>
 <p>For more information about installing, see the
-<span class="xref myst">INSTALLATION</span> file.</p>
+<a class="reference internal" href="INSTALLATION.html"><span class="doc std std-doc">INSTALLATION</span></a> file.</p>
 <section id="redis-configuration">
-<h3>Redis configuration<a class="headerlink" href="#redis-configuration" title="Permalink to this headline">¶</a></h3>
+<h3>Redis configuration<a class="headerlink" href="#redis-configuration" title="Permalink to this headline"></a></h3>
 <p>Redis is used to store the real-time state of every active user’s
 outbound quota, sender-domain authorization status cache, and also to
 keep track of greylisting status for greylisted emails.  An active
@@ -169,7 +229,7 @@ Redis, the inbound load may be lighter than the outbound load,
 depending on which things happen more at a particular site.</p>
 </section>
 <section id="logging">
-<h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
+<h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline"></a></h3>
 <p>At this time, CHAPPS uses <strong>syslog</strong>, and transmits logs on the
 <code class="docutils literal notranslate"><span class="pre">local0</span></code> facility.  CHAPPS sends a fair amount of debug information at
 the DEBUG level.  Right now, the application’s facility and level may
@@ -189,7 +249,7 @@ it is set in one place, at the top of <code class="docutils literal notranslate"
 </section>
 </section>
 <section id="rest-api-service">
-<h2>REST API Service<a class="headerlink" href="#rest-api-service" title="Permalink to this headline">¶</a></h2>
+<h2>REST API Service<a class="headerlink" href="#rest-api-service" title="Permalink to this headline"></a></h2>
 <p>Starting with version 0.4.0, a REST API service is included, based on
 FastAPI, and using SQLAlchemy with the MySQLclient backend.  A service
 template for the API is provided, as well as a socket unit and an
@@ -213,7 +273,7 @@ server – and in fact probably <em>should</em> not run on the same server –
 with the policy service.</p>
 </section>
 <section id="outbound-services">
-<h2>Outbound Services<a class="headerlink" href="#outbound-services" title="Permalink to this headline">¶</a></h2>
+<h2>Outbound Services<a class="headerlink" href="#outbound-services" title="Permalink to this headline"></a></h2>
 <p>Policy services can be divided into those which work on outbound mail,
 and those which work on inbound mail.  Some, possibly, might be
 applied to either flow, but none such are part of this project yet.
@@ -227,7 +287,7 @@ to the policy service.</p>
 policy data they would like to use to identify users, the
 configuration allows the user to specify the first field to check.</p>
 <section id="setting-the-user-key">
-<h3>Setting the user key<a class="headerlink" href="#setting-the-user-key" title="Permalink to this headline">¶</a></h3>
+<h3>Setting the user key<a class="headerlink" href="#setting-the-user-key" title="Permalink to this headline"></a></h3>
 <p>Postfix submits a fairly large packet of data on each policy
 delegation request.  One prominent element of this data is the MAIL
 FROM address, which is labelled as <code class="docutils literal notranslate"><span class="pre">sender</span></code>.  This is perhaps the
@@ -272,7 +332,7 @@ unique string will work.</p>
 </section>
 </section>
 <section id="outbound-quota-policy-service">
-<h2>Outbound Quota Policy Service<a class="headerlink" href="#outbound-quota-policy-service" title="Permalink to this headline">¶</a></h2>
+<h2>Outbound Quota Policy Service<a class="headerlink" href="#outbound-quota-policy-service" title="Permalink to this headline"></a></h2>
 <p>The service is designed to run locally side-by-side with the Postfix
 server, and connect to a Redis instance, optionally via Sentinel.  As
 such it listens on 127.0.0.1, and on port 10225 by default, though
@@ -300,7 +360,7 @@ are to be found in the <code class="docutils literal notranslate"><span class="p
 current wisdom, Postfix’s own <code class="docutils literal notranslate"><span class="pre">spawn</span></code> functionality from <code class="docutils literal notranslate"><span class="pre">master.cf</span></code>
 should be avoided.)</p>
 <section id="outbound-quota-policy-configuration-database-setup">
-<h3>Outbound Quota Policy Configuration: Database Setup<a class="headerlink" href="#outbound-quota-policy-configuration-database-setup" title="Permalink to this headline">¶</a></h3>
+<h3>Outbound Quota Policy Configuration: Database Setup<a class="headerlink" href="#outbound-quota-policy-configuration-database-setup" title="Permalink to this headline"></a></h3>
 <p>At present, the service expects to obtain quota policy enforcement
 parameters from a relational database (MariaDB).  The
 framework has been designed to make it easy to write adapters to any
@@ -356,9 +416,9 @@ Routes for doing so are provided by the REST API.</p>
 outbound email.</p>
 </section>
 <section id="quota-policy-settings-non-database">
-<h3>Quota policy settings (non-database)<a class="headerlink" href="#quota-policy-settings-non-database" title="Permalink to this headline">¶</a></h3>
+<h3>Quota policy settings (non-database)<a class="headerlink" href="#quota-policy-settings-non-database" title="Permalink to this headline"></a></h3>
 <section id="counting-all-outbound-messages-against-the-quota">
-<h4>Counting all outbound messages against the quota<a class="headerlink" href="#counting-all-outbound-messages-against-the-quota" title="Permalink to this headline">¶</a></h4>
+<h4>Counting all outbound messages against the quota<a class="headerlink" href="#counting-all-outbound-messages-against-the-quota" title="Permalink to this headline"></a></h4>
 <p>Some quota systems count any email as a single email regardless of the
 number of recipients included in the envelope recipients list
 (RCPT TO).  This software can operate that way, but it can also
@@ -368,7 +428,7 @@ True will cause CHAPPS OutboundQuotaPolicy to count a sent email for
 each recipient.</p>
 </section>
 <section id="outbound-quota-grace-margins">
-<h4>Outbound quota grace margins<a class="headerlink" href="#outbound-quota-grace-margins" title="Permalink to this headline">¶</a></h4>
+<h4>Outbound quota grace margins<a class="headerlink" href="#outbound-quota-grace-margins" title="Permalink to this headline"></a></h4>
 <p>There is a <code class="docutils literal notranslate"><span class="pre">margin</span></code> setting which will allow for some fuzziness over
 the established quota for multi-recipient emails, allowing a customer
 to go over their quota on a single (multi-recipient) email as long as
@@ -384,7 +444,7 @@ a percentage, and it divided by 100.0 is used as the ratio.</p>
 </section>
 </section>
 <section id="sender-domain-authorization-outbound-multi-policy-service">
-<h2>Sender Domain Authorization (Outbound multi-policy service)<a class="headerlink" href="#sender-domain-authorization-outbound-multi-policy-service" title="Permalink to this headline">¶</a></h2>
+<h2>Sender Domain Authorization (Outbound multi-policy service)<a class="headerlink" href="#sender-domain-authorization-outbound-multi-policy-service" title="Permalink to this headline"></a></h2>
 <p>As of this writing, sender-domain authorization (SDA) is only
 available as part of the outbound multi-policy service, consisting of
 SDA followed by outbound quota.  There is a plan (TODO:) to produce a
@@ -460,7 +520,7 @@ appearing to originate from that domain should be added to the <code class="docu
 table, with join records linking their IDs to the IDs of the domain(s)
 they can send for, in <code class="docutils literal notranslate"><span class="pre">domain_user</span></code>.</p>
 <section id="whole-email-matching">
-<h3>Whole-Email Matching<a class="headerlink" href="#whole-email-matching" title="Permalink to this headline">¶</a></h3>
+<h3>Whole-Email Matching<a class="headerlink" href="#whole-email-matching" title="Permalink to this headline"></a></h3>
 <p>As a fallback to domain authorization, the SDA module also compares
 the entire <code class="docutils literal notranslate"><span class="pre">sender</span></code> field with the whole-email entries associated to
 the user.  This allows an email provider to specify specific email
@@ -483,7 +543,7 @@ different sites are different.</p>
 </section>
 </section>
 <section id="greylisting-policy-service">
-<h2>Greylisting Policy Service<a class="headerlink" href="#greylisting-policy-service" title="Permalink to this headline">¶</a></h2>
+<h2>Greylisting Policy Service<a class="headerlink" href="#greylisting-policy-service" title="Permalink to this headline"></a></h2>
 <p>Greylisting is an <a class="reference external" href="https://en.wikipedia.org/wiki/Greylisting_(email)">approach to spam
 prevention</a> based
 on the tendency of spammers to emit emails without using gateways.
@@ -507,7 +567,7 @@ greylisting and SPF checking in a sane fashion, and provide a
 framework for adding further policies.</p>
 </section>
 <section id="spf-policy-enforcement">
-<h2>SPF Policy Enforcement<a class="headerlink" href="#spf-policy-enforcement" title="Permalink to this headline">¶</a></h2>
+<h2>SPF Policy Enforcement<a class="headerlink" href="#spf-policy-enforcement" title="Permalink to this headline"></a></h2>
 <p>The <a class="reference external" href="https://en.wikipedia.org/wiki/Sender_Policy_Framework">Sender Policy
 Framework</a> is a
 complicated and intricate beast, and so I will not try to describe it
@@ -537,7 +597,7 @@ inbound service offering SPF with integrated greylisting, because of
 the odd interaction of greylisting with SPF.</p>
 </section>
 <section id="inbound-multi-policy-service-spf-greylisting">
-<h2>Inbound Multi-policy Service (SPF + Greylisting)<a class="headerlink" href="#inbound-multi-policy-service-spf-greylisting" title="Permalink to this headline">¶</a></h2>
+<h2>Inbound Multi-policy Service (SPF + Greylisting)<a class="headerlink" href="#inbound-multi-policy-service-spf-greylisting" title="Permalink to this headline"></a></h2>
 <p>What does it mean to use both greylisting and SPF?  The trivial answer
 is to pass one filter, and then pass the next filter.  But which comes
 first?</p>
@@ -576,7 +636,7 @@ enabled.  (Non-deliverable categories are: <code class="docutils literal notrans
 <code class="docutils literal notranslate"><span class="pre">permerror</span></code>.)</p>
 </section>
 <section id="upcoming-features">
-<h2>Upcoming features<a class="headerlink" href="#upcoming-features" title="Permalink to this headline">¶</a></h2>
+<h2>Upcoming features<a class="headerlink" href="#upcoming-features" title="Permalink to this headline"></a></h2>
 <p>A mini-roadmap of upcoming changes:</p>
 <p>minor:</p>
 <ul class="simple">
@@ -605,85 +665,34 @@ a domain that user lacks authorization for.</p></li>
 </section>
 
 
+           </div>
           </div>
-          
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Caching, Highly-Available Postfix Policy Service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="INSTALLATION.html" class="btn btn-neutral float-right" title="CHAPPS Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Caleb Cullen and EasyDNS Technologies Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">CHAPPS</a></h1>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
 
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">CHAPPS</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#the-caching-highly-available-postfix-policy-service">the Caching, Highly-Available Postfix Policy Service</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#rest-api-service">REST API Service</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#outbound-services">Outbound Services</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#outbound-quota-policy-service">Outbound Quota Policy Service</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sender-domain-authorization-outbound-multi-policy-service">Sender Domain Authorization (Outbound multi-policy service)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#greylisting-policy-service">Greylisting Policy Service</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#spf-policy-enforcement">SPF Policy Enforcement</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#inbound-multi-policy-service-spf-greylisting">Inbound Multi-policy Service (SPF + Greylisting)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#upcoming-features">Upcoming features</a></li>
-</ul>
-</li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">Caching, Highly-Available Postfix Policy Service</a></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2022, Caleb Cullen and EasyDNS Technologies Inc..
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/README.md.txt"
-          rel="nofollow">Page source</a>
-    </div>
-
-    
-
-    
-  </body>
+</body>
 </html>

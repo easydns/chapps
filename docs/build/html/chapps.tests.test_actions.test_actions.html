@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chapps.tests.test_actions.test_actions module &mdash; CHAPPS 0.4.5 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="chapps.tests.test_adapter package" href="chapps.tests.test_adapter.html" />
+    <link rel="prev" title="chapps.tests.test_actions.conftest module" href="chapps.tests.test_actions.conftest.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> CHAPPS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">the Caching, Highly-Available Postfix Policy Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">CHAPPS Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">chapps</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="chapps.html">chapps package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="chapps.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="chapps.rest.html">chapps.rest package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="chapps.tests.html">chapps.tests package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="chapps.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CHAPPS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">chapps</a> &raquo;</li>
+          <li><a href="chapps.html">chapps package</a> &raquo;</li>
+          <li><a href="chapps.tests.html">chapps.tests package</a> &raquo;</li>
+          <li><a href="chapps.tests.test_actions.html">chapps.tests.test_actions package</a> &raquo;</li>
+      <li>chapps.tests.test_actions.test_actions module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/chapps.tests.test_actions.test_actions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-chapps.tests.test_actions.test_actions">
+<span id="chapps-tests-test-actions-test-actions-module"></span><h1>chapps.tests.test_actions.test_actions module<a class="headerlink" href="#module-chapps.tests.test_actions.test_actions" title="Permalink to this headline"></a></h1>
+<p>Tests for response-action adapter objects</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixActions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_actions.test_actions.</span></span><span class="sig-name descname"><span class="pre">Test_PostfixActions</span></span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixActions" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Tests for abstract Postfix action superclass</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixActions.test_action_for_raises_not_implemented_error">
+<span class="sig-name descname"><span class="pre">test_action_for_raises_not_implemented_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postfix_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixActions.test_action_for_raises_not_implemented_error" title="Permalink to this definition"></a></dt>
+<dd><p>The method action_for() is abstract and not implemented by PostfixActions</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixActions.test_dunno">
+<span class="sig-name descname"><span class="pre">test_dunno</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postfix_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixActions.test_dunno" title="Permalink to this definition"></a></dt>
+<dd><p>Returns DUNNO</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixActions.test_dunno_accepts_useless_message">
+<span class="sig-name descname"><span class="pre">test_dunno_accepts_useless_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postfix_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixActions.test_dunno_accepts_useless_message" title="Permalink to this definition"></a></dt>
+<dd><p>Returns DUNNO even if a message is supplied</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixActions.test_okay">
+<span class="sig-name descname"><span class="pre">test_okay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postfix_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixActions.test_okay" title="Permalink to this definition"></a></dt>
+<dd><p>Returns OK</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixActions.test_okay_accepts_useless_message">
+<span class="sig-name descname"><span class="pre">test_okay_accepts_useless_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postfix_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixActions.test_okay_accepts_useless_message" title="Permalink to this definition"></a></dt>
+<dd><p>Returns OK even if a message is supplied</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixGRLActions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_actions.test_actions.</span></span><span class="sig-name descname"><span class="pre">Test_PostfixGRLActions</span></span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixGRLActions" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Testing greylisting actions for Postfix</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixGRLActions.test_fail_yields_rejection">
+<span class="sig-name descname"><span class="pre">test_fail_yields_rejection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grl_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixGRLActions.test_fail_yields_rejection" title="Permalink to this definition"></a></dt>
+<dd><p>Fail returns a string starting with DEFER_IF_PERMIT</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixGRLActions.test_pass_yields_dunno">
+<span class="sig-name descname"><span class="pre">test_pass_yields_dunno</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grl_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixGRLActions.test_pass_yields_dunno" title="Permalink to this definition"></a></dt>
+<dd><p>Pass returns DUNNO</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixOQPActions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_actions.test_actions.</span></span><span class="sig-name descname"><span class="pre">Test_PostfixOQPActions</span></span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixOQPActions" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Testing outbound quota actions for Postfix</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixOQPActions.test_fail_yields_rejection">
+<span class="sig-name descname"><span class="pre">test_fail_yields_rejection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">oqp_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixOQPActions.test_fail_yields_rejection" title="Permalink to this definition"></a></dt>
+<dd><p>Fail returns a string starting with ‘554 Rejected’ or ‘REJECT’</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixOQPActions.test_pass_yields_okay">
+<span class="sig-name descname"><span class="pre">test_pass_yields_okay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">oqp_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixOQPActions.test_pass_yields_okay" title="Permalink to this definition"></a></dt>
+<dd><p>Pass returns OK</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixSPFActions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_actions.test_actions.</span></span><span class="sig-name descname"><span class="pre">Test_PostfixSPFActions</span></span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Tests for Postfix action strings to be sent in response to particular SPF results:
+The possible results are:</p>
+<blockquote>
+<div><p>pass*
+fail*
+softfail
+temperror*
+permerror*
+none/neutral (two which must be treated the same)</p>
+</div></blockquote>
+<p>Starred items are ones for which RFC 7208 provides recommended SMTP result codes.
+For now, configuration will be able to override how the non-starred results are mapped onto
+actions taken for other classes of message.
+Eventually a response which implements greylisting (say, for softfails) will be provided,
+which could be applied also to none/neutral situations as well.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_fail_produces_reject">
+<span class="sig-name descname"><span class="pre">test_fail_produces_reject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spf_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spf_reason</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_fail_produces_reject" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_neutral_produces_greylist">
+<span class="sig-name descname"><span class="pre">test_neutral_produces_greylist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spf_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_neutral_produces_greylist" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_none_produces_greylist">
+<span class="sig-name descname"><span class="pre">test_none_produces_greylist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spf_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_none_produces_greylist" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_pass_produces_prepend">
+<span class="sig-name descname"><span class="pre">test_pass_produces_prepend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spf_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spf_reason</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_pass_produces_prepend" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_permerror_produces_enhanced_code">
+<span class="sig-name descname"><span class="pre">test_permerror_produces_enhanced_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spf_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spf_reason</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_permerror_produces_enhanced_code" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_softfail_produces_greylist">
+<span class="sig-name descname"><span class="pre">test_softfail_produces_greylist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spf_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_softfail_produces_greylist" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_temperror_produces_enhanced_code">
+<span class="sig-name descname"><span class="pre">test_temperror_produces_enhanced_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spf_actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spf_reason</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_actions.test_actions.Test_PostfixSPFActions.test_temperror_produces_enhanced_code" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="chapps.tests.test_actions.conftest.html" class="btn btn-neutral float-left" title="chapps.tests.test_actions.conftest module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="chapps.tests.test_adapter.html" class="btn btn-neutral float-right" title="chapps.tests.test_adapter package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Caleb Cullen and EasyDNS Technologies Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

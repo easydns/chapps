@@ -11,6 +11,8 @@ Caching, Highly-Available Postfix Policy Service
    :caption: Contents:
 
    README.md
+   INSTALLATION.md
+   modules.rst
 
 
 Indices and tables

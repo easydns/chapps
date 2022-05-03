@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chapps.rest.dbmodels module &mdash; CHAPPS 0.4.5 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="chapps.rest.dbsession module" href="chapps.rest.dbsession.html" />
+    <link rel="prev" title="chapps.rest.api module" href="chapps.rest.api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> CHAPPS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">CHAPPS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">CHAPPS Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">chapps</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="chapps.html">chapps package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="chapps.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="chapps.rest.html">chapps.rest package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="chapps.tests.html">chapps.tests package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="chapps.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CHAPPS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">chapps</a> &raquo;</li>
+          <li><a href="chapps.html">chapps package</a> &raquo;</li>
+          <li><a href="chapps.rest.html">chapps.rest package</a> &raquo;</li>
+      <li>chapps.rest.dbmodels module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/chapps.rest.dbmodels.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-chapps.rest.dbmodels">
+<span id="chapps-rest-dbmodels-module"></span><h1>chapps.rest.dbmodels module<a class="headerlink" href="#module-chapps.rest.dbmodels" title="Permalink to this headline"></a></h1>
+<p>SQLAlchemy ORM Models to correspond to Pydantic models for API</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Base">
+<span class="sig-prename descclassname"><span class="pre">chapps.rest.dbmodels.</span></span><span class="sig-name descname"><span class="pre">DB_Base</span></span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Base" title="Permalink to this definition"></a></dt>
+<dd><p>DB_Base serves as the base of all ORM classes</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Customizations">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.rest.dbmodels.</span></span><span class="sig-name descname"><span class="pre">DB_Customizations</span></span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Customizations" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.DeclarativeMeta</span></code></p>
+<p>Metaclass for adding custom code to ORM models</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Customizations.remove_by_id">
+<span class="sig-name descname"><span class="pre">remove_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ids</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Customizations.remove_by_id" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Customizations.select_by_id">
+<span class="sig-name descname"><span class="pre">select_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Customizations.select_by_id" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id</strong> (<em>int</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Customizations.select_by_name">
+<span class="sig-name descname"><span class="pre">select_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Customizations.select_by_name" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>q</strong> (<em>str</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Customizations.select_by_pattern">
+<span class="sig-name descname"><span class="pre">select_by_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Customizations.select_by_pattern" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>q</strong> (<em>str</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Customizations.select_names_by_id">
+<span class="sig-name descname"><span class="pre">select_names_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ids</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Customizations.select_names_by_id" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Customizations.update_by_id">
+<span class="sig-name descname"><span class="pre">update_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Customizations.update_by_id" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Customizations.windowed_list">
+<span class="sig-name descname"><span class="pre">windowed_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Customizations.windowed_list" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>str</em>) – </p></li>
+<li><p><strong>skip</strong> (<em>int</em>) – </p></li>
+<li><p><strong>limit</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.DB_Customizations.windowed_list_by_ids">
+<span class="sig-name descname"><span class="pre">windowed_list_by_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subquery</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.DB_Customizations.windowed_list_by_ids" title="Permalink to this definition"></a></dt>
+<dd><p>Provide either a list of IDs (integers) or a SELECT which yields them.
+Optionally provide pagination and name filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>skip</strong> (<em>int</em>) – </p></li>
+<li><p><strong>limit</strong> (<em>int</em>) – </p></li>
+<li><p><strong>q</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Domain">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.rest.dbmodels.</span></span><span class="sig-name descname"><span class="pre">Domain</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Domain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<p>ORM Model for domain definitions</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Domain.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.Domain.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>A simple constructor that allows initialization from kwargs.</p>
+<p>Sets attributes on the constructed instance using the names and
+values in <code class="docutils literal notranslate"><span class="pre">kwargs</span></code>.</p>
+<p>Only keys that are present as
+attributes of the instance’s class are allowed. These could be,
+for example, any mapped columns or relationships.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Domain.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Domain.id" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Domain.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Domain.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Email">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.rest.dbmodels.</span></span><span class="sig-name descname"><span class="pre">Email</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Email" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<p>ORM Model for email definitions</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Email.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.Email.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>A simple constructor that allows initialization from kwargs.</p>
+<p>Sets attributes on the constructed instance using the names and
+values in <code class="docutils literal notranslate"><span class="pre">kwargs</span></code>.</p>
+<p>Only keys that are present as
+attributes of the instance’s class are allowed. These could be,
+for example, any mapped columns or relationships.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Email.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Email.id" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Email.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Email.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.rest.dbmodels.</span></span><span class="sig-name descname"><span class="pre">JoinAssoc</span></span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for representing joins via jointable
+There is probably some way to use SQLA for this
+but I am using it wrongly, to avoid loading associations
+just in order to link them to other objects
+via a join table</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_id</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_id</strong> (<em>str</em>) – </p></li>
+<li><p><strong>assoc_name</strong> (<em>str</em>) – </p></li>
+<li><p><strong>assoc_id</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.assoc_col">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">assoc_col</span></span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.assoc_col" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.delete" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.delete_assoc">
+<span class="sig-name descname"><span class="pre">delete_assoc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.delete_assoc" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>item_id</strong> (<em>int</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.insert">
+<span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.insert" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.insert_assoc">
+<span class="sig-name descname"><span class="pre">insert_assoc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.insert_assoc" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>item_id</strong> (<em>int</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.select" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.select_ids_by_source_id">
+<span class="sig-name descname"><span class="pre">select_ids_by_source_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.select_ids_by_source_id" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>item_id</strong> (<em>int</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.source_col">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">source_col</span></span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.source_col" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.update" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.update_assoc">
+<span class="sig-name descname"><span class="pre">update_assoc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.update_assoc" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item_id</strong> (<em>int</em>) – </p></li>
+<li><p><strong>assoc_id</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.values" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.JoinAssoc.where_tuples">
+<span class="sig-name descname"><span class="pre">where_tuples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assoc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.JoinAssoc.where_tuples" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>item_id</strong> (<em>int</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Quota">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.rest.dbmodels.</span></span><span class="sig-name descname"><span class="pre">Quota</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Quota" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<p>ORM Model for quota definitions</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Quota.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.Quota.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>A simple constructor that allows initialization from kwargs.</p>
+<p>Sets attributes on the constructed instance using the names and
+values in <code class="docutils literal notranslate"><span class="pre">kwargs</span></code>.</p>
+<p>Only keys that are present as
+attributes of the instance’s class are allowed. These could be,
+for example, any mapped columns or relationships.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Quota.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Quota.id" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Quota.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Quota.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.Quota.quota">
+<span class="sig-name descname"><span class="pre">quota</span></span><a class="headerlink" href="#chapps.rest.dbmodels.Quota.quota" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.User">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.rest.dbmodels.</span></span><span class="sig-name descname"><span class="pre">User</span></span><a class="headerlink" href="#chapps.rest.dbmodels.User" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<p>ORM model for user entities within CHAPPS</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.User.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.rest.dbmodels.User.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>A simple constructor that allows initialization from kwargs.</p>
+<p>Sets attributes on the constructed instance using the names and
+values in <code class="docutils literal notranslate"><span class="pre">kwargs</span></code>.</p>
+<p>Only keys that are present as
+attributes of the instance’s class are allowed. These could be,
+for example, any mapped columns or relationships.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.User.domains">
+<span class="sig-name descname"><span class="pre">domains</span></span><a class="headerlink" href="#chapps.rest.dbmodels.User.domains" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.User.emails">
+<span class="sig-name descname"><span class="pre">emails</span></span><a class="headerlink" href="#chapps.rest.dbmodels.User.emails" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.User.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#chapps.rest.dbmodels.User.id" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.User.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#chapps.rest.dbmodels.User.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.rest.dbmodels.User.quota">
+<span class="sig-name descname"><span class="pre">quota</span></span><a class="headerlink" href="#chapps.rest.dbmodels.User.quota" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="chapps.rest.api.html" class="btn btn-neutral float-left" title="chapps.rest.api module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="chapps.rest.dbsession.html" class="btn btn-neutral float-right" title="chapps.rest.dbsession module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Caleb Cullen and EasyDNS Technologies Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chapps.tests.test_policy.test_policy module &mdash; CHAPPS 0.4.5 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="chapps.tests.test_policy.test_spf_policy module" href="chapps.tests.test_policy.test_spf_policy.html" />
+    <link rel="prev" title="chapps.tests.test_policy.conftest module" href="chapps.tests.test_policy.conftest.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> CHAPPS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">CHAPPS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">CHAPPS Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">chapps</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="chapps.html">chapps package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="chapps.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="chapps.rest.html">chapps.rest package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="chapps.tests.html">chapps.tests package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="chapps.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CHAPPS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">chapps</a> &raquo;</li>
+          <li><a href="chapps.html">chapps package</a> &raquo;</li>
+          <li><a href="chapps.tests.html">chapps.tests package</a> &raquo;</li>
+          <li><a href="chapps.tests.test_policy.html">chapps.tests.test_policy package</a> &raquo;</li>
+      <li>chapps.tests.test_policy.test_policy module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/chapps.tests.test_policy.test_policy.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-chapps.tests.test_policy.test_policy">
+<span id="chapps-tests-test-policy-test-policy-module"></span><h1>chapps.tests.test_policy.test_policy module<a class="headerlink" href="#module-chapps.tests.test_policy.test_policy" title="Permalink to this headline"></a></h1>
+<p>Tests for CHAPPS policy module</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_EmailPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_policy.test_policy.</span></span><span class="sig-name descname"><span class="pre">Test_EmailPolicy</span></span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_EmailPolicy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Tests of the base policy class</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_approval_not_implemented">
+<span class="sig-name descname"><span class="pre">test_approval_not_implemented</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_approval_not_implemented" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN an instance of EmailPolicy or a subclass
+WHEN  the superclass/abstract version of approve_policy_request is called
+THEN  a NotImplementedError should be raised</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_connect_to_redis">
+<span class="sig-name descname"><span class="pre">test_connect_to_redis</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_connect_to_redis" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a new EmailPolicy
+WHEN  asked for a Redis handle
+THEN  return a Redis handle</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_connect_to_sentinel">
+<span class="sig-name descname"><span class="pre">test_connect_to_sentinel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chapps_sentinel_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chapps_sentinel_config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_connect_to_sentinel" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN Sentinel servers are listed in the config file
+WHEN  asked for a Redis handle
+THEN  use Sentinel server and dataset information to get a read-write Redis handle</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_fmtkey">
+<span class="sig-name descname"><span class="pre">test_fmtkey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_fmtkey" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN some arguments
+WHEN  we ask EmailPolicy to format a key
+THEN  it should use the prefix ‘grl’, and glue all together with colons</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_rediskey">
+<span class="sig-name descname"><span class="pre">test_rediskey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_EmailPolicy.test_rediskey" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a prefix and some arguments
+WHEN  we ask EmailPolicy for a redis key
+THEN  it should glue everything together with colons</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_policy.test_policy.</span></span><span class="sig-name descname"><span class="pre">Test_GreylistingPolicyEvaluation</span></span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_client_tally_updated_when_unrecognized_tuple_passes">
+<span class="sig-name descname"><span class="pre">test_client_tally_updated_when_unrecognized_tuple_passes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_client_tally</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis_grl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_client_tally_updated_when_unrecognized_tuple_passes" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a new tuple from a client with a large enough tally
+WHEN  executed
+THEN  update the tally</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_first_encounter_false">
+<span class="sig-name descname"><span class="pre">test_first_encounter_false</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_first_encounter_false" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a new tuple
+WHEN  executed
+THEN  return False</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_first_encounter_updates_tuple">
+<span class="sig-name descname"><span class="pre">test_first_encounter_updates_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_first_encounter_updates_tuple" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a new tuple
+WHEN  executed
+THEN  update the tuple</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_recognized_tuple_passes">
+<span class="sig-name descname"><span class="pre">test_recognized_tuple_passes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_recognized_tuple_passes" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a recognized tuple - a timestamp
+WHEN  the tuple was seen more than min_delay seconds ago
+THEN  return True</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_recognized_tuple_updates_client_tally">
+<span class="sig-name descname"><span class="pre">test_recognized_tuple_updates_client_tally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_recognized_tuple_updates_client_tally" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a recognized tuple - a timestamp
+WHEN  the tuple was seen more than min_delay seconds ago
+THEN  return True</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_retry_too_soon_fails">
+<span class="sig-name descname"><span class="pre">test_retry_too_soon_fails</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_retry_too_soon_fails" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a recognized tuple
+WHEN  the tuple was seen too recently (less than min_delay seconds)
+THEN  return False</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_retry_too_soon_updates_tuple">
+<span class="sig-name descname"><span class="pre">test_retry_too_soon_updates_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_retry_too_soon_updates_tuple" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a recognized tuple
+WHEN  the tuple was seen too recently (less than min_delay seconds)
+THEN  return False</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_sufficient_client_tally_permits_sending_for_unrecognized_tuple">
+<span class="sig-name descname"><span class="pre">test_sufficient_client_tally_permits_sending_for_unrecognized_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_client_tally</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis_grl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicyEvaluation.test_sufficient_client_tally_permits_sending_for_unrecognized_tuple" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a new tuple from a client with a large enough tally
+WHEN  executed
+THEN  return True</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_policy.test_policy.</span></span><span class="sig-name descname"><span class="pre">Test_GreylistingPolicy_Base</span></span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Tests of the greylisting policy module</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_approve_policy_request">
+<span class="sig-name descname"><span class="pre">test_approve_policy_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_approve_policy_request" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a positive policy evaluation
+WHEN  approve_policy_request is called
+THEN  it should return True</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_client_key">
+<span class="sig-name descname"><span class="pre">test_client_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_client_key" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a PostfixPolicyRequest object populated with valid data
+WHEN  we ask for a client key
+THEN a string in the form of grl:&lt;ip&gt; should be returned</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_config_overrides_properly_forwarded">
+<span class="sig-name descname"><span class="pre">test_config_overrides_properly_forwarded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_grl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_config_overrides_properly_forwarded" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_fmtkey">
+<span class="sig-name descname"><span class="pre">test_fmtkey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_fmtkey" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN some arguments
+WHEN  we ask EmailPolicy to format a key
+THEN  it should use the prefix ‘grl’, and glue all together with colons</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_policy_request_instance_cache">
+<span class="sig-name descname"><span class="pre">test_policy_request_instance_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_policy_request_instance_cache" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a positive policy evaluation
+WHEN  approve_policy_request is called
+THEN  it should return True</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_tuple_key">
+<span class="sig-name descname"><span class="pre">test_tuple_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_Base.test_tuple_key" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a PostfixPolicyRequest object populated with valid data
+WHEN  we as for a tuple key
+THEN  a string in the form of grl:&lt;ip&gt;:&lt;sender&gt;:&lt;recipient&gt; should be returned</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_policy.test_policy.</span></span><span class="sig-name descname"><span class="pre">Test_GreylistingPolicy_get_control_data</span></span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This method interfaces with Redis</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_allow_after_is_zero">
+<span class="sig-name descname"><span class="pre">test_allow_after_is_zero</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_allow_after_is_zero" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a recognized tuple, and allow_after set to 0
+WHEN  control data is requested
+THEN  the second member of the tuple should always be None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_new_tuple_client_tally_present">
+<span class="sig-name descname"><span class="pre">test_new_tuple_client_tally_present</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_client_tally</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_instance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_new_tuple_client_tally_present" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN an unrecognized tuple, but existing client tally
+WHEN  executed
+THEN  the count should be returned as the second member of the tuple</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_no_keys_yet_exist">
+<span class="sig-name descname"><span class="pre">test_no_keys_yet_exist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_no_keys_yet_exist" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a new tuple
+WHEN  control data is requested
+THEN  the returned tuple should have None as its first element</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_tuple_is_recognized">
+<span class="sig-name descname"><span class="pre">test_tuple_is_recognized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_tuple_is_recognized" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a recognized tuple
+WHEN  control data is requested
+THEN  the returned tuple should have a timestamp (float) as its first argument</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_tuple_recognized_and_tally_exists">
+<span class="sig-name descname"><span class="pre">test_tuple_recognized_and_tally_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_client_tally</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_instance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_get_control_data.test_tuple_recognized_and_tally_exists" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a recognized tuple, and an existing tally
+WHEN  executed
+THEN  return a timestamp, and the client’s tally in that order</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_update_control_data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_policy.test_policy.</span></span><span class="sig-name descname"><span class="pre">Test_GreylistingPolicy_update_control_data</span></span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_update_control_data" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Testing control update routes _update_tuple and _update_client_tally</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_update_control_data.test_skip_client_tally_update_if_allow_after_is_zero">
+<span class="sig-name descname"><span class="pre">test_skip_client_tally_update_if_allow_after_is_zero</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_update_control_data.test_skip_client_tally_update_if_allow_after_is_zero" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN that allow_after is set to zero (we are not keeping a success tally)
+WHEN  _update_client_tally is executed
+THEN  immediately return</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_update_control_data.test_update_client_tally">
+<span class="sig-name descname"><span class="pre">test_update_client_tally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_update_control_data.test_update_client_tally" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a ppr
+WHEN  _update_client_tally is executed
+THEN  add the tuple (map) instance -&gt; timestamp to the client key</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_update_control_data.test_update_tuple">
+<span class="sig-name descname"><span class="pre">test_update_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_GreylistingPolicy_update_control_data.test_update_tuple" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN a ppr
+WHEN  _update_tuple executed
+THEN  set a key with a particular structure to a current timestamp</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_policy.test_policy.</span></span><span class="sig-name descname"><span class="pre">Test_OutboundQuotaPolicy</span></span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Tests of the outbound quota policy module</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_last_remaining_quota">
+<span class="sig-name descname"><span class="pre">test_approve_last_remaining_quota</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_last_remaining_quota" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that the last bit of a quota can be used.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_last_with_multiple_recipients">
+<span class="sig-name descname"><span class="pre">test_approve_last_with_multiple_recipients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupsend_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_last_with_multiple_recipients" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that multiple recipients adding up to the last available messages will be approved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_policy_request">
+<span class="sig-name descname"><span class="pre">test_approve_policy_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_policy_request" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that underquota users’ emails are approved.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_policy_request_for_uncached">
+<span class="sig-name descname"><span class="pre">test_approve_policy_request_for_uncached</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uncached_allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populated_database_fixture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_policy_request_for_uncached" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that existing-but-uncached users’ emails are approved.
+(Uncached implies they have sent no emails w/i the rolling interval.)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_underquota_within_margin">
+<span class="sig-name descname"><span class="pre">test_approve_underquota_within_margin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multisend_ppr_factory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_approve_underquota_within_margin" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that when a multi-recipient email takes an underquota account overquota, it will be
+approved if the amount overquota is within the established margin.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_current_quota">
+<span class="sig-name descname"><span class="pre">test_current_quota</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sda_allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populated_database_fixture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_current_quota" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_overquota_within_margin">
+<span class="sig-name descname"><span class="pre">test_deny_overquota_within_margin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupsend_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_overquota_within_margin" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that an account which is just over-quota will not have a new email which is within
+the margin approved.  This is to ensure that the quota is real, and not just enlarged by
+the margin.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_policy_request">
+<span class="sig-name descname"><span class="pre">test_deny_policy_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overquota_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_policy_request" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that overquota users are rejected.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_policy_request_for_undefined">
+<span class="sig-name descname"><span class="pre">test_deny_policy_request_for_undefined</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">undefined_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populated_database_fixture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_policy_request_for_undefined" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that undefined users are rejected.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_rapid_attempts">
+<span class="sig-name descname"><span class="pre">test_deny_rapid_attempts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rapid_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_rapid_attempts" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that attempts which come too fast will be rejected.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_when_too_many_recipients">
+<span class="sig-name descname"><span class="pre">test_deny_when_too_many_recipients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multisend_ppr_factory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_deny_when_too_many_recipients" title="Permalink to this definition"></a></dt>
+<dd><p>Verify that when the recipient list would go over the quota, the attempt is denied.
+This has the side-effect of meaning that rejected multi-recipient attempts add their
+recipient count to the attempt history, meaning that the account will be fully over-quota
+once this occurs.
+TODO: consider removing failed multiple attempts from the sorted list, reducing their impact to 1</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_oqp_fmtkey">
+<span class="sig-name descname"><span class="pre">test_oqp_fmtkey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_oqp_fmtkey" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN: email (user), and parameter name
+WHEN: oqp is asked for a Redis key
+THEN: oqp._fmtkey(user, param) should return a string like ‘oqp:&lt;user&gt;:&lt;param&gt;’</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_return_cached_instance_approval">
+<span class="sig-name descname"><span class="pre">test_return_cached_instance_approval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">well_spaced_double_attempts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_redis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_OutboundQuotaPolicy.test_return_cached_instance_approval" title="Permalink to this definition"></a></dt>
+<dd><p>GIVEN we have already seen a particular instance before,
+WHEN  we are asked to approve or deny it
+THEN  we will return the cached value of the instance (which really only matters on approval)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_policy.test_policy.</span></span><span class="sig-name descname"><span class="pre">Test_SenderDomainAuthPolicy</span></span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_authorized_user">
+<span class="sig-name descname"><span class="pre">test_authorized_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sda_allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_sda</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_authorized_user" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_cached_authed_user">
+<span class="sig-name descname"><span class="pre">test_cached_authed_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sda_allowable_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_sda</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_cached_authed_user" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_cached_unauth_user">
+<span class="sig-name descname"><span class="pre">test_cached_unauth_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sda_unauth_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_sda</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_cached_unauth_user" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_cached_whole_email">
+<span class="sig-name descname"><span class="pre">test_cached_whole_email</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sda_auth_email_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_sda</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_cached_whole_email" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_get_sender_domain">
+<span class="sig-name descname"><span class="pre">test_get_sender_domain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">auto_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_get_sender_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_sda_fmtkey">
+<span class="sig-name descname"><span class="pre">test_sda_fmtkey</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_sda_fmtkey" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_sender_domain_key">
+<span class="sig-name descname"><span class="pre">test_sender_domain_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">allowable_ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_sender_domain_key" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_unauthorized_user">
+<span class="sig-name descname"><span class="pre">test_unauthorized_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sda_unauth_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_sda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis_sda</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_unauthorized_user" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_whole_email_auth">
+<span class="sig-name descname"><span class="pre">test_whole_email_auth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sda_auth_email_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_sda</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_whole_email_auth" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_whole_email_unauth">
+<span class="sig-name descname"><span class="pre">test_whole_email_unauth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sda_unauth_email_ppr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_sda</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_policy.test_policy.Test_SenderDomainAuthPolicy.test_whole_email_unauth" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="chapps.tests.test_policy.conftest.html" class="btn btn-neutral float-left" title="chapps.tests.test_policy.conftest module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="chapps.tests.test_policy.test_spf_policy.html" class="btn btn-neutral float-right" title="chapps.tests.test_policy.test_spf_policy module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Caleb Cullen and EasyDNS Technologies Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

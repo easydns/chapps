@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chapps.util module &mdash; CHAPPS 0.4.5 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="chapps.switchboard module" href="chapps.switchboard.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> CHAPPS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">CHAPPS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">CHAPPS Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">chapps</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="chapps.html">chapps package</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="chapps.html#subpackages">Subpackages</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="chapps.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="chapps.actions.html">chapps.actions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="chapps.adapter.html">chapps.adapter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="chapps.config.html">chapps.config module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="chapps.logging.html">chapps.logging module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="chapps.outbound.html">chapps.outbound module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="chapps.policy.html">chapps.policy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="chapps.signals.html">chapps.signals module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="chapps.spf_policy.html">chapps.spf_policy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="chapps.switchboard.html">chapps.switchboard module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">chapps.util module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CHAPPS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">chapps</a> &raquo;</li>
+          <li><a href="chapps.html">chapps package</a> &raquo;</li>
+      <li>chapps.util module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/chapps.util.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-chapps.util">
+<span id="chapps-util-module"></span><h1>chapps.util module<a class="headerlink" href="#module-chapps.util" title="Permalink to this headline"></a></h1>
+<p>chapps.util</p>
+<p>These are the utility classes for CHAPPS</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.util.AttrDict">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.util.</span></span><span class="sig-name descname"><span class="pre">AttrDict</span></span><a class="headerlink" href="#chapps.util.AttrDict" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This simple class allows accessing the keys of a hash as attributes on
+an object.  As a useful side effect it also casts floats and integers
+in advance.  This object is used for holding the configuration data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.util.AttrDict.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.util.AttrDict.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.util.AttrDict.boolean_pattern">
+<span class="sig-name descname"><span class="pre">boolean_pattern</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">re.compile('^[Tt]rue|[Ff]alse$')</span></em><a class="headerlink" href="#chapps.util.AttrDict.boolean_pattern" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.util.PostfixPolicyRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.util.</span></span><span class="sig-name descname"><span class="pre">PostfixPolicyRequest</span></span><a class="headerlink" href="#chapps.util.PostfixPolicyRequest" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.Mapping</span></code></p>
+<p>An implementation of Mapping which by default only processes and caches
+values from the data payload when they are accessed, to avoid a bunch of
+useless parsing.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.util.PostfixPolicyRequest.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.util.PostfixPolicyRequest.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>We get passed a payload of strings
+which are formatted as ‘key=val’</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chapps.util.PostfixPolicyRequest.recipients">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">recipients</span></span><a class="headerlink" href="#chapps.util.PostfixPolicyRequest.recipients" title="Permalink to this definition"></a></dt>
+<dd><p>A convenience method to split the ‘recipient’ datum
+into comma-separated tokens, for easier counting.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="chapps.util.VenvDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.util.</span></span><span class="sig-name descname"><span class="pre">VenvDetector</span></span><a class="headerlink" href="#chapps.util.VenvDetector" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.util.VenvDetector.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datapath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.util.VenvDetector.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chapps.util.VenvDetector.docpath">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">docpath</span></span><a class="headerlink" href="#chapps.util.VenvDetector.docpath" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.util.VenvDetector.get_base_prefix_compat">
+<span class="sig-name descname"><span class="pre">get_base_prefix_compat</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.util.VenvDetector.get_base_prefix_compat" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.util.VenvDetector.in_virtualenv">
+<span class="sig-name descname"><span class="pre">in_virtualenv</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.util.VenvDetector.in_virtualenv" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chapps.util.VenvDetector.ve">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ve</span></span><a class="headerlink" href="#chapps.util.VenvDetector.ve" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="chapps.switchboard.html" class="btn btn-neutral float-left" title="chapps.switchboard module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Caleb Cullen and EasyDNS Technologies Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
