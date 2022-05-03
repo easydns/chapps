@@ -1,4 +1,7 @@
-"""Actions: instructions for the MTA, based on policy module output"""
+"""
+##Actions
+
+These classes intepret policy module output to produce instructions for Postfix."""
 import functools
 from chapps.config import config
 from chapps.policy import GreylistingPolicy
@@ -9,24 +12,37 @@ class PostfixActions:
 
     @staticmethod
     def dunno(*args, **kwargs):
+        """Return the Postfix directive DUNNO"""
         return "DUNNO"
 
     @staticmethod
     def okay(*args, **kwargs):
+        """Return the Postfix directive OK"""
         return "OK"
 
     ok = okay
+    """ok() is an alias for okay()"""
 
     @staticmethod
     def defer_if_permit(msg, *args, **kwargs):
+        """
+        Return the Postfix DEFER_IF_PERMIT directive with the provided message
+        """
         return f"DEFER_IF_PERMIT {msg}"
 
     @staticmethod
     def reject(msg, *args, **kwargs):
+        """
+        Return the Postfix REJECT directive along with the provided message
+        """
         return f"REJECT {msg}"
 
     @staticmethod
-    def prepend(msg, *args, **kwargs):
+    def prepend(*args, **kwargs):
+        """
+        Return the Postfix PREPEND directive.
+        Include the header to prepend as keyword-argument `prepend`
+        """
         new_header = kwargs.get("prepend", None)
         if new_header is None or len(new_header) < 5:
             raise ValueError(
@@ -34,11 +50,12 @@ class PostfixActions:
             )
         return f"PREPEND {new_header}"
 
-    def __init__(self, cfg=None, extended_status=True):
-        self.config = cfg or config
-        self.extended_status = (
-            extended_status
-        )  # intended to allow choice whether to use extended status; TODO: not currently implemented
+    def __init__(self, cfg=None):
+        """
+        Optionally supply a CHAPPSConfig instance as the first argument.
+        """
+        self.cfg = cfg or config
+        self.config = self.cfg  # later this is overridden, in subclasses
 
     def _get_closure_for(self, decision):
         """Setup the prescribed closure for generating SMTP action directives"""
@@ -52,20 +69,25 @@ class PostfixActions:
         try:
             i = int(action)  #  if the first token is a number, its a directive
         except ValueError:  #  first token was a string, and therefore refers to a method
+            # look for predefined or memoized version
             af = getattr(self, action, None)
             if af:
                 return af
+            # no local version found, find function reference
             action_func = getattr(PostfixActions, action, None)
             if not action_func:
                 action_func = getattr(self.__class__, action, None)
             if not action_func:
                 raise NotImplementedError(
-                    f"Action {action} is not implemented by PostfixActions or by {self.__class__.__name__}"
+                    f"Action {action} is not implemented by PostfixActions"
+                    f" or by {self.__class__.__name__}"
                 )
         else:
+            # construct closure from configured message string
             action_func = lambda reason, ppr, *args, **kwargs: action_config.format(
                 reason=reason
             )
+        # memoize the action function for quicker reference next time
         setattr(self, action, action_func)
         return action_func
 
@@ -80,18 +102,44 @@ class PostfixActions:
         return msg
 
     def _mangle_action(self, action):
-        """Policy decisions which are also reserved words will need to be altered"""
+        """
+        Policy decisions which are also reserved words need to be altered.
+        Currently, this routine handles only the action 'pass'
+        """
         if action == "pass":
             return "passing"
         return action
 
     def action_for(self, *args, **kwargs):
+        """
+        Abstract method which must be implemented in subclasses.
+
+        This method is intended to map responses from a policy module onto
+        Postfix directives.
+
+        Not all policy modules return only yes/no
+        answers.  Some, like :py:mod:`chapps.spf_policy`, return a handful of
+        different possible values, and so there must be a mechanism for
+        allowing sites to determine what happens when each of those different
+        outcomes occurs.
+        """
         raise NotImplementedError(
-            f"Subclasses of {self.__class__.__name__} must define the method action_for() for themselves, to map policy module response (decision) strings onto Postfix action directives."
+            f"Subclasses of {self.__class__.__name__} must define the method"
+            " action_for() for themselves, to map policy module responses"
+            " (decisions) onto Postfix action directives."
         )
 
 
 class PostfixPassfailActions(PostfixActions):
+    """
+    Postfix Actions adapter for PASS/FAIL policy responses.
+
+    Many policies return True if the email should be accepted/forwarded
+    and return False if the email should be rejected/dropped.  This class
+    encapsulates the common case, and includes some logic to extract
+    precise instructions from the config.
+    """
+
     def __init__(self, cfg=None):
         super().__init__(cfg)
 
@@ -101,7 +149,8 @@ class PostfixPassfailActions(PostfixActions):
         msg = getattr(self.config, msg_key, None)
         if not msg:
             raise ValueError(
-                f"The key {msg_key} is not defined in the config for {self.__class__.__name__} or its policy"
+                f"The key {msg_key} is not defined in the config for"
+                f" {self.__class__.__name__} or its policy"
             )
         msg_tokens = msg.split(" ")
         msg_text = ""
@@ -117,14 +166,17 @@ class PostfixPassfailActions(PostfixActions):
             msg_text = " ".join(msg_tokens[1:])
         else:
             raise NotImplementedError(
-                f"Pass-fail closure creation for Postfix directive {msg_tokens[0]} is not yet available."
+                "Pass-fail closure creation for Postfix directive"
+                f" {msg_tokens[0]} is not yet available."
             )
         action = self.__prepend_action_with_message(func, msg_text)
         setattr(self, decision, action)
         return action
 
     def __prepend_action_with_message(self, func, prepend_msg_text):
-        ### avoiding use of nonlocal required if definition is embedded inline in calling procedure
+        """Wrap an action func in order to prepend an additional message"""
+        # avoiding use of nonlocal required if definition is embedded inline
+        # in calling procedure
         def action(message="", *args, **kwargs):
             msg_text = prepend_msg_text
             if len(message) > 0:
@@ -134,6 +186,10 @@ class PostfixPassfailActions(PostfixActions):
         return action
 
     def action_for(self, pf_result):
+        """
+        Boolean action decider: returns 'passing' if the argument is True,
+        otherwise it returns 'fail'.
+        """
         if pf_result:  # True / pass
             action_name = "passing"
         else:  # False / fail
@@ -141,29 +197,52 @@ class PostfixPassfailActions(PostfixActions):
         return getattr(self, action_name, None)
 
     def __getattr__(self, attrname, *args, **kwargs):
+        """Allow use of old config elements with long descriptive names."""
         attrname = self._mangle_action(attrname)
         if attrname == "passing":
             msg_key = "acceptance_message"
         elif attrname == "fail":
             msg_key = "rejection_message"
         else:
-            raise NotImplementedError(f"Pass-fail actions do not include {attrname}")
+            raise NotImplementedError(
+                f"Pass-fail actions do not include {attrname}"
+            )
         return self._get_closure_for(attrname, msg_key)
 
 
 class PostfixOQPActions(PostfixPassfailActions):
+    """Postfix Action translator object for OutboundQuotaPolicy"""
+
     def __init__(self, cfg=None):
+        """
+        Optionally provide an instance of CHAPPSConfig.
+
+        All this class does is wire up `self.config` to
+        point at the OutboundQuotaPolicy config block.
+        """
         super().__init__(cfg)
         self.config = self.config.policy_oqp
 
 
 class PostfixGRLActions(PostfixPassfailActions):
+    """Postfix Action translator object for GreylistingPolicy"""
+
     def __init__(self, cfg=None):
+        """
+        Optionally provide an instance of CHAPPSConfig.
+
+        All this class does is wire up `self.config` to
+        point at the GreylistingPolicy config block.
+        """
         super().__init__(cfg)
         self.config = self.config.policy_grl
 
 
 class PostfixSPFActions(PostfixActions):
+    """Postfix Action translator object for SPFEnforcementPolicy"""
+
+    # TODO:
+    # this should not be instantiated this way as it confounds config override
     greylisting_policy = GreylistingPolicy()
 
     @staticmethod

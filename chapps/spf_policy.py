@@ -1,18 +1,19 @@
-"""SPF Enforcement Policy Object"""
+"""SPF Enforcement Policy"""
 import spf
 from chapps.policy import EmailPolicy
 from chapps.actions import PostfixSPFActions
 
 
 class SPFEnforcementPolicy(EmailPolicy):
-    """Represents SPF policy"""
+    """Enforces SPF policy"""
 
     ### we may never use Redis for SPF directly
     redis_key_prefix = "spf"
 
     def __init__(self, cfg=None):
-        """At present, there are no extra options for SPF Enforcement policy; perhaps there should be for
-           how to treat none_neutral and softfail"""
+        """
+        Accepts a CHAPPSConfig instance as an optional argument.
+        """
         super().__init__(cfg)
         self.actions = PostfixSPFActions()
 
@@ -22,7 +23,9 @@ class SPFEnforcementPolicy(EmailPolicy):
         helo_sender = "postmaster@" + ppr.helo_name
         query = spf.query(ppr.client_address, helo_sender, ppr.helo_name)
         result, _, message = query.check()
-        if result in ["fail"]:  ### TODO: allow configuration of HELO results to honor
+        if result in [
+            "fail"
+        ]:  ### TODO: allow configuration of HELO results to honor
             action = self.actions.action_for(result)
         else:
             ### the HELO name did not produce a definitive result, so check MAILFROM
