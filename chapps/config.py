@@ -1,6 +1,33 @@
-"""chapps.config
+"""Config
+------
 
-An easy way to encapsulate library-wide defaults and settings for CHAPPS
+CHAPPS configures itself at the library level.  When it is first launched,
+the library will create a config file for itself if it does not find one
+at its default config path, ``/etc/chapps/chapps.ini``, or the value of
+the environment variable ``CHAPPS_CONFIG`` if it is set.  When it does,
+default settings for all available submodules will be produced.
+
+Any instance of CHAPPS requires the general CHAPPS settings, adapter settings,
+and the Redis settings.  These control basic features of CHAPPS and tell it
+how to access its brains.
+
+Each service script most likely runs a unique policy handler.  If only one
+service is being used, only the settings for the policies of that handler will
+be needed, plus the ones mentioned above.
+
+Policy handlers (from :py:mod:`chapps.switchboard`) take their listener
+configuration from that of their related policy.  Each may each be configured
+to use separate listening addresses and ports, so that they may run
+simultaneously on the same server.
+
+.. note::
+
+    For multi-policy handlers, the settings used are taken from the first
+    handler found to have config elements named ``listen_address`` and
+    ``listen_port``.  It is recommended to configure those elements only on one
+    active policy, or to keep them in sync on all policies which are handled
+    together.
+
 """
 import collections.abc
 import configparser
@@ -21,21 +48,39 @@ logger = logging.getLogger(__name__)
 
 
 class CHAPPSConfig:
-    """Class wrapper around config logic makes testing easier"""
+    """The configuation object
+
+    Mostly a wrapper around :py:mod:`configparser`, with the most
+    commonly used portions wrapped in :py:mod:`chapps.util.AttrDict`
+
+    """
 
     # ultimately, we may need also to allow for a command-line option
     @staticmethod
-    def what_config_file():
-        """
-        Determine what config file to read.  This is to allow for easier
-           addition of a command-line option.
+    def what_config_file() -> Path:
+        """Determine what config file to read.
+
+        This is to allow for easier addition of a command-line option.
+        Also encapsulates search for possible file pointed to by the
+        environment setting ``CHAPPS_CONFIG``
+
         """
         config_file = Path(env.get("CHAPPS_CONFIG", "/etc/chapps/chapps.ini"))
         return config_file
 
     @staticmethod
-    def setup_config(cp):
-        """Setup default config pattern on the parser passed in"""
+    def setup_config(
+        cp: configparser.ConfigParser
+    ) -> configparser.ConfigParser:
+        """Setup default config pattern on the parser passed in
+
+        :param configparser.ConfigParser cp: a
+           :py:class:`configparser.ConfigParser` instance to establish the
+           default config upon.
+
+        This routine establishes the default configuration.  It returns
+        the same object which was passed to it.
+        """
         cp["CHAPPS"] = {
             "payload_encoding": "utf-8",
             "user_key": "sasl_username",
@@ -53,6 +98,12 @@ class CHAPPSConfig:
             "db_name": "chapps",
             "db_user": "chapps",
             "db_pass": "chapps",
+        }
+        cp["Redis"] = {
+            "sentinel_servers": "",
+            "sentinel_dataset": "",
+            "server": "localhost",
+            "port": "6379",
         }
         cp["OutboundQuotaPolicy"] = {
             "listen_address": "localhost",
@@ -92,20 +143,18 @@ class CHAPPSConfig:
             "acceptance_message": "DUNNO",
             "null_sender_ok": False,
         }
-        cp["Redis"] = {
-            "sentinel_servers": "",
-            "sentinel_dataset": "",
-            "server": "localhost",
-            "port": "6379",
-        }
         return cp
 
     @staticmethod
     def write_config(cp, fn):
-        """
-        write config in cp to file named fn,
-        if no such file exists; returns a Path
-        object pointing at the config file
+        """Write the CHAPPS config to disk.
+
+        :param configparser.ConfigParser cp: a ConfigParser object
+        :param Union[str, Path] fn: path of the config file to write
+
+        If the location's parent directory does not exist, CHAPPS
+        will attempt to create it.  If CHAPPS can open the file, it
+        writes the contents of ``cp`` into the file referred to by ``fn``
         """
         config_file = Path(fn)
         if not config_file.parent.exists():
@@ -123,6 +172,10 @@ class CHAPPSConfig:
         return config_file
 
     def __init__(self):
+        """Setup a new CHAPPSConfig instance
+
+
+        """
         ### Create and initialize the config
         config_file = CHAPPSConfig.what_config_file()
         self.venvdetector = VenvDetector()
