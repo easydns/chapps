@@ -1,9 +1,7 @@
-# CHAPPS
+# the Caching, Highly-Available Postfix Policy Service
 
-## the Caching, Highly-Available Postfix Policy Service
-
-### requires Python 3.8.10+
-### makes use of Redis, (eventually Sentinel) and a relational database (MariaDB)
+| **requires Python 3.8.10+**
+| **makes use of Redis (or Sentinel) and a relational database (MariaDB)**
 
 ## Introduction
 
@@ -62,7 +60,7 @@ An example **rsyslog** config is also included; modification is
 encouraged.  If you wish to keep the debug logs in their special
 destination, ensure that you create a log-rotation profile for it.
 
-## Installation
+## Installation Overview
 
 Please ensure that MariaDB Connector/C is installed before attempting
 installation of this package.  The Debian packages recommended are:
