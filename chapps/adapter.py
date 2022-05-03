@@ -1,10 +1,20 @@
-"""Policy-configuration source data adapters"""
+"""
+Adapters
+--------
+
+Policy-configuration source data adapters.
+
+All of these currently interface to MariaDB as a fairly low level.
+A change is planned to convert all of this to use SQLAlchemy.
+
+"""
 import mariadb
 
 # import re ### needed if implementing domain_re_for_user()
 import logging
 from chapps.config import config
 from contextlib import contextmanager
+from typing import List
 
 logger = logging.getLogger(__name__)  # pragma: no cover
 
@@ -18,18 +28,33 @@ class PolicyConfigAdapter:
         "name VARCHAR(128) UNIQUE NOT NULL"
         ")"
     )
+    """SQL query used to create the **user** table."""
     userid_query = "SELECT id FROM users WHERE name = %(user)s"
+    """
+    SQL query for obtaining the ID of a **user**.  These queries
+    will go away when the older codebase is adapted to use SQLAlchemy
+    """
 
     def __init__(
         self,
         *,
-        db_host=None,
-        db_port=None,
-        db_name=None,
-        db_user=None,
-        db_pass=None,
-        autocommit=True,
+        db_host: str = None,
+        db_port: int = None,
+        db_name: str = None,
+        db_user: str = None,
+        db_pass: str = None,
+        autocommit: bool = True,
     ):
+        """
+        :param str db_host: the hostname or IP address of the database server
+        :param int db_port: the port number of the database server
+        :param str db_name: the name of the database
+        :param str db_user: the username for login
+        :param str db_pass: the password for the user
+        :param bool autocommit: defaults to True
+
+
+        """
         self.host = db_host or config.adapter.db_host or "127.0.0.1"
         self.port = db_port or config.adapter.db_port or 3306
         self.user = db_user or config.adapter.db_user
@@ -47,15 +72,32 @@ class PolicyConfigAdapter:
         self.conn = mariadb.connect(**kwargs)
 
     def finalize(self):
+        """Close the database connection."""
         self.conn.close()
 
     def _initialize_tables(self):
+        """Set up required tables.
+
+        Everything requires User records, so those tables are created here.
+
+        """
         cur = self.conn.cursor()
         cur.execute(self.user_table)
         cur.close()
 
     @contextmanager
     def adapter_context(self):
+        """Database connection context manager.
+
+        This method is meant to be used as a context manager, like so:
+
+        .. code:: python
+
+          with someadapter.adapter_context() as cur:
+              cur.execute(some_sql)
+
+        The context manager closes the cursor once the context ends.
+        """
         cur = self.conn.cursor()
         try:
             yield cur
@@ -64,7 +106,15 @@ class PolicyConfigAdapter:
 
 
 class MariaDBQuotaAdapter(PolicyConfigAdapter):
-    """A class for adapting to MariaDB for quota policy data"""
+    """An adapter for obtaining quota policy data from MariaDB
+
+    .. admonition:: SQL constants are deprecated.
+
+       All of the SQL statement constant strings defined in this class are
+       deprecated.  In a future version, all of this logic will be accomplished
+       using SQLAlchemy.
+
+    """
 
     quota_table = (
         "CREATE TABLE IF NOT EXISTS quotas ("  # pragma: no cover
@@ -73,6 +123,7 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         "quota BIGINT UNIQUE NOT NULL"
         ")"
     )
+    """SQL statement for creating the **Quota** table."""
     join_table = (
         "CREATE TABLE IF NOT EXISTS quota_user ("  # pragma: no cover
         "quota_id BIGINT NOT NULL,"
@@ -87,12 +138,14 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         " ON UPDATE CASCADE"  # allow replacement of quota defs
         ")"
     )
+    """SQL statement for creating the join table between **Quota** and **User** tables."""
     basic_quotas = (
         "INSERT INTO quotas ( name, quota ) VALUES "  # pragma: no cover
         "('10eph', 240),"
         "('50eph', 1200),"
         "('200eph', 4800)"
     )
+    """Doubly deprecated insert statement for creating basic quotas."""
     quota_query = (
         "SELECT quota FROM quotas WHERE id = ("  # pragma: no cover
         "SELECT quota_id FROM quota_user AS j"
@@ -100,11 +153,13 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         " WHERE u.name = %(user)s"
         ")"
     )
+    """SQL query for selecting a **Quota**'s ``quota`` value for a named **User**."""
     quota_map_query = (
         "SELECT u.name AS user, p.quota FROM quotas AS p"  # pragma: no cover
         " LEFT JOIN quota_user AS j ON p.id = j.quota_id"
         " LEFT JOIN users AS u ON j.user_id = u.id"
     )
+    """SQL query for selecting a list of users and their quotas."""
     quota_map_where = "WHERE u.name IN ({srch})"  # pragma: no cover
 
     def _initialize_tables(self, *, defquotas=False):
@@ -152,8 +207,19 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         res = {r[0]: r[1] for r in rows}
         return res
 
-    def quota_map(self, func, users=[]):
-        """Provide a function to execute over each user and its quota.  Use this to directly wire the database-loading logic to the Redis-population logic."""
+    def quota_map(self, func: callable, users: List[str] = []):
+        """Map a callable over a set of users and their quotas
+
+        :param callable func: A callable which will be passed (username, quota
+          amount) for each user in the result
+
+        :param List[str] users: Optional limiting list of usernames
+
+        Provide a function to execute over each user and its quota.  Use this
+        to directly wire the database-loading logic to the Redis-population
+        logic.
+
+        """
         if not callable(func):
             raise ValueError(
                 "The first non-self argument must be a callable which accepts the user and quota as arguments, in that order."

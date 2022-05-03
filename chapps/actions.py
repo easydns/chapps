@@ -1,7 +1,8 @@
 """
-##Actions
+Actions
+-------
 
-These classes intepret policy module output to produce instructions for Postfix."""
+These classes intepret policy manager output to produce instructions for Postfix."""
 import functools
 from chapps.config import config
 from chapps.policy import GreylistingPolicy
@@ -12,36 +13,37 @@ class PostfixActions:
 
     @staticmethod
     def dunno(*args, **kwargs):
-        """Return the Postfix directive DUNNO"""
+        """Return the Postfix directive ``DUNNO``"""
         return "DUNNO"
 
     @staticmethod
     def okay(*args, **kwargs):
-        """Return the Postfix directive OK"""
+        """Return the Postfix directive ``OK``"""
         return "OK"
 
     ok = okay
-    """ok() is an alias for okay()"""
+    """``ok()`` is an alias for ``okay()``"""
 
     @staticmethod
     def defer_if_permit(msg, *args, **kwargs):
         """
-        Return the Postfix DEFER_IF_PERMIT directive with the provided message
+        Return the Postfix ``DEFER_IF_PERMIT`` directive with the provided
+        message
         """
         return f"DEFER_IF_PERMIT {msg}"
 
     @staticmethod
     def reject(msg, *args, **kwargs):
         """
-        Return the Postfix REJECT directive along with the provided message
+        Return the Postfix ``REJECT`` directive along with the provided message
         """
         return f"REJECT {msg}"
 
     @staticmethod
     def prepend(*args, **kwargs):
         """
-        Return the Postfix PREPEND directive.
-        Include the header to prepend as keyword-argument `prepend`
+        Return the Postfix ``PREPEND`` directive.
+        Include the header to prepend as keyword-argument ``prepend``
         """
         new_header = kwargs.get("prepend", None)
         if new_header is None or len(new_header) < 5:
@@ -52,7 +54,8 @@ class PostfixActions:
 
     def __init__(self, cfg=None):
         """
-        Optionally supply a CHAPPSConfig instance as the first argument.
+        Optionally supply a :py:class:`chapps.config.CHAPPSConfig` instance as
+        the first argument.
         """
         self.cfg = cfg or config
         self.config = self.cfg  # later this is overridden, in subclasses
@@ -111,17 +114,17 @@ class PostfixActions:
         return action
 
     def action_for(self, *args, **kwargs):
-        """
-        Abstract method which must be implemented in subclasses.
+        """Abstract method which must be implemented in subclasses.
 
-        This method is intended to map responses from a policy module onto
-        Postfix directives.
+        This method is intended to map responses from a policy
+        manager onto Postfix directives.
 
-        Not all policy modules return only yes/no
-        answers.  Some, like :py:mod:`chapps.spf_policy`, return a handful of
+        Not all policy managers return only yes/no answers.  Some, like
+        :py:class:`chapps.spf_policy.SPFEnforcementPolicy`, return a handful of
         different possible values, and so there must be a mechanism for
         allowing sites to determine what happens when each of those different
         outcomes occurs.
+
         """
         raise NotImplementedError(
             f"Subclasses of {self.__class__.__name__} must define the method"
@@ -131,20 +134,22 @@ class PostfixActions:
 
 
 class PostfixPassfailActions(PostfixActions):
-    """
-    Postfix Actions adapter for PASS/FAIL policy responses.
+    """Postfix Actions adapter for PASS/FAIL policy responses.
 
-    Many policies return True if the email should be accepted/forwarded
-    and return False if the email should be rejected/dropped.  This class
-    encapsulates the common case, and includes some logic to extract
-    precise instructions from the config.
+    Many policies return ``True`` if the email should be accepted/forwarded and
+    return ``False`` if the email should be rejected/dropped.  This class
+    encapsulates the common case, and includes some logic to extract precise
+    instructions from the config.
+
     """
 
     def __init__(self, cfg=None):
         super().__init__(cfg)
 
     def _get_closure_for(self, decision, msg_key=None):
-        """Create a closure for formatting these messages and store it on self.<decision>, and also return it"""
+        """Create a closure for formatting these messages and store it on
+        self.<decision>, and also return it
+        """
         msg_key = msg_key or decision
         msg = getattr(self.config, msg_key, None)
         if not msg:
@@ -186,9 +191,17 @@ class PostfixPassfailActions(PostfixActions):
         return action
 
     def action_for(self, pf_result):
-        """
-        Boolean action decider: returns 'passing' if the argument is True,
-        otherwise it returns 'fail'.
+        """Return an action closure for a pass/fail policy
+
+        Evaluates its argument ``pf_result`` as a boolean and returns the
+        action closure for 'passing' if True, otherwise the action closure for
+        'fail'.  To provide backwards-compatibility with older versions, and to
+        allow for more descriptive configuration elements, the actions may be
+        attached to keys named ``acceptance_message`` or ``rejection_message``
+        instead of ``passing`` and ``fail`` respectively.  This is only true
+        of policies with action factories inheriting from
+        :py:class:`chapps.actions.PostfixPassfailActions`
+
         """
         if pf_result:  # True / pass
             action_name = "passing"
@@ -211,47 +224,81 @@ class PostfixPassfailActions(PostfixActions):
 
 
 class PostfixOQPActions(PostfixPassfailActions):
-    """Postfix Action translator object for OutboundQuotaPolicy"""
+    """Postfix Action translator for :py:class:`chapps.policy.OutboundQuotaPolicy`"""
 
     def __init__(self, cfg=None):
         """
-        Optionally provide an instance of CHAPPSConfig.
+        Optionally provide an instance of :py::class`chapps.config.CHAPPSConfig`.
 
-        All this class does is wire up `self.config` to
-        point at the OutboundQuotaPolicy config block.
+        All this class does is wire up ``self.config`` to
+        point at the :py:class:`chapps.policy.OutboundQuotaPolicy` config block.
         """
         super().__init__(cfg)
         self.config = self.config.policy_oqp
 
 
 class PostfixGRLActions(PostfixPassfailActions):
-    """Postfix Action translator object for GreylistingPolicy"""
+    """Postfix Action translator for :py:class:`chapps.policy.GreylistingPolicy`"""
 
     def __init__(self, cfg=None):
         """
-        Optionally provide an instance of CHAPPSConfig.
+        Optionally provide an instance of :py:class:`chapps.config.CHAPPSConfig`.
 
         All this class does is wire up `self.config` to
-        point at the GreylistingPolicy config block.
+        point at the :py:class:`chapps.policy.GreylistingPolicy` config block.
         """
         super().__init__(cfg)
         self.config = self.config.policy_grl
 
 
 class PostfixSPFActions(PostfixActions):
-    """Postfix Action translator object for SPFEnforcementPolicy"""
+    """
+    Postfix Action translator for :py:class:`chapps.policy.SPFEnforcementPolicy`
+
+    .. caution::
+
+        The SPF functionality of CHAPPS is not considered complete.  YMMV
+
+    """
 
     # TODO:
     # this should not be instantiated this way as it confounds config override
+    # make this a classmethod which accepts an optional config
     greylisting_policy = GreylistingPolicy()
+    """
+    Reference to a class-global :py:class:`chapps.policy.GreylistingPolicy`
+    instance.
+
+    This implementation is poor and will change in future revisions.
+    """
 
     @staticmethod
     def greylist(msg, *args, **kwargs):
+        """This method is meant to share the same signature as the other
+        action methods, mainly defined on :py:class:`chapps.actions.PostfixActions`
+
+        The ``greylist`` action causes the email in question to be
+        greylisted, according to the policy.  The ``msg`` is used as
+        the message for the Postfix directive, or if the message has
+        no contents and the email is being deferred, the string
+        "due to SPF enforcement policy" is used.  Because the greylisting
+        policy's message is prepended later, the actual message delivered
+        by Postfix will look something like "greylisted due to SPF
+        enforcement policy".
+
+        Right now :py:class:`chapps.actions.PostfixSPFActions` uses a
+        declared class-global :py:class:`chapps.policy.GreylistingPolicy`
+        instance, which will change in a future revision so that an overriding
+        config may be provided for initialization of that instance.
+
+        """
         ppr = kwargs.get("ppr", None)
         if ppr is None:
             raise ValueError(
                 f"PostfixSPFActions.greylist() expects a ppr= kwarg providing the PPR for greylisting."
             )
+        # TODO: make this a classmethod call
+        # if there is a 'config' key in kwargs, pass it as the config
         if PostfixSPFActions.greylisting_policy.approve_policy_request(ppr):
             passing = PostfixSPFActions().action_for("pass")
             return passing(msg, ppr, *args, **kwargs)
@@ -260,10 +307,21 @@ class PostfixSPFActions(PostfixActions):
         return PostfixGRLActions().fail(msg, ppr, *args, **kwargs)
 
     def __init__(self, cfg=None):
+        """Optionally pass CHAPPSConfig override.
+
+        All this init routine needs to do is adjust ``self.config`` to refer to
+        the ``PostfixSPFActions`` config block.
+
+        """
         super().__init__(cfg)
         self.config = self.config.actions_spf
 
     def _mangle_action(self, action):
+        """
+        Perform additional mangling to turn either of 'none' or 'neutral' into
+        the same symbol, 'none_neutral'
+
+        """
         if action == "none" or action == "neutral":
             action = "none_neutral"
         else:
@@ -271,6 +329,12 @@ class PostfixSPFActions(PostfixActions):
         return action
 
     def action_for(self, spf_result):
+        """
+        Override :py:meth:`chapps.actions.PostfixActions.action_for()` to provide action closures
+        for the different SPF results.  The closures are memoized, so that
+        they only need be constructed once per runtime.
+
+        """
         spf_result = self._mangle_action(spf_result)
         action = getattr(self, spf_result, None)
         if action:
