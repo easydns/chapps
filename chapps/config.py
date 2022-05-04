@@ -36,6 +36,7 @@ from os import environ as env
 from chapps.util import AttrDict, VenvDetector
 from chapps._version import __version__
 import logging
+from typing import Union
 
 try:
     from dotenv import load_dotenv
@@ -57,7 +58,9 @@ class CHAPPSConfig:
 
     # ultimately, we may need also to allow for a command-line option
     @staticmethod
-    def what_config_file() -> Path:
+    def what_config_file(
+        default_pathname: str = "/etc/chapps/chapps.ini"
+    ) -> Path:
         """Determine what config file to read.
 
         This is to allow for easier addition of a command-line option.
@@ -65,7 +68,7 @@ class CHAPPSConfig:
         environment setting ``CHAPPS_CONFIG``
 
         """
-        config_file = Path(env.get("CHAPPS_CONFIG", "/etc/chapps/chapps.ini"))
+        config_file = Path(env.get("CHAPPS_CONFIG", default_pathname))
         return config_file
 
     @staticmethod
@@ -75,8 +78,8 @@ class CHAPPSConfig:
         """Setup default config pattern on the parser passed in
 
         :param configparser.ConfigParser cp: a
-           :py:class:`configparser.ConfigParser` instance to establish the
-           default config upon.
+           :py:class:`configparser.ConfigParser` instance to hold the
+           default config
 
         This routine establishes the default configuration.  It returns
         the same object which was passed to it.
@@ -146,27 +149,29 @@ class CHAPPSConfig:
         return cp
 
     @staticmethod
-    def write_config(cp, fn):
-        """Write the CHAPPS config to disk.
+    def write_config(cp, fn) -> Path:
+        """Write the ConfigParser contents to disk.
 
         :param configparser.ConfigParser cp: a ConfigParser object
-        :param Union[str, Path] fn: path of the config file to write
+        :param Union[str, pathlib.Path] fn: path of the config file to write
 
         If the location's parent directory does not exist, CHAPPS
         will attempt to create it.  If CHAPPS can open the file, it
-        writes the contents of ``cp`` into the file referred to by ``fn``
+        writes the contents of ``cp`` into the file referred to by ``fn``.
+
+        Returns a :class:`pathlib.Path` which points at the newly-written file.
+
         """
         config_file = Path(fn)
         if not config_file.parent.exists():
-            try:
-                config_file.parent.mkdir(
-                    0o777, True
-                )  # attempt to make any missing parent directories
+            try:  # attempt to make any missing parent directories
+                config_file.parent.mkdir(0o777, True)
             except OSError as e:
                 logger.error(
-                    f"The specified config file's directory did not exist and could not be created.  File: {str(config_file)}"
+                    "The specified config file's directory did not exist and"
+                    f" could not be created.  File: {str(config_file)}"
                 )
-                raise e
+                raise e  # possibly this should not be re-raised
         with config_file.open("w") as fh:
             cp.write(fh)
         return config_file
@@ -174,11 +179,28 @@ class CHAPPSConfig:
     def __init__(self):
         """Setup a new CHAPPSConfig instance
 
+        This routine does a bunch of different setup to provide more than just
+        the on-disk configuration to the running instance. It provides the path
+        to the config file that was used to configure the session.  It also
+        provides a symbol to refer to the version number.
+
+        It creates a :mod:`chapps.util.VenvDetector` in order to set up the
+        path to the README-API.md file.  This could also be used to change the
+        default config location when running in a ``venv``.  That would
+        eliminate the need for prefacing commands with a phrase setting the
+        config-file location.
+
+        It causes a config file full of defaults to be written to disk if it
+        does not find a file to read.  If it does find a file, it uses the
+        settings from that file to overlay the defaults already set up on the
+        config object.  It is for this reason that an API method is provided to
+        refresh the file on disk with any new settings which might have been
+        introduced since the software was last configured.
 
         """
         ### Create and initialize the config
-        config_file = CHAPPSConfig.what_config_file()
         self.venvdetector = VenvDetector()
+        config_file = CHAPPSConfig.what_config_file()
         self.configparser = configparser.ConfigParser(interpolation=None)
         CHAPPSConfig.setup_config(self.configparser)
 
@@ -200,14 +222,36 @@ class CHAPPSConfig:
         self.policy_grl = AttrDict(self.configparser["GreylistingPolicy"])
         self.policy_spf = AttrDict(self.configparser["SPFEnforcementPolicy"])
 
-    def get_block(self, blockname):
+    def get_block(self, blockname) -> AttrDict:
+        """Attempt to get a top-level block of the config as an AttrDict.
+
+        :param str blockname: the name of the block
+
+        Return ``None`` if it cannot be found.
+
+        """
         try:
             return AttrDict(self.configparser[blockname])
         except Exception:
             pass
         return None
 
-    def write(self, location=None):
+    def write(self, location: Union[str, Path] = None):
+        """Write the current config to disk.
+
+        :param Union[str,pathlib.Path] location: where to write the file
+
+        Currently manages exceptions for elements of the ``CHAPPS`` section of
+        the config, for parameters which are not specified in the file.  It
+        removes them from the config, writes the file, then restores their
+        values.  These are:
+
+          * the config file itself (as a :class:`Path`)
+          * the CHAPPS version
+          * the READMEs' directory (as a :class:`Path`)
+
+        """
+
         location = Path(location or self.chapps.config_file)
         config_file = self.chapps.config_file
         version = self.chapps.version
