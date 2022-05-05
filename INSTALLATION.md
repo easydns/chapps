@@ -180,7 +180,6 @@ callable which implements the REST API is called `chapps.rest.api:api`,
 which is an instance of `FastAPI`.
 
 ## To Sum Up
-#### (or: Getting the dumb thing to run)
 
 In bullet points, there are the prerequisites:
 - the library (and its dependencies) must be in the Python search path

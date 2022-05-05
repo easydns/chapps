@@ -205,7 +205,7 @@ In order to allow sites to specify exactly what field of the Postfix
 policy data they would like to use to identify users, the
 configuration allows the user to specify the first field to check.
 
-#### Setting the user key
+### Setting the user key
 
 Postfix submits a fairly large packet of data on each policy
 delegation request.  One prominent element of this data is the MAIL
@@ -496,12 +496,15 @@ deliveries.  Because a large proportion of spam is (or was) sent this
 way, the simple act of deferring emails from unknown (untrusted)
 sources eliminates a large amount of spam.
 
-If greylisting is being performed then emails will be greylisted--that
-is, deferred--when they are associated with source tuples which are
-not recognized.  Tracking data regarding recognized tuples is stored
-in Redis.  Config data regarding which inbound domains request
-greylisting will be obtained from the database (feature TBD) and
-cached in Redis.
+CHAPPS can perform [RCPT or DATA
+greylisting](https://datatracker.ietf.org/doc/html/rfc6647#section-2.4)
+at present, since it wants to use the sender's email address and IP
+address as well as the recipient list.  Emails will be
+greylisted--that is, deferred--when they are associated with source
+tuples which are not recognized.  Tracking data regarding recognized
+tuples is stored in Redis.  Config data regarding which inbound
+domains request greylisting will be obtained from the database
+(feature TBD) and cached in Redis.
 
 Please note that in the context of comprehensive inbound email
 filtering, SPF and greylisting have an interesting relationship which
