@@ -56,7 +56,6 @@
 <li class="toctree-l4 current"><a class="current reference internal" href="#">chapps.util module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -97,9 +96,11 @@
 <dt class="sig sig-object py" id="chapps.util.AttrDict">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.util.</span></span><span class="sig-name descname"><span class="pre">AttrDict</span></span><a class="headerlink" href="#chapps.util.AttrDict" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>This simple class allows accessing the keys of a hash as attributes on
-an object.  As a useful side effect it also casts floats and integers
-in advance.  This object is used for holding the configuration data.</p>
+<p>Attribute Dictionary</p>
+<p>This simple class allows accessing the keys of a hash as attributes on an
+object.  As a useful side effect it also casts floats, integers and
+booleans in advance.</p>
+<p>This object is used in <code class="xref py py-class docutils literal notranslate"><span class="pre">CHAPPSConfig</span></code> for holding the configuration data.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.util.AttrDict.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.util.AttrDict.__init__" title="Permalink to this definition"></a></dt>
@@ -116,19 +117,39 @@ in advance.  This object is used for holding the configuration data.</p>
 <dt class="sig sig-object py" id="chapps.util.PostfixPolicyRequest">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.util.</span></span><span class="sig-name descname"><span class="pre">PostfixPolicyRequest</span></span><a class="headerlink" href="#chapps.util.PostfixPolicyRequest" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.Mapping</span></code></a></p>
+<p>Lazy-loading Policy Request Mapping Interface</p>
 <p>An implementation of Mapping which by default only processes and caches
 values from the data payload when they are accessed, to avoid a bunch of
-useless parsing.</p>
+useless parsing.  Instances may be dereferenced like hashes, but the keys
+are also attributes on the instance, similar to <a class="reference internal" href="#chapps.util.AttrDict" title="chapps.util.AttrDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttrDict</span></code></a>.</p>
+<p>Once parsed, results are memoized.</p>
+<p>For example, a payload might look a bit like this, when it is first received from Postfix and turned into an array of one string per line:</p>
+<p>Refer to the <cite>Postfix policy delegation
+documentation &lt;http://www.postfix.org/SMTPD_POLICY_README.html&gt;</cite>
+for more information.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.util.PostfixPolicyRequest.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.util.PostfixPolicyRequest.__init__" title="Permalink to this definition"></a></dt>
-<dd><p>We get passed a payload of strings
-which are formatted as ‘key=val’</p>
+<dd><p>Store the payload.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>payload</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em>) – strings which are formatted as ‘key=val’,
+including an empty entry at the end.</p>
+</dd>
+</dl>
+<p>This routine discards the last element of the list and stores the rest
+as <code class="docutils literal notranslate"><span class="pre">self._payload</span></code>.</p>
+<div class="admonition-the-getattr-dunder-method-is-overloaded admonition">
+<p class="admonition-title">The getattr dunder method is overloaded</p>
+<p>Because the purpose of the class is to present the contents of the
+initial payload as attributes, all internal attributes are
+prefaced with an underscore.</p>
+</div>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="chapps.util.PostfixPolicyRequest.recipients">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">recipients</span></span><a class="headerlink" href="#chapps.util.PostfixPolicyRequest.recipients" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">recipients</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#chapps.util.PostfixPolicyRequest.recipients" title="Permalink to this definition"></a></dt>
 <dd><p>A convenience method to split the ‘recipient’ datum
 into comma-separated tokens, for easier counting.</p>
 </dd></dl>
@@ -142,12 +163,13 @@ into comma-separated tokens, for easier counting.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.util.VenvDetector.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datapath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.util.VenvDetector.__init__" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="chapps.util.VenvDetector.docpath">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">docpath</span></span><a class="headerlink" href="#chapps.util.VenvDetector.docpath" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Detect virtual environments and help with paths</p>
+<p>The detector encapsulates the job of determining whether a virtual
+environment is activaed, and assists in composing some important
+paths in order to locate certain files the application needs.</p>
+<p>One of those files is Markdown source which is imported into the
+live API documentation.  Another is the config file.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.util.VenvDetector.get_base_prefix_compat">
@@ -160,9 +182,31 @@ into comma-separated tokens, for easier counting.</p>
 <dd></dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="chapps.util.VenvDetector.confpath">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">confpath</span></span><a class="headerlink" href="#chapps.util.VenvDetector.confpath" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> pointing at the config file</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chapps.util.VenvDetector.docpath">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">docpath</span></span><a class="headerlink" href="#chapps.util.VenvDetector.docpath" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> pointing at the data directory</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="chapps.util.VenvDetector.ve">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ve</span></span><a class="headerlink" href="#chapps.util.VenvDetector.ve" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="chapps.util.VenvDetector.venvpath">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">venvpath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><span class="pre">pathlib.Path</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#chapps.util.VenvDetector.venvpath" title="Permalink to this definition"></a></dt>
+<dd><p>Returns None or the value of <code class="xref py py-const docutils literal notranslate"><span class="pre">sys.prefix</span></code> as a <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></p>
+<p>If no virtual environment is active, then <code class="docutils literal notranslate"><span class="pre">None</span></code> is returned,
+otherwise as <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> instance is returned, containing the path to
+the virtual environment.  This hasn’t been tested with all types of
+virtual environment.</p>
+</dd></dl>
 
 </dd></dl>
 

@@ -57,7 +57,6 @@
 <li class="toctree-l4"><a class="reference internal" href="chapps.util.html">chapps.util module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -92,12 +91,24 @@
              
   <section id="module-chapps.policy">
 <span id="chapps-policy-module"></span><h1>chapps.policy module<a class="headerlink" href="#module-chapps.policy" title="Permalink to this headline"></a></h1>
-<p>chapps.policy</p>
-<p>Policy routines for CHAPPS</p>
+<p>Policy managers</p>
+<p>So far, all but the SPF enforcement policy are contained here; it has
+extra dependencies which are isolated that way.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="chapps.policy.EmailPolicy">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.policy.</span></span><span class="sig-name descname"><span class="pre">EmailPolicy</span></span><a class="headerlink" href="#chapps.policy.EmailPolicy" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Abstract policy manager</p>
+<dl class="simple">
+<dt>Subclasses must:</dt><dd><ul class="simple">
+<li><p>set class attribute <code class="docutils literal notranslate"><span class="pre">redis_key_prefix</span></code> to a unique value.</p></li>
+<li><p>define an instance method called <a class="reference internal" href="#chapps.policy.EmailPolicy.approve_policy_request" title="chapps.policy.EmailPolicy.approve_policy_request"><code class="xref py py-meth docutils literal notranslate"><span class="pre">approve_policy_request()</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+<p>This abstract superclass provides a standard framework for constructing Redis keys,
+since the main purpose of the policy manager is to make decisions about email by
+consulting Redis.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.policy.EmailPolicy.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.policy.EmailPolicy.__init__" title="Permalink to this definition"></a></dt>
@@ -108,15 +119,32 @@
 <span class="sig-name descname"><span class="pre">approve_policy_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.policy.EmailPolicy.approve_policy_request" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.policy.EmailPolicy.redis_key_prefix">
-<span class="sig-name descname"><span class="pre">redis_key_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'chapps'</span></em><a class="headerlink" href="#chapps.policy.EmailPolicy.redis_key_prefix" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.policy.EmailPolicy.rediskey">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rediskey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.policy.EmailPolicy.rediskey" title="Permalink to this definition"></a></dt>
 <dd><p>Format a string to serve as a Redis key for arbitrary data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – a prefix unique to the policy manager (subclass)</p></li>
+<li><p><strong>args</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em>) – a list of strings to use to construct the rest of the key</p></li>
+</ul>
+</dd>
+</dl>
+<p>In CHAPPS, each policy has its own prefix.  What other data the policy
+uses to construct the key is not relevant to any other entities, though
+it must be sent as a string.</p>
+<p>This routine simply joins up all the tokens with colon (<code class="docutils literal notranslate"><span class="pre">:</span></code>)
+characters, so it is not recommended to use them as part of the
+key-components (although it should ‘just work’).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.policy.EmailPolicy.redis_key_prefix">
+<span class="sig-name descname"><span class="pre">redis_key_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'chapps'</span></em><a class="headerlink" href="#chapps.policy.EmailPolicy.redis_key_prefix" title="Permalink to this definition"></a></dt>
+<dd><p>A placeholder value, since this class is abstract</p>
+<p>Subclasses should set this to a unique prefix identifying the policy manager.
+For examples, see the included subclasses.</p>
 </dd></dl>
 
 </dd></dl>
@@ -159,11 +187,6 @@ named arguments for GreylistingPolicy objects are:</p>
 <span class="sig-name descname"><span class="pre">client_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.policy.GreylistingPolicy.client_key" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.policy.GreylistingPolicy.redis_key_prefix">
-<span class="sig-name descname"><span class="pre">redis_key_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'grl'</span></em><a class="headerlink" href="#chapps.policy.GreylistingPolicy.redis_key_prefix" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.policy.GreylistingPolicy.tuple_key">
 <span class="sig-name descname"><span class="pre">tuple_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.policy.GreylistingPolicy.tuple_key" title="Permalink to this definition"></a></dt>
@@ -171,6 +194,14 @@ named arguments for GreylistingPolicy objects are:</p>
 - client_address
 - sender
 - recipient</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.policy.GreylistingPolicy.redis_key_prefix">
+<span class="sig-name descname"><span class="pre">redis_key_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'grl'</span></em><a class="headerlink" href="#chapps.policy.GreylistingPolicy.redis_key_prefix" title="Permalink to this definition"></a></dt>
+<dd><p>A placeholder value, since this class is abstract</p>
+<p>Subclasses should set this to a unique prefix identifying the policy manager.
+For examples, see the included subclasses.</p>
 </dd></dl>
 
 </dd></dl>
@@ -224,11 +255,6 @@ does not seem to.</p>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.policy.OutboundQuotaPolicy.redis_key_prefix">
-<span class="sig-name descname"><span class="pre">redis_key_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'oqp'</span></em><a class="headerlink" href="#chapps.policy.OutboundQuotaPolicy.redis_key_prefix" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.policy.OutboundQuotaPolicy.refresh_policy_cache">
 <span class="sig-name descname"><span class="pre">refresh_policy_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quota</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.policy.OutboundQuotaPolicy.refresh_policy_cache" title="Permalink to this definition"></a></dt>
@@ -251,6 +277,14 @@ does not seem to.</p>
 <dd class="field-odd"><p><strong>user</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – </p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.policy.OutboundQuotaPolicy.redis_key_prefix">
+<span class="sig-name descname"><span class="pre">redis_key_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'oqp'</span></em><a class="headerlink" href="#chapps.policy.OutboundQuotaPolicy.redis_key_prefix" title="Permalink to this definition"></a></dt>
+<dd><p>A placeholder value, since this class is abstract</p>
+<p>Subclasses should set this to a unique prefix identifying the policy manager.
+For examples, see the included subclasses.</p>
 </dd></dl>
 
 </dd></dl>
@@ -299,11 +333,6 @@ apparent sender domain</p>
 <span class="sig-name descname"><span class="pre">clear_policy_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.policy.SenderDomainAuthPolicy.clear_policy_cache" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.policy.SenderDomainAuthPolicy.redis_key_prefix">
-<span class="sig-name descname"><span class="pre">redis_key_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sda'</span></em><a class="headerlink" href="#chapps.policy.SenderDomainAuthPolicy.redis_key_prefix" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.policy.SenderDomainAuthPolicy.sender_domain_key">
 <span class="sig-name descname"><span class="pre">sender_domain_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.policy.SenderDomainAuthPolicy.sender_domain_key" title="Permalink to this definition"></a></dt>
@@ -314,6 +343,14 @@ apparent sender domain</p>
 <dt class="sig sig-object py" id="chapps.policy.SenderDomainAuthPolicy.sender_email_key">
 <span class="sig-name descname"><span class="pre">sender_email_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ppr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.policy.SenderDomainAuthPolicy.sender_email_key" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.policy.SenderDomainAuthPolicy.redis_key_prefix">
+<span class="sig-name descname"><span class="pre">redis_key_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sda'</span></em><a class="headerlink" href="#chapps.policy.SenderDomainAuthPolicy.redis_key_prefix" title="Permalink to this definition"></a></dt>
+<dd><p>A placeholder value, since this class is abstract</p>
+<p>Subclasses should set this to a unique prefix identifying the policy manager.
+For examples, see the included subclasses.</p>
+</dd></dl>
 
 </dd></dl>
 

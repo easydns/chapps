@@ -1,6 +1,11 @@
 chapps.rest package
 ===================
 
+.. automodule:: chapps.rest
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -19,11 +24,3 @@ Submodules
    chapps.rest.dbmodels
    chapps.rest.dbsession
    chapps.rest.models
-
-Module contents
----------------
-
-.. automodule:: chapps.rest
-   :members:
-   :undoc-members:
-   :show-inheritance:

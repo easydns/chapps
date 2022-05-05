@@ -57,7 +57,6 @@
 <li class="toctree-l4"><a class="reference internal" href="chapps.util.html">chapps.util module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -127,12 +126,38 @@ commonly used portions wrapped in <a class="reference internal" href="chapps.uti
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.config.CHAPPSConfig.__init__" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Setup a new CHAPPSConfig instance</p>
+<p>This routine does a bunch of different setup to provide more than just
+the on-disk configuration to the running instance. It provides the path
+to the config file that was used to configure the session.  It also
+provides a symbol to refer to the version number.</p>
+<p>It creates a <a class="reference internal" href="chapps.util.html#chapps.util.VenvDetector" title="chapps.util.VenvDetector"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chapps.util.VenvDetector</span></code></a> in order to set up the
+path to the README-API.md file.  This could also be used to change the
+default config location when running in a <code class="docutils literal notranslate"><span class="pre">venv</span></code>.  That would
+eliminate the need for prefacing commands with a phrase setting the
+config-file location.</p>
+<p>It causes a config file full of defaults to be written to disk if it
+does not find a file to read.  If it does find a file, it uses the
+settings from that file to overlay the defaults already set up on the
+config object.  It is for this reason that an API method is provided to
+refresh the file on disk with any new settings which might have been
+introduced since the software was last configured.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig.get_block">
 <span class="sig-name descname"><span class="pre">get_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blockname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.config.CHAPPSConfig.get_block" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Attempt to get a top-level block of the config as an AttrDict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>blockname</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – the name of the block</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="chapps.util.html#chapps.util.AttrDict" title="chapps.util.AttrDict">chapps.util.AttrDict</a></p>
+</dd>
+</dl>
+<p>Return <code class="docutils literal notranslate"><span class="pre">None</span></code> if it cannot be found.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig.setup_config">
@@ -141,8 +166,8 @@ commonly used portions wrapped in <a class="reference internal" href="chapps.uti
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>cp</strong> (<a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser" title="(in Python v3.10)"><em>configparser.ConfigParser</em></a>) – a
-<a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">configparser.ConfigParser</span></code></a> instance to establish the
-default config upon.</p>
+<a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">configparser.ConfigParser</span></code></a> instance to hold the
+default config</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser" title="(in Python v3.10)">configparser.ConfigParser</a></p>
@@ -154,14 +179,17 @@ the same object which was passed to it.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig.what_config_file">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">what_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.config.CHAPPSConfig.what_config_file" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">what_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_pathname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/etc/chapps/chapps.ini'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.config.CHAPPSConfig.what_config_file" title="Permalink to this definition"></a></dt>
 <dd><p>Determine what config file to read.</p>
 <p>This is to allow for easier addition of a command-line option.
 Also encapsulates search for possible file pointed to by the
 environment setting <code class="docutils literal notranslate"><span class="pre">CHAPPS_CONFIG</span></code></p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)">pathlib.Path</a></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>default_pathname</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)">pathlib.Path</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -169,14 +197,44 @@ environment setting <code class="docutils literal notranslate"><span class="pre"
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig.write">
 <span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.config.CHAPPSConfig.write" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Write the current config to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>location</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><em>pathlib.Path</em></a><em>]</em>) – where to write the file</p>
+</dd>
+</dl>
+<p>Currently manages exceptions for elements of the <code class="docutils literal notranslate"><span class="pre">CHAPPS</span></code> section of
+the config, for parameters which are not specified in the file.  It
+removes them from the config, writes the file, then restores their
+values.  These are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the config file itself (as a <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>)</p></li>
+<li><p>the CHAPPS version</p></li>
+<li><p>the READMEs’ directory (as a <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>)</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.config.CHAPPSConfig.write_config">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.config.CHAPPSConfig.write_config" title="Permalink to this definition"></a></dt>
-<dd><p>write config in cp to file named fn,
-if no such file exists; returns a Path
-object pointing at the config file</p>
+<dd><p>Write the ConfigParser contents to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cp</strong> (<a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser" title="(in Python v3.10)"><em>configparser.ConfigParser</em></a>) – a ConfigParser object</p></li>
+<li><p><strong>fn</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><em>pathlib.Path</em></a><em>]</em>) – path of the config file to write</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)">pathlib.Path</a></p>
+</dd>
+</dl>
+<p>If the location’s parent directory does not exist, CHAPPS
+will attempt to create it.  If CHAPPS can open the file, it
+writes the contents of <code class="docutils literal notranslate"><span class="pre">cp</span></code> into the file referred to by <code class="docutils literal notranslate"><span class="pre">fn</span></code>.</p>
+<p>Returns a <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.Path</span></code></a> which points at the newly-written file.</p>
 </dd></dl>
 
 </dd></dl>

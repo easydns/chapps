@@ -1,6 +1,11 @@
 chapps.rest.routers package
 ===========================
 
+.. automodule:: chapps.rest.routers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -13,11 +18,3 @@ Submodules
    chapps.rest.routers.live
    chapps.rest.routers.quotas
    chapps.rest.routers.users
-
-Module contents
----------------
-
-.. automodule:: chapps.rest.routers
-   :members:
-   :undoc-members:
-   :show-inheritance:

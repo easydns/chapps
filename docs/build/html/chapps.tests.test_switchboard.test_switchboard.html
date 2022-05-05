@@ -49,7 +49,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="chapps.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -92,11 +91,6 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_switchboard.test_switchboard.</span></span><span class="sig-name descname"><span class="pre">Test_GreylistingHandler</span></span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_GreylistingHandler" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Tests of the Greylisting switchboard</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_GreylistingHandler.pytestmark">
-<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_GreylistingHandler.pytestmark" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_GreylistingHandler.test_handle_allowed_client">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_handle_allowed_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear_redis_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_grl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grl_reader_with_tally</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_writer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_GreylistingHandler.test_handle_allowed_client" title="Permalink to this definition"></a></dt>
@@ -129,17 +123,17 @@ WHEN  the two attempts are two close together
 THEN  reject the email</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_GreylistingHandler.pytestmark">
+<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_GreylistingHandler.pytestmark" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_OutboundMultipolicyHandler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_switchboard.test_switchboard.</span></span><span class="sig-name descname"><span class="pre">Test_OutboundMultipolicyHandler</span></span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_OutboundMultipolicyHandler" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_OutboundMultipolicyHandler.pytestmark">
-<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_OutboundMultipolicyHandler.pytestmark" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_OutboundMultipolicyHandler.test_authed_user_gets_quota_check">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_authed_user_gets_quota_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis_sda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_sda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_reader_sda_auth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populated_database_fixture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database_fixture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finalizing_pcadapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_adapter_fixture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_OutboundMultipolicyHandler.test_authed_user_gets_quota_check" title="Permalink to this definition"></a></dt>
@@ -162,6 +156,11 @@ THEN  reject the email</p>
 <dd><p>Verify that unsuccessful SDA tests prevent quota testing, and immediately reject the email</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_OutboundMultipolicyHandler.pytestmark">
+<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_OutboundMultipolicyHandler.pytestmark" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -169,11 +168,6 @@ THEN  reject the email</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_switchboard.test_switchboard.</span></span><span class="sig-name descname"><span class="pre">Test_OutboundQuotaHandler</span></span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_OutboundQuotaHandler" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Tests for the OQP switchboard</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_OutboundQuotaHandler.pytestmark">
-<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_OutboundQuotaHandler.pytestmark" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_OutboundQuotaHandler.test_default_policy">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_default_policy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mock_reader_ok</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_writer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_OutboundQuotaHandler.test_default_policy" title="Permalink to this definition"></a></dt>
@@ -192,6 +186,11 @@ THEN  reject the email</p>
 <dd><p>Verify that when a permissible request is received, it gets an OK.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_OutboundQuotaHandler.pytestmark">
+<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_OutboundQuotaHandler.pytestmark" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -199,16 +198,16 @@ THEN  reject the email</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_switchboard.test_switchboard.</span></span><span class="sig-name descname"><span class="pre">Test_RequestHandler</span></span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_RequestHandler" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class contains the actual async handler logic</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_RequestHandler.pytestmark">
-<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_RequestHandler.pytestmark" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_RequestHandler.test_exception_handling">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_exception_handling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_redis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_reader_ok</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_exc_raising_writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populated_database_fixture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_RequestHandler.test_exception_handling" title="Permalink to this definition"></a></dt>
 <dd><p>Verify that if an exception is raised, it will be handled by logging</p>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_RequestHandler.pytestmark">
+<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_RequestHandler.pytestmark" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -217,11 +216,6 @@ THEN  reject the email</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_switchboard.test_switchboard.</span></span><span class="sig-name descname"><span class="pre">Test_SenderDomainAuthHandler</span></span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_SenderDomainAuthHandler" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Tests of the SenderDomainAuth handler</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_SenderDomainAuthHandler.pytestmark">
-<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_SenderDomainAuthHandler.pytestmark" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_SenderDomainAuthHandler.test_handle_authorized_user">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_handle_authorized_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear_redis_sda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_sda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_reader_sda_auth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_writer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_SenderDomainAuthHandler.test_handle_authorized_user" title="Permalink to this definition"></a></dt>
@@ -237,6 +231,11 @@ THEN  return the acceptance message</p>
 WHEN  asked for a response
 THEN  return the rejection message</p>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_switchboard.Test_SenderDomainAuthHandler.pytestmark">
+<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_switchboard.Test_SenderDomainAuthHandler.pytestmark" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

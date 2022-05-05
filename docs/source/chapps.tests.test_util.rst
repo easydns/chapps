@@ -1,6 +1,11 @@
 chapps.tests.test\_util package
 ===============================
 
+.. automodule:: chapps.tests.test_util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -9,11 +14,3 @@ Submodules
 
    chapps.tests.test_util.conftest
    chapps.tests.test_util.test_util
-
-Module contents
----------------
-
-.. automodule:: chapps.tests.test_util
-   :members:
-   :undoc-members:
-   :show-inheritance:

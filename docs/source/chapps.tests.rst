@@ -1,6 +1,11 @@
 chapps.tests package
 ====================
 
+.. automodule:: chapps.tests
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -22,11 +27,3 @@ Submodules
    :maxdepth: 4
 
    chapps.tests.conftest
-
-Module contents
----------------
-
-.. automodule:: chapps.tests
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -57,7 +57,6 @@
 <li class="toctree-l4"><a class="reference internal" href="chapps.util.html">chapps.util module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -93,31 +92,72 @@
   <section id="module-chapps.outbound">
 <span id="chapps-outbound-module"></span><h1>chapps.outbound module<a class="headerlink" href="#module-chapps.outbound" title="Permalink to this headline"></a></h1>
 <p>Classes related to outbound traffic</p>
+<p>Right now there is only one, which is an outbound-only subclass of
+<a class="reference internal" href="chapps.util.html#chapps.util.PostfixPolicyRequest" title="chapps.util.PostfixPolicyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">chapps.util.PostfixPolicyRequest</span></code></a>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="chapps.outbound.OutboundPPR">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.outbound.</span></span><span class="sig-name descname"><span class="pre">OutboundPPR</span></span><a class="headerlink" href="#chapps.outbound.OutboundPPR" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="chapps.util.html#chapps.util.PostfixPolicyRequest" title="chapps.util.PostfixPolicyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">chapps.util.PostfixPolicyRequest</span></code></a></p>
+<p>Encapsulates logic to identify the authenticated user sending the email.</p>
+<p>Ignoring non-authenticated email attempts, which I think everyone does
+today, outbound requests should all be associated to a known user who has
+authenticated to Postfix.  Postfix provides information in the payload
+which can be used to identify the user.  That piece of data may then be
+used to apply policies to the outbound email of a particular user.</p>
+<p>In order to allow for the possibility that other sites might prefer to use
+arbitrary bits of the Postfix policy request payload to identify users,
+CHAPPS allows for the key used to extract that data to be specified in the
+config file.  At present, there is no support for combining more than one
+key.  TODO: Such functionality could be achieved by a classmethod setting
+the user-getter routine, accepting as its argument a closure which accepts
+a <a class="reference internal" href="chapps.util.html#chapps.util.PostfixPolicyRequest" title="chapps.util.PostfixPolicyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">PostfixPolicyRequest</span></code></a> and returns a string which is the
+user-identifier.</p>
+<div class="admonition-notes-about-subclassing admonition">
+<p class="admonition-title">Notes about subclassing</p>
+<p>Don’t forget that the normal attribute space is reserved for the payload
+data.  All internal attributes should start with <code class="docutils literal notranslate"><span class="pre">_</span></code> (underscore).</p>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.outbound.OutboundPPR.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.outbound.OutboundPPR.__init__" title="Permalink to this definition"></a></dt>
-<dd><p>We get passed a payload of strings
-which are formatted as ‘key=val’</p>
+<dd><p>Create a new outbound policy request</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="chapps.outbound.OutboundPPR._get_user">
+<span class="sig-name descname"><span class="pre">_get_user</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.outbound.OutboundPPR._get_user" title="Permalink to this definition"></a></dt>
+<dd><p>Obtain the user value, and memoize the procedure</p>
+<p>In an attempt to support as many different configuration scenarios as
+possible, the codebase can attempt to find a user-identifier in a few
+different places, in a search path.  Since it is possible to configure
+this search path via the config file, the actual search function is
+produced as a closure and memoized at the class level, so that all
+future instances will be able to use the same function without creating
+a new (identical) closure first.</p>
+<p>The closure produced by this factory raises <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.10)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> if it
+cannot find a non-nil user-identifier.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Any alternate closure provided for this purpose should also raise
+<a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.10)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> if no user-identifier can be found, as it is
+handled explicitly in <a class="reference internal" href="#chapps.outbound.OutboundPPR.user" title="chapps.outbound.OutboundPPR.user"><code class="xref py py-meth docutils literal notranslate"><span class="pre">user()</span></code></a></p>
+</div>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.outbound.OutboundPPR.clear_memoized_routines">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_memoized_routines</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.outbound.OutboundPPR.clear_memoized_routines" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.outbound.OutboundPPR.memoized_routines">
-<span class="sig-name descname"><span class="pre">memoized_routines</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#chapps.outbound.OutboundPPR.memoized_routines" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Clear all memoized routines</p>
+<p>This mainly exists to facilitate testing.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="chapps.outbound.OutboundPPR.user">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">user</span></span><a class="headerlink" href="#chapps.outbound.OutboundPPR.user" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Return and memoize the user-identifier.</p>
+</dd></dl>
 
 </dd></dl>
 

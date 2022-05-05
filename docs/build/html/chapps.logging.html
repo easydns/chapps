@@ -57,7 +57,6 @@
 <li class="toctree-l4"><a class="reference internal" href="chapps.util.html">chapps.util module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -92,31 +91,88 @@
              
   <section id="module-chapps.logging">
 <span id="chapps-logging-module"></span><h1>chapps.logging module<a class="headerlink" href="#module-chapps.logging" title="Permalink to this headline"></a></h1>
-<p>CHAPPS module for controlling logging</p>
+<p>Logging</p>
+<p>This module’s purpose is to ensure that CHAPPS modules
+end up instantiating loggers which all share a common
+formatter and handler.</p>
+<p>It has been reworked a little bit since its inception,
+and it may approach the issue from two directions, still.
+It does attempt to be the first thing to get a handler,
+and thereby be able to set the basic config.</p>
+<p>But it also instantiates a logger at the top of the hierarchy,
+one named simply <code class="docutils literal notranslate"><span class="pre">chapps</span></code>, so that all further CHAPPS loggers
+(using the recommended pattern) will be under that parent logger
+and inherit its config.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="chapps.logging.LogSetup">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.logging.</span></span><span class="sig-name descname"><span class="pre">LogSetup</span></span><a class="headerlink" href="#chapps.logging.LogSetup" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Establish global log format and handler for CHAPPS</p>
+<p>For consistency, logs from different modules should all appear to come from
+CHAPPS, otherwise it may be quite a headache to make sense of them.  The
+class defines two different formatters, one for debugging and one for
+general use.  There is no fancy method in place for switching between them
+at present.</p>
+<p>The default formatter is very basic, simply prepending “CHAPPS:” and the
+severity level to the message.</p>
+<p>The default minimum severity at present is <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>.</p>
+<p>The default <strong>syslog</strong> facility is <code class="docutils literal notranslate"><span class="pre">LOCAL0</span></code>.</p>
+<p>It is possible to use <strong>rsyslog</strong> configuration to send different levels of
+the <code class="docutils literal notranslate"><span class="pre">LOCAL0</span></code> facility to different destinations, or to ignore <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>
+level messages entirely.  An example config is included in the project’s
+ancillary materials.</p>
+<p>It had been a conscious decision not to include the <a class="reference internal" href="chapps.config.html#module-chapps.config" title="chapps.config"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chapps.config</span></code></a>
+module in this module, in order to avoid circular dependencies when this
+module was included everywhere.  The rework has this module loaded as part
+of package initialization, so it is no longer necessary to load it
+anywhere, since once it is loaded its job is done.  TODO: add configuration
+support for <strong>syslog</strong> facility and minimum severity.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.logging.LogSetup.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chapps.logging.LogSetup.__init__" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Setup logging</p>
+<p>If there are not yet any handlers, this routine calls
+:py:func:<code class="docutils literal notranslate"><span class="pre">logging.basicConfig</span></code> to set up basic logging configuration.</p>
+<p>If there are already handlers, for instance due to running within
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">pytest</span></code>, then nothing happens.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="chapps.logging.LogSetup.debug_formatter">
 <span class="sig-name descname"><span class="pre">debug_formatter</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;logging.Formatter</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#chapps.logging.LogSetup.debug_formatter" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>A formatter helpful for debugging.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="chapps.logging.LogSetup.maillog_formatter">
 <span class="sig-name descname"><span class="pre">maillog_formatter</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;logging.Formatter</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#chapps.logging.LogSetup.maillog_formatter" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>The default formatter, anticipated to go to the mail log</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="chapps.logging.LogSetup.syslog_handler">
 <span class="sig-name descname"><span class="pre">syslog_handler</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SysLogHandler</span> <span class="pre">(DEBUG)&gt;</span></em><a class="headerlink" href="#chapps.logging.LogSetup.syslog_handler" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>A handler which uses <code class="docutils literal notranslate"><span class="pre">/dev/log</span></code> to send messages to <strong>syslog</strong></p>
+</dd></dl>
 
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="chapps.logging.DEFAULT_FACILITY">
+<span class="sig-prename descclassname"><span class="pre">chapps.logging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_FACILITY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#chapps.logging.DEFAULT_FACILITY" title="Permalink to this definition"></a></dt>
+<dd><p>Default <strong>syslog</strong> facility <code class="docutils literal notranslate"><span class="pre">LOCAL0</span></code></p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="chapps.logging.DEFAULT_LEVEL">
+<span class="sig-prename descclassname"><span class="pre">chapps.logging.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_LEVEL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#chapps.logging.DEFAULT_LEVEL" title="Permalink to this definition"></a></dt>
+<dd><p>Default minimum severity <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code></p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="chapps.logging.logger">
+<span class="sig-prename descclassname"><span class="pre">chapps.logging.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;Logger</span> <span class="pre">chapps</span> <span class="pre">(DEBUG)&gt;</span></em><a class="headerlink" href="#chapps.logging.logger" title="Permalink to this definition"></a></dt>
+<dd><p>Create a logger in order to configure the top of the hierarchy</p>
 </dd></dl>
 
 </section>

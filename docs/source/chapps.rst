@@ -1,6 +1,11 @@
 chapps package
 ==============
 
+.. automodule:: chapps
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -26,11 +31,3 @@ Submodules
    chapps.spf_policy
    chapps.switchboard
    chapps.util
-
-Module contents
----------------
-
-.. automodule:: chapps
-   :members:
-   :undoc-members:
-   :show-inheritance:

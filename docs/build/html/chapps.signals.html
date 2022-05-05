@@ -57,7 +57,6 @@
 <li class="toctree-l4"><a class="reference internal" href="chapps.util.html">chapps.util module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -142,6 +141,13 @@
 <p>Exceptions which occur during outbound mail processing</p>
 </dd></dl>
 
+<dl class="py exception">
+<dt class="sig sig-object py" id="chapps.signals.TooManyAtsException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.signals.</span></span><span class="sig-name descname"><span class="pre">TooManyAtsException</span></span><a class="headerlink" href="#chapps.signals.TooManyAtsException" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#chapps.signals.CHAPPSException" title="chapps.signals.CHAPPSException"><code class="xref py py-class docutils literal notranslate"><span class="pre">chapps.signals.CHAPPSException</span></code></a></p>
+<p>An email address had too many at-signs in it</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="chapps.signals.SignalHandlerFactory">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.signals.</span></span><span class="sig-name descname"><span class="pre">SignalHandlerFactory</span></span><a class="headerlink" href="#chapps.signals.SignalHandlerFactory" title="Permalink to this definition"></a></dt>
@@ -153,13 +159,6 @@
 <dd><p>Pass in the asyncio event loop and get a closure which will end the program</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="chapps.signals.TooManyAtsException">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.signals.</span></span><span class="sig-name descname"><span class="pre">TooManyAtsException</span></span><a class="headerlink" href="#chapps.signals.TooManyAtsException" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#chapps.signals.CHAPPSException" title="chapps.signals.CHAPPSException"><code class="xref py py-class docutils literal notranslate"><span class="pre">chapps.signals.CHAPPSException</span></code></a></p>
-<p>An email address had too many at-signs in it</p>
 </dd></dl>
 
 </section>

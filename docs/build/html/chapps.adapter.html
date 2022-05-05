@@ -57,7 +57,6 @@
 <li class="toctree-l4"><a class="reference internal" href="chapps.util.html">chapps.util module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -108,18 +107,6 @@ A change is planned to convert all of this to use SQLAlchemy.</p>
 deprecated.  In a future version, all of this logic will be accomplished
 using SQLAlchemy.</p>
 </div>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.adapter.MariaDBQuotaAdapter.basic_quotas">
-<span class="sig-name descname"><span class="pre">basic_quotas</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;INSERT</span> <span class="pre">INTO</span> <span class="pre">quotas</span> <span class="pre">(</span> <span class="pre">name,</span> <span class="pre">quota</span> <span class="pre">)</span> <span class="pre">VALUES</span> <span class="pre">('10eph',</span> <span class="pre">240),('50eph',</span> <span class="pre">1200),('200eph',</span> <span class="pre">4800)&quot;</span></em><a class="headerlink" href="#chapps.adapter.MariaDBQuotaAdapter.basic_quotas" title="Permalink to this definition"></a></dt>
-<dd><p>Doubly deprecated insert statement for creating basic quotas.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.adapter.MariaDBQuotaAdapter.join_table">
-<span class="sig-name descname"><span class="pre">join_table</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CREATE</span> <span class="pre">TABLE</span> <span class="pre">IF</span> <span class="pre">NOT</span> <span class="pre">EXISTS</span> <span class="pre">quota_user</span> <span class="pre">(quota_id</span> <span class="pre">BIGINT</span> <span class="pre">NOT</span> <span class="pre">NULL,user_id</span> <span class="pre">BIGINT</span> <span class="pre">NOT</span> <span class="pre">NULL</span> <span class="pre">PRIMARY</span> <span class="pre">KEY,CONSTRAINT</span> <span class="pre">fk_user_quota</span> <span class="pre">FOREIGN</span> <span class="pre">KEY</span> <span class="pre">(user_id)</span> <span class="pre">REFERENCES</span> <span class="pre">users</span> <span class="pre">(id)</span> <span class="pre">ON</span> <span class="pre">DELETE</span> <span class="pre">CASCADE</span> <span class="pre">ON</span> <span class="pre">UPDATE</span> <span class="pre">RESTRICT,CONSTRAINT</span> <span class="pre">fk_quota</span> <span class="pre">FOREIGN</span> <span class="pre">KEY</span> <span class="pre">(quota_id)</span> <span class="pre">REFERENCES</span> <span class="pre">quotas</span> <span class="pre">(id)</span> <span class="pre">ON</span> <span class="pre">DELETE</span> <span class="pre">CASCADE</span> <span class="pre">ON</span> <span class="pre">UPDATE</span> <span class="pre">CASCADE)'</span></em><a class="headerlink" href="#chapps.adapter.MariaDBQuotaAdapter.join_table" title="Permalink to this definition"></a></dt>
-<dd><p>SQL statement for creating the join table between <strong>Quota</strong> and <strong>User</strong> tables.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.adapter.MariaDBQuotaAdapter.quota_dict">
 <span class="sig-name descname"><span class="pre">quota_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">users</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.adapter.MariaDBQuotaAdapter.quota_dict" title="Permalink to this definition"></a></dt>
@@ -169,6 +156,18 @@ empty or not provided, all users will be listed.</p></li>
 <p>Provide a function to execute over each user and its quota.  Use this
 to directly wire the database-loading logic to the Redis-population
 logic.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.adapter.MariaDBQuotaAdapter.basic_quotas">
+<span class="sig-name descname"><span class="pre">basic_quotas</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;INSERT</span> <span class="pre">INTO</span> <span class="pre">quotas</span> <span class="pre">(</span> <span class="pre">name,</span> <span class="pre">quota</span> <span class="pre">)</span> <span class="pre">VALUES</span> <span class="pre">('10eph',</span> <span class="pre">240),('50eph',</span> <span class="pre">1200),('200eph',</span> <span class="pre">4800)&quot;</span></em><a class="headerlink" href="#chapps.adapter.MariaDBQuotaAdapter.basic_quotas" title="Permalink to this definition"></a></dt>
+<dd><p>Doubly deprecated insert statement for creating basic quotas.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.adapter.MariaDBQuotaAdapter.join_table">
+<span class="sig-name descname"><span class="pre">join_table</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CREATE</span> <span class="pre">TABLE</span> <span class="pre">IF</span> <span class="pre">NOT</span> <span class="pre">EXISTS</span> <span class="pre">quota_user</span> <span class="pre">(quota_id</span> <span class="pre">BIGINT</span> <span class="pre">NOT</span> <span class="pre">NULL,user_id</span> <span class="pre">BIGINT</span> <span class="pre">NOT</span> <span class="pre">NULL</span> <span class="pre">PRIMARY</span> <span class="pre">KEY,CONSTRAINT</span> <span class="pre">fk_user_quota</span> <span class="pre">FOREIGN</span> <span class="pre">KEY</span> <span class="pre">(user_id)</span> <span class="pre">REFERENCES</span> <span class="pre">users</span> <span class="pre">(id)</span> <span class="pre">ON</span> <span class="pre">DELETE</span> <span class="pre">CASCADE</span> <span class="pre">ON</span> <span class="pre">UPDATE</span> <span class="pre">RESTRICT,CONSTRAINT</span> <span class="pre">fk_quota</span> <span class="pre">FOREIGN</span> <span class="pre">KEY</span> <span class="pre">(quota_id)</span> <span class="pre">REFERENCES</span> <span class="pre">quotas</span> <span class="pre">(id)</span> <span class="pre">ON</span> <span class="pre">DELETE</span> <span class="pre">CASCADE</span> <span class="pre">ON</span> <span class="pre">UPDATE</span> <span class="pre">CASCADE)'</span></em><a class="headerlink" href="#chapps.adapter.MariaDBQuotaAdapter.join_table" title="Permalink to this definition"></a></dt>
+<dd><p>SQL statement for creating the join table between <strong>Quota</strong> and <strong>User</strong> tables.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -225,11 +224,6 @@ using SQLAlchemy.</p>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.adapter.MariaDBSenderDomainAuthAdapter.check_domain_query">
-<span class="sig-name descname"><span class="pre">check_domain_query</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;SELECT</span> <span class="pre">COUNT(d.name)</span> <span class="pre">FROM</span> <span class="pre">domains</span> <span class="pre">AS</span> <span class="pre">d</span> <span class="pre">LEFT</span> <span class="pre">JOIN</span> <span class="pre">domain_user</span> <span class="pre">AS</span> <span class="pre">j</span> <span class="pre">ON</span> <span class="pre">d.id</span> <span class="pre">=</span> <span class="pre">j.domain_id</span> <span class="pre">LEFT</span> <span class="pre">JOIN</span> <span class="pre">users</span> <span class="pre">AS</span> <span class="pre">u</span> <span class="pre">ON</span> <span class="pre">u.id</span> <span class="pre">=</span> <span class="pre">j.user_id</span> <span class="pre">WHERE</span> <span class="pre">d.name</span> <span class="pre">=</span> <span class="pre">'{domain}'</span> <span class="pre">AND</span> <span class="pre">u.name</span> <span class="pre">=</span> <span class="pre">'{user}'&quot;</span></em><a class="headerlink" href="#chapps.adapter.MariaDBSenderDomainAuthAdapter.check_domain_query" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.adapter.MariaDBSenderDomainAuthAdapter.check_email_for_user">
 <span class="sig-name descname"><span class="pre">check_email_for_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.adapter.MariaDBSenderDomainAuthAdapter.check_email_for_user" title="Permalink to this definition"></a></dt>
@@ -246,6 +240,11 @@ using SQLAlchemy.</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.adapter.MariaDBSenderDomainAuthAdapter.check_domain_query">
+<span class="sig-name descname"><span class="pre">check_domain_query</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;SELECT</span> <span class="pre">COUNT(d.name)</span> <span class="pre">FROM</span> <span class="pre">domains</span> <span class="pre">AS</span> <span class="pre">d</span> <span class="pre">LEFT</span> <span class="pre">JOIN</span> <span class="pre">domain_user</span> <span class="pre">AS</span> <span class="pre">j</span> <span class="pre">ON</span> <span class="pre">d.id</span> <span class="pre">=</span> <span class="pre">j.domain_id</span> <span class="pre">LEFT</span> <span class="pre">JOIN</span> <span class="pre">users</span> <span class="pre">AS</span> <span class="pre">u</span> <span class="pre">ON</span> <span class="pre">u.id</span> <span class="pre">=</span> <span class="pre">j.user_id</span> <span class="pre">WHERE</span> <span class="pre">d.name</span> <span class="pre">=</span> <span class="pre">'{domain}'</span> <span class="pre">AND</span> <span class="pre">u.name</span> <span class="pre">=</span> <span class="pre">'{user}'&quot;</span></em><a class="headerlink" href="#chapps.adapter.MariaDBSenderDomainAuthAdapter.check_domain_query" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="chapps.adapter.MariaDBSenderDomainAuthAdapter.check_email_query">

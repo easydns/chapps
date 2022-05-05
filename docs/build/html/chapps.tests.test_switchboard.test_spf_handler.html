@@ -49,7 +49,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="chapps.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="chapps.html#module-chapps">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -92,11 +91,6 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">chapps.tests.test_switchboard.test_spf_handler.</span></span><span class="sig-name descname"><span class="pre">Test_SPFEnforcementHandler</span></span><a class="headerlink" href="#chapps.tests.test_switchboard.test_spf_handler.Test_SPFEnforcementHandler" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class contains tests of the SPF Enforcement Handler</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_spf_handler.Test_SPFEnforcementHandler.pytestmark">
-<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_spf_handler.Test_SPFEnforcementHandler.pytestmark" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_spf_handler.Test_SPFEnforcementHandler.test_handle_policy_request">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_handle_policy_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caplog</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monkeypatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing_policy_spf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_spf_query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_reader_factory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_writer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#chapps.tests.test_switchboard.test_spf_handler.Test_SPFEnforcementHandler.test_handle_policy_request" title="Permalink to this definition"></a></dt>
@@ -105,6 +99,11 @@ WHEN  communicating with Postfix
 THEN  send the appropriate result
 This test will be parameterized to go through all possible responses</p>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="chapps.tests.test_switchboard.test_spf_handler.Test_SPFEnforcementHandler.pytestmark">
+<span class="sig-name descname"><span class="pre">pytestmark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[Mark(name='asyncio',</span> <span class="pre">args=(),</span> <span class="pre">kwargs={})]</span></em><a class="headerlink" href="#chapps.tests.test_switchboard.test_spf_handler.Test_SPFEnforcementHandler.pytestmark" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
