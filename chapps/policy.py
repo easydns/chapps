@@ -1,10 +1,13 @@
-"""chapps.policy
+"""
+Policy managers
 
-Policy routines for CHAPPS
+So far, all but the SPF enforcement policy are contained here; it has
+extra dependencies which are isolated that way.
 """
 import time
 from contextlib import contextmanager
 from collections import deque
+from typing import List
 import functools
 import redis
 import logging
@@ -30,15 +33,53 @@ TIME_FORMAT = "%d %b %Y %H:%M:%S %z"
 
 
 class EmailPolicy:
+    """Abstract policy manager
+
+    Subclasses must:
+      * set class attribute ``redis_key_prefix`` to a unique value.
+      * define an instance method called :meth:`~.approve_policy_request`.
+
+    This abstract superclass provides a standard framework for constructing Redis keys,
+    since the main purpose of the policy manager is to make decisions about email by
+    consulting Redis.
+
+    """
+
     redis_key_prefix = "chapps"
+    """A placeholder value, since this class is abstract
+
+    Subclasses should set this to a unique prefix identifying the policy manager.
+    For examples, see the included subclasses.
+
+    """
 
     @staticmethod
     def rediskey(prefix, *args):
-        """Format a string to serve as a Redis key for arbitrary data"""
+        """Format a string to serve as a Redis key for arbitrary data
+
+        :param str prefix: a prefix unique to the policy manager (subclass)
+        :param List[str] args: a list of strings to use to construct the rest of the key
+
+        In CHAPPS, each policy has its own prefix.  What other data the policy
+        uses to construct the key is not relevant to any other entities, though
+        it must be sent as a string.
+
+        This routine simply joins up all the tokens with colon (``:``)
+        characters, so it is not recommended to use them as part of the
+        key-components (although it should 'just work').
+
+        """
         return f"{ prefix }:{ ':'.join( args ) }"
 
     @classmethod
     def _fmtkey(cls, *args):
+        """Convenience classmethod for Redis key construction
+
+        :param List[str] args: a list of key components
+
+        Subclasses may use this method which automatically discovers the prefix.
+
+        """
         return cls.rediskey(cls.redis_key_prefix, *args)
 
     def __init__(self, cfg=None):
