@@ -20,3 +20,6 @@ vars/local.yml
 .dir-locals.el
 /etc/
 /chapps.egg-info/
+docs/build/**
+docs/source/*rst
+!docs/source/index.rst

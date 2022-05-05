@@ -63,3 +63,4 @@ html_static_path = ["_static"]
 # Autodoc options
 autodoc_typehints = "description"
 autodoc_class_signature = "separated"
+autodoc_member_order = "groupwise"
