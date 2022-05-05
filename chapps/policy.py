@@ -7,12 +7,12 @@ extra dependencies which are isolated that way.
 import time
 from contextlib import contextmanager
 from collections import deque
-from typing import List
+from typing import List, Union, Optional, Tuple
 import functools
 import redis
 import logging
 from expiring_dict import ExpiringDict
-from chapps.config import config
+from chapps.config import config, CHAPPSConfig
 from chapps.adapter import MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter
 from chapps.signals import (
     TooManyAtsException,
@@ -20,6 +20,8 @@ from chapps.signals import (
     NotAnEmailAddressException,
 )
 from chapps.rest.models import Quota, SDAStatus
+from chapps.util import PostfixPolicyRequest
+from chapps.outbound import OutboundPPR
 
 logger = logging.getLogger(__name__)
 seconds_per_day = 3600 * 24
@@ -39,26 +41,40 @@ class EmailPolicy:
       * set class attribute ``redis_key_prefix`` to a unique value.
       * define an instance method called :meth:`~.approve_policy_request`.
 
-    This abstract superclass provides a standard framework for constructing Redis keys,
-    since the main purpose of the policy manager is to make decisions about email by
-    consulting Redis.
+    This abstract superclass provides a standard framework for constructing
+    Redis keys, since the main purpose of the policy manager is to make
+    decisions about email by consulting Redis.
+
+    Instance attributes:
+
+      :config: :class:`chapps.config.CHAPPSConfig` either passed in
+        during initialization or inherited from the environment
+
+      :params: :class:`chapps.util.AttrDict` corresponding to the config
+        for the policy manager
+
+      :sentinel: a :class:`redis.Sentinel` handle, or ``None`` if using
+        only Redis
+
+      :redis: a :class:`redis.Redis` handle
 
     """
 
     redis_key_prefix = "chapps"
     """A placeholder value, since this class is abstract
 
-    Subclasses should set this to a unique prefix identifying the policy manager.
-    For examples, see the included subclasses.
+    Subclasses should set this to a unique prefix identifying the policy
+    manager.  For examples, see the included subclasses.
 
     """
 
     @staticmethod
-    def rediskey(prefix, *args):
+    def rediskey(prefix: str, *args):
         """Format a string to serve as a Redis key for arbitrary data
 
         :param str prefix: a prefix unique to the policy manager (subclass)
-        :param List[str] args: a list of strings to use to construct the rest of the key
+        :param List[str] args: a list of strings to use to construct the rest
+          of the key
 
         In CHAPPS, each policy has its own prefix.  What other data the policy
         uses to construct the key is not relevant to any other entities, though
@@ -77,20 +93,40 @@ class EmailPolicy:
 
         :param List[str] args: a list of key components
 
-        Subclasses may use this method which automatically discovers the prefix.
+        Subclasses may use this method which automatically discovers the
+        prefix.
 
+        :meta public:
         """
         return cls.rediskey(cls.redis_key_prefix, *args)
 
-    def __init__(self, cfg=None):
+    def __init__(self, cfg: CHAPPSConfig = None):
+        """Sets up a new policy manager
+
+        :param chapps.config.CHAPPSConfig cfg: optional :class:`CHAPPSConfig`
+          object for config override
+
+        Store the config and get the params for the specific policy class,
+        which are in a config block named for the class.  Using that config, set
+        the policy manager up with a Redis handle, and an instance cache (from
+        :class:`expiring_dict.ExpiringDict`)
+
+        """
         self.config = cfg if cfg else config
         self.params = self.config.get_block(self.__class__.__name__)
         self.sentinel = None
         self.redis = self._redis()  # pass True to get read-only
         self.instance_cache = ExpiringDict(3)  # entries expire after 3 seconds
 
-    def _redis(self, read_only=False):
-        """Get a Redis handle, possibly from Sentinel"""
+    def _redis(self, read_only: bool = False):
+        """Get a Redis handle, possibly from Sentinel
+
+        :param bool read_only: if Sentinel is in use, get a read-only handle
+
+        If you're not using Sentinel, the ``read_only`` parameter is
+        meaningless.
+
+        """
         try:
             if self.config.redis.sentinel_servers and not self.sentinel:
                 self.sentinel = redis.Sentinel(
@@ -118,32 +154,56 @@ class EmailPolicy:
             host=self.config.redis.server, port=self.config.redis.port
         )
 
-    def approve_policy_request(self, ppr):
+    def approve_policy_request(
+        self, ppr: PostfixPolicyRequest
+    ) -> Union[str, bool]:
+        """Placeholder method which must be implemented by subclasses."""
         raise NotImplementedError(
             "Subclasses of EmailPolicy must implement this function."
         )
 
 
 class GreylistingPolicy(EmailPolicy):
-    """Represents Greylisting policy"""
+    """Policy manager which implements greylisting
+
+    `Greylisting <https://en.wikipedia.org/wiki/Greylisting_(email)>`_ is a
+    `well-defined <https://datatracker.ietf.org/doc/html/rfc6647>`_ and
+    frequently-implemented pattern.  This implementation stores the tracking
+    information in Redis.
+
+    Instance attributes (in addition to those of :class:`.EmailPolicy`):
+
+      :min_defer: minimum time between retries, in seconds
+
+      :cache_ttl: how long to store tracking data, in seconds
+
+      :allow_after: success threshold, after which the client may be
+        whitelisted
+
+    """
 
     redis_key_prefix = "grl"
 
     def __init__(
         self,
-        cfg=None,
+        cfg: CHAPPSConfig = None,
         *,
-        minimum_deferral=60,
-        cache_ttl=seconds_per_day,
-        auto_allow_after=10,
+        minimum_deferral: int = 60,
+        cache_ttl: int = seconds_per_day,
+        auto_allow_after: int = 10,
     ):
-        """all EmailPolicy objects expect an optional positional param for a CHAPPSConfig
-           named arguments for GreylistingPolicy objects are:
-             - minimum_deferral: the minimum amount of time allowed for greylisting to approve the second attempt
-             - cache_ttl: how long to store data about a tracked client (source IP)
-                          this is used both for auto-allow and for basic greylist impression retention
-             - auto_allow_after: a count of successful greylist re-sends post-deferral, after which
-                          approval will be granted automatically
+        """Initialize a greylisting policy manager
+
+        :param chapps.config.CHAPPSConfig cfg: optional config override
+
+        :param int minimum_deferral: min time between retries, in seconds
+
+        :param int cache_ttl: tracking data cache expiration time in seconds
+
+        :param int auto_allow_after: number of successful attempts needed
+          before source client is considered trusted, and no longer incurs
+          deferrals
+
         """
         super().__init__(cfg)
         self.min_defer = minimum_deferral
@@ -165,21 +225,35 @@ class GreylistingPolicy(EmailPolicy):
                 f"Sender auto-approval is set to a fairly low threshold. (={self.allow_after})"
             )
 
-    def tuple_key(self, ppr):
-        """The names of the values in the PPR are as follows (in order):
-             - client_address
-             - sender
-             - recipient
+    def tuple_key(self, ppr: PostfixPolicyRequest) -> str:
+        """Return the greylisting tuple as a Redis key
+
+        The names of the values taken from ``ppr`` are as follows (in order):
+
+             - ``client_address``
+             - ``sender``
+             - ``recipient``
+
         """
         return self._fmtkey(ppr.client_address, ppr.sender, ppr.recipient)
 
     def client_key(self, ppr):
+        """Return the greylisting client key
+
+        This key indicates whether the client has enough successful
+        resubmissions to be whitelisted.
+
+        """
         return self._fmtkey(ppr.client_address)
 
-    def approve_policy_request(self, ppr):
-        """Expects a PostfixPolicyRequest; returns True if the email should be accepted"""
-        ### TODO: memoization can be factored into the superclass if pre-evaluation hook and evaluation
-        ###       can be generalized
+    def approve_policy_request(self, ppr: PostfixPolicyRequest):
+        """Return True if the email should be accepted
+
+        :param chapps.util.PostfixPolicyRequest ppr: the Postfix payload
+
+        """
+        # TODO: memoization can be factored into the superclass if
+        #       pre-evaluation hook and evaluation can be generalized
         instance = ppr.instance
         cached_response = self.instance_cache.get(instance, None)
         if cached_response is not None:
@@ -188,7 +262,8 @@ class GreylistingPolicy(EmailPolicy):
         self.instance_cache[instance] = response
         return response
 
-    def _evaluate_policy_request(self, ppr):
+    def _evaluate_policy_request(self, ppr: PostfixPolicyRequest):
+        """Do the dirty work of policy evaluation"""
         try:
             logger.debug(f"Getting control data for {self.tuple_key( ppr )}")
             tuple_seen, client_tally = self._get_control_data(ppr)
@@ -198,6 +273,7 @@ class GreylistingPolicy(EmailPolicy):
             logger.debug(
                 f"Returning denial for {ppr.instance} (unexpected exception)."
             )
+        # if not whitelisting, client_tally will be None
         if client_tally is not None and client_tally >= self.allow_after:
             self._update_client_tally(ppr)
             return True
@@ -208,19 +284,14 @@ class GreylistingPolicy(EmailPolicy):
                 # the email will be approved; some housekeeping is necessary
                 self._update_client_tally(ppr)
                 return True
-        # if we get here, the tuple either isn't stored or was stored too recently
-        # either way, we update it
+        # if we get here, the tuple either isn't stored or was stored too
+        # recently; either way, we update it
         self._update_tuple(ppr)
         return False
 
     def _get_control_data(self, ppr):
         """Extract data from Redis in order to answer the policy request"""
         now = time.time()
-        client_address, sender, recipient = (
-            ppr.client_address,
-            ppr.sender,
-            ppr.recipient,
-        )
         tuple_key = self.tuple_key(ppr)
         client_key = self.client_key(ppr)
         pipe = self.redis.pipeline()
@@ -243,7 +314,12 @@ class GreylistingPolicy(EmailPolicy):
         return (tuple_seen, client_tally)
 
     def _update_client_tally(self, ppr):
-        """Update Redis when an email is allowed, to increase the reliability score of the client"""
+        """Update client reliability score in Redis
+
+        When an email is allowed, increment the reliability score of the
+        client.
+
+        """
         if self.allow_after == 0:  # if we're not keeping a tally, return
             return
         now = time.time()
@@ -257,18 +333,46 @@ class GreylistingPolicy(EmailPolicy):
             pipe.execute()
 
     def _update_tuple(self, ppr):
+        """Set or update a greylisting tuple in Redis"""
         self.redis.setex(self.tuple_key(ppr), self.cache_ttl, time.time())
 
 
 class OutboundQuotaPolicy(EmailPolicy):
-    """Represents an outbound quota policy, based on sending rate"""
+    """Policy manager which implements an outbound quota limitation
+
+    Outbound email is controlled based on the count of (attempted)
+    transmissions in the last 24 hours.  Some parameters are provided to
+    fine-tune the behavior of the limiting algorithm.
+
+    Instance attributes (in addition to those of :class:`.EmailPolicy`):
+
+      :interval: number of seconds to store transmission attemps, and
+          to use for quota evaluation; defaults to one day
+
+      :counting_recipients: a boolean determined from the config; whether to
+        count each recipient of a multi-recipient email as a separate
+        transmission for quota purposes
+
+      :min_delta: defaults to 0; if set, the number of seconds which
+        must elapse between send attempts.  **Currently experimental**
+
+    """
 
     redis_key_prefix = "oqp"
 
     def __init__(self, cfg=None, *, enforcement_interval=None, min_delta=0):
-        """first, optional positional argument: a CHAPPSConfig object to use
-           named arguments: enforcement_interval will default to seconds per day if not provided
-                            min_delta defaults to 5 seconds, to prevent spamming; set to 0 to disable
+        """Set up an outbound quota policy manager
+
+        :param chapps.config.CHAPPSConfig cfg: optional config override
+
+        :param int enforcement_interval: number of seconds to store
+          transmission attemps, and to use for quota evaluation; defaults to
+          one day
+
+        :param int min_delta: Minimum time which must pass between
+          transmission attempts; defaults to 5 seconds to prevent spamming.
+          Set to 0 to disable
+
         """
         super().__init__(cfg)  # sets attrs 'config', 'params', and 'redis'
         self.interval = (
@@ -289,7 +393,23 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     @contextmanager
     def _control_data_storage_context(self):
-        """return a closure which takes the tuple (email, quota, margin) and stores it in Redis"""
+        """Atomic context manager for Redis updates
+
+        Yields a closure which takes the tuple (email, quota, margin) and
+        adds it to a Redis pipeline, which will set it in Redis once the
+        context is closed.
+
+        Intended to be used as a context manager, like so:
+
+        .. code::python
+            with self._control_data_storage_context() as store:
+                store(user_identifier, quota_count, margin_count)
+
+        This is most useful when collections of data are involved, but also
+        encapsulates and hides the pipeline management foo required by the
+        Redis library.
+
+        """
         pipe = self.redis.pipeline()
         fmtkey = self._fmtkey
 
@@ -305,7 +425,20 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     @contextmanager
     def _adapter_handle(self):
-        """A context manager for obtaining a database handle for acquiring policy data"""
+        """Context manager for obtaining a database handle
+
+        In order to acquire policy configuration data, the policy manager must
+        be able to reach the RDBMS or other policy-config data store.  One of
+        the policy manager's priciple jobs is to obtain this data from the
+        database and stuff it into Redis for future reference.
+
+        Adapter configuration, in terms of how to access the database, is
+        obtained from the config object.  It is clear now that the (TODO:)
+        adapter classes should also accept an optional config argument, and
+        then use it for default values, so that this routine need not enumerate
+        all the options.
+
+        """
         adapter = MariaDBQuotaAdapter(
             db_host=self.config.adapter.db_host,
             db_port=self.config.adapter.db_port,
@@ -313,13 +446,14 @@ class OutboundQuotaPolicy(EmailPolicy):
             db_user=self.config.adapter.db_user,
             db_pass=self.config.adapter.db_pass,
         )
-        try:
+        try:  # possibly yield from adapter.adapter_context() ?
             yield adapter
         finally:
             adapter.conn.close()
 
     def _get_control_data(self, ppr):
-        """
+        """Obtain essential data for policy decisionmaking
+
         This is the routine which keeps track of emails in Redis.  It
         combines all of its requests into a single pipelined (atomic)
         transaction.  When counting recipients, the record is a string
@@ -378,6 +512,13 @@ class OutboundQuotaPolicy(EmailPolicy):
         return (int(limit) if limit is not None else None, m, attempts)
 
     def _cast_margin(self, margin_bytes):
+        """Convenience method
+
+        :param bytes margin_bytes: margin value from Redis
+
+        Get the correct type (int or float) from the provided bytestring.
+
+        """
         try:
             m = int(margin_bytes)
         except:
@@ -387,7 +528,34 @@ class OutboundQuotaPolicy(EmailPolicy):
                 m = 0
         return m
 
-    def current_quota(self, user: str, quota: Quota):
+    def current_quota(
+        self, user: str, quota: Optional[Quota]
+    ) -> Tuple[int, List[str]]:
+        """Provide real-time remaining quota for a user
+
+        :param str user: user-identifier
+
+        :param chapps.rest.models.Quota quota: optional
+          :class:`~chapps.rest.models.Quota` record
+
+        :returns: (*remaining quota count*, [*remarks*,...])
+
+        :rtype: Tuple[int, List[str]]
+
+        The caller is anticipated to be the API.  The **User** and **Quota**
+        are both available, so the **Quota** may be provided, but it is not
+        required.  The ``user`` parameter is expected to contain a string at
+        present, though this may change as the :mod:`pydantic` data models
+        become more tightly integrated into the codebase.
+
+        The return value, intended for wrapping by the API and transmission to a client, is a tuple composed of:
+
+          1. the number of transmission attempts remaining to the user at the
+             moment the query executed
+
+          2. a list of remarks created by the inspection routine
+
+        """
         attempts_key = self._fmtkey(user, "attempts")
         limit_key = self._fmtkey(user, "limit")
         pipe = self.redis.pipeline()
@@ -426,7 +594,20 @@ class OutboundQuotaPolicy(EmailPolicy):
             )
         return (response, remarks)
 
-    def reset_quota(self, user: str):
+    def reset_quota(self, user: str) -> Tuple[int, List[str]]:
+        """Reset quota for user
+
+        :param str user: user-identifier
+
+        :returns: (*number of records dropped*, [*remarks*,...])
+
+        :rtype: Tuple[int,List[str]]
+
+        This method is intended for real-time management of the Redis
+        configuration mirror.  It will drop all the attempts from the
+        outbound-quota transmission-tracking list for the named user.
+
+        """
         attempts_key = self._fmtkey(user, "attempts")
         pipe = self.redis.pipeline()
         pipe.zrange(attempts_key, 0, -1)
@@ -475,11 +656,22 @@ class OutboundQuotaPolicy(EmailPolicy):
             self.redis.delete(key)
         return res
 
-    def acquire_policy_for(self, user, quota=None):
-        """Go get the policy for a sender from the relational database or
-           other policy source via adapter.  If the margin needs to be
-           altered on a per-sender basis, this is the place to adjust
-           that.
+    def acquire_policy_for(self, user: str, quota: Optional[Quota] = None):
+        """Populate Redis with policy config data for a user
+
+        :param str user: user-identifier
+
+        :param chapps.rest.models.Quota quota: optional
+          :class:`~chapps.rest.models.Quota` reference containing the quota to
+          load for the user.  This is provided mainly to optimize queries
+          coming from the API.
+
+        Go get the policy for a sender from the policy adapter.
+
+        If the margin needs to be configured on a per-sender basis, this is the
+        place to adjust that.  Right now, the margin is set in the config file,
+        and applied to each user as policy config is loaded.
+
         """
         if not quota:
             with self._adapter_handle() as adapter:
@@ -487,14 +679,18 @@ class OutboundQuotaPolicy(EmailPolicy):
         if quota:
             self._store_control_data(user, quota, self.params.margin)
 
-    def approve_policy_request(self, ppr):
-        """Expects a PostfixPolicyRequest object; returns True if mail sending
-           should be allowed This routine implements memoization in
-           order to overcome the Postfix double-checking weirdness.
-           Since it seems like the object only lives for the duration
-           of the query, it doesn't get us very far.  The Postfix docs
-           say it will hold open and re-use the connection, but it
-           does not seem to.
+    def approve_policy_request(self, ppr: OutboundPPR):
+        """Determine whether this email falls within the quota
+
+        :param chapps.outbound.OutboundPPR ppr: the Postfix payload
+
+        Returns True if this email is within the quota.
+
+        This routine implements memoization on ``ppr.instance`` in order to
+        overcome the Postfix double-checking weirdness.  Sometimes, Postfix
+        sends a request about a given email twice, but this is easy to spot
+        because they will have the same value for ``ppr.instance``.
+
         """
         user = ppr.user
         instance = ppr.instance
@@ -502,22 +698,30 @@ class OutboundQuotaPolicy(EmailPolicy):
         if cached_response is not None:
             logger.debug(f"apr: returning instance cache {cached_response}")
             return cached_response
-        if not self._detect_control_data(
-            user
-        ):  # attempt to retrieve control data if need be
+        if not self._detect_control_data(user):
             self.acquire_policy_for(user)
         response = self._evaluate_policy_request(ppr)
         self.instance_cache[instance] = response
         return response
 
     def _get_delta(self, ppr, attempts):
-        """
-        This routine gets the number of seconds between this attempt and the
-        previous.  It takes into account whether we are counting each
-        recipient, and parses the attempt record accordingly -- when counting
-        recipients, the record is a string consisting of the timestamp and the
-        recipient serial number separated by a colon, in order to ensure that
-        each recipient is listed as an attempt in the log.
+        """Obtain the number of seconds between successive attempts
+
+        This routine should calculate the number of seconds between this
+        attempt and the previous.  To do so, it must take into account whether
+        we are counting each recipient, and parse the attempt record
+        accordingly.  When counting recipients, the record is a string
+        consisting of the timestamp and the recipient serial number separated
+        by a colon, in order to ensure that each recipient is listed as an
+        attempt in the log.
+
+        .. admonition: Experimental
+
+          There is some subtle problem with either or both of the logic here
+          and in the tests, and so since it was initially provided as an
+          interesting extra feature, it is currently disabled and considered
+          experimental.  At some point, I intend to come back to it.
+
         """
         if len(attempts) < 2:
             return float("inf")
@@ -610,31 +814,93 @@ class OutboundQuotaPolicy(EmailPolicy):
 
 
 class SenderDomainAuthPolicy(EmailPolicy):
-    """A class for encapsulation of explicit policy regarding what authenticated users are allowed to send from what domains.  Right now we match on the entire string after the @ """
+    """Policy manager implementing domain and whole-email matching for senders
+
+    This class encapsulates explicit policy regarding what sorts of
+    masquerading authenticated users are allowed to do.  Currently, two sorts
+    of matches are handled, in succession.
+
+    First, the domain part of the email address, the entire string after the
+    ``@``, is matched against **Domain** entries linked to the **User**.
+
+    If there is no **Domain** match, then **Email** entries linked to the
+    **User** are checked.  **Email** entries must match the entirety of a
+    policy request's ``sender`` attribute in order to pass.
+
+    """
 
     # every subclass of EmailPolicy must set a key prefix
     redis_key_prefix = "sda"
     # initialization is when we plug in the config
-    def __init__(self, cfg=None):
-        """first, optional positional argument: a CHAPPSConfig object to use"""
+    def __init__(self, cfg: CHAPPSConfig = None):
+        """Set up a new sender domain authorization policy manager
+
+        :param chapps.config.CHAPPSConfig cfg: optional config override
+
+        """
         super().__init__(cfg)  # sets attrs 'config' and 'redis'
 
     # every subclass has one of these, with a unique name, and fine
     # but maybe there should also be a generic single entry point
-    def sender_domain_key(self, ppr):
-        """Create a Redis key for each valid user->domain mapping, for speed"""
+    def sender_domain_key(self, ppr: OutboundPPR) -> str:
+        """Create a Redis key for a user->domain mapping
+
+        :param chapps.outbound.OutboundPPR ppr: a Postfix payload
+
+        :returns: the sender domain key, by obtaining the domain part of the
+          email address from ``ppr.sender``
+
+        :rtype: str
+
+        """
         return self._sender_domain_key(ppr.user, self._get_sender_domain(ppr))
 
-    def sender_email_key(self, ppr):
+    def sender_email_key(self, ppr) -> str:
+        """Create a Redis key for a user->email mapping
+
+        :param chapps.outbound.OutboundPPR ppr: a Postfix payload
+
+        :returns: the sender email key, by obtaining the email address from
+          ``ppr.sender``
+
+        :rtype: str
+
+        """
         return self._sender_domain_key(ppr.user, ppr.sender)
 
     # factored out for use in API
-    def _sender_domain_key(self, user, domain):
+    def _sender_domain_key(self, user: str, domain: str) -> str:
+        """Passes its two string params to _fmtkey
+
+        Should be called ``_sender_auth_key`` since it works with both domains
+        and email addresses.
+
+        """
         return self._fmtkey(user, domain)
 
     # determine the domain of the sender address, if any
     @functools.lru_cache(maxsize=2)
-    def _get_sender_domain(self, ppr):
+    def _get_sender_domain(self, ppr: OutboundPPR) -> str:
+        """Returns the domain portion of ``ppr.sender``
+
+        :param chapps.outbound.OutboundPPR ppr: a Postfix payload
+
+        :returns: the domain part of ``ppr.sender``
+
+        :rtype: str
+
+        :raise chapps.signals.TooManyAtsException: if there are more than one
+          ``@`` in ``ppr.sender``
+
+        :raise chapps.signals.NotAnEmailAddressException: if there is no ``@``
+          in ``ppr.sender``
+
+        :raise chapps.signals.NullSenderException: if ``ppr.sender`` is
+          ``None``
+
+        :meta public:
+
+        """
         if ppr.sender:
             parts = ppr.sender.split("@")
             if len(parts) > 2:
@@ -667,12 +933,14 @@ class SenderDomainAuthPolicy(EmailPolicy):
         return res if res is None else int(res)
 
     def _get_control_data(self, ppr):
+        """Cascade through control data searches: domain, email"""
         return self._detect_control_data(
             ppr.user, self._get_sender_domain(ppr)
         ) or self._detect_control_data(ppr.user, ppr.sender)
 
     # We will need to be able to store data in Redis
-    def _store_control_data(self, ppr, allowed):
+    def _store_control_data(self, ppr: OutboundPPR, allowed: int):
+        """Stuff control data into Redis for domain auth"""
         logger.debug(
             f"store request: {ppr.user} {self._get_sender_domain(ppr)}"
             f" {allowed!r}"
@@ -681,6 +949,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
             dsc(ppr.user, self._get_sender_domain(ppr), allowed)
 
     def _store_email_control_data(self, ppr, allowed):
+        """Stuff control data into Redis for email auth"""
         logger.debug(f"store request: {ppr.user} {ppr.sender} {allowed!r}")
         with self._control_data_storage_context() as dsc:
             dsc(ppr.user, ppr.sender, allowed)
@@ -688,7 +957,10 @@ class SenderDomainAuthPolicy(EmailPolicy):
     # We will need a Redis storage context manager in order to mimic
     # the structure of OQP -- metaprogramming opportunity
     @contextmanager
-    def _control_data_storage_context(self, expire_time=seconds_per_day):
+    def _control_data_storage_context(
+        self, expire_time: int = seconds_per_day
+    ):
+        """Context manager for storing SDA policy cache data in Redis"""
         pipe = self.redis.pipeline()
         fmtkey = self._fmtkey
 
@@ -708,6 +980,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
     def _adapter_handle(
         self
     ):  # TODO: identical to OQP -- should be factored up into a superclass
+        """Context manager for policy config access; yields a database handle"""
         adapter = MariaDBSenderDomainAuthAdapter(
             db_host=self.config.adapter.db_host,
             db_port=self.config.adapter.db_port,
@@ -721,7 +994,18 @@ class SenderDomainAuthPolicy(EmailPolicy):
             adapter.conn.close()
 
     # How to obtain control data
-    def acquire_policy_for(self, ppr):
+    def acquire_policy_for(self, ppr) -> bool:
+        """Populate Redis with policy config
+
+        :param chapps.outbound.OutboundPPR ppr: a Postfix payload
+
+        :returns: whether the policy allows ``ppr``
+
+        :rtype: bool
+
+        Populates Redis and return the policy result for ``ppr``.
+
+        """
         logger.debug(f"acq pol for {ppr!r}")
         with self._adapter_handle() as adapter:
             allowed = adapter.check_domain_for_user(
@@ -743,10 +1027,20 @@ class SenderDomainAuthPolicy(EmailPolicy):
         return allowed
 
     # This is the main purpose of the class, to answer this question
-    def approve_policy_request(self, ppr):
-        """
+    def approve_policy_request(self, ppr: OutboundPPR) -> bool:
+        """Returns true if ``ppr`` represents an authorized email
+
+        :param chapps.outbound.OutboundPPR ppr: a Postfix payload
+
+        :returns: whether the email represented by ``ppr`` should be
+          transmitted
+
+        :rtype: bool
+
         Given a PPR, say whether this user is allowed to send as the
-        apparent sender domain
+        apparent sender domain or address.  Memoize result in the
+        instance cache.
+
         """
         result = self.instance_cache.get(
             ppr.instance, None
@@ -767,7 +1061,19 @@ class SenderDomainAuthPolicy(EmailPolicy):
             pass
         return bool(int(result))
 
-    def _decode_policy_cache(self, result):
+    def _decode_policy_cache(self, result) -> SDAStatus:
+        """Decode the {None, 0, 1} response from Redis into an Enum
+
+        :params int result: b'0', b'1', or None
+
+        :returns: an SDAStatus corresponding to ``result``
+
+        :rtype: chapps.rest.models.SDAStatus
+
+        The :class:`Enum` :class:`~chapps.rest.models.SDAStatus` represents
+        these results as nonexistent, prohibited or authorized respectively.
+
+        """
         if result is not None:
             result = int(result)
             if result:
@@ -778,12 +1084,34 @@ class SenderDomainAuthPolicy(EmailPolicy):
             return SDAStatus.NONE
 
     # For the API -- inspect state
-    def check_policy_cache(self, user, domain):
+    def check_policy_cache(self, user: str, domain: str) -> SDAStatus:
+        """Check a particular policy cache entry for the API
+
+        :param str user: user-identifier
+
+        :param str domain: domain or email to check
+
+        :returns: the cached policy
+
+        :rtype: chapps.rest.models.SDAStatus
+
+        """
         return self._decode_policy_cache(
             self._detect_control_data(user, domain)
         )
 
-    def clear_policy_cache(self, user, domain):
+    def clear_policy_cache(self, user: str, domain: str) -> SDAStatus:
+        """Clear a specific policy cache entry
+
+        :param str user: user-identifier
+
+        :param str domain: domain or email to clear
+
+        :returns: the previous policy
+
+        :rtype: SDAStatus
+
+        """
         prev = self.check_policy_cache(user, domain)
         if prev != SDAStatus.NONE:
             self.redis.delete(self._sender_domain_key(user, domain))
