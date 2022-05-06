@@ -63,4 +63,7 @@ html_static_path = ["_static"]
 # Autodoc options
 autodoc_typehints = "description"
 autodoc_class_signature = "separated"
-autodoc_member_order = "groupwise"
+autodoc_member_order = "bysource"
+
+# MyST options
+myst_heading_anchors = 4
