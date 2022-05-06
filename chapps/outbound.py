@@ -81,7 +81,26 @@ class OutboundPPR(PostfixPolicyRequest):
 
     @property
     def user(self):
-        """Return and memoize the user-identifier."""
+        """Return and memoize the user-identifier.
+
+        :returns: the user-identifier
+
+        :rtype: str
+
+        :raise AuthenticationFailureException: when no user-identifier can be
+          found, and the ``require_user_key`` setting of the ``CHAPPS`` section
+          of the config is set to :obj:`True`
+
+        :raise ValueError: when no user-identifier is found, but user keys
+          are not required
+
+        The underlying routine raises :exc:`ValueError` when no user-identifier
+        can be found.  If the config stipulates that a user-identifier must be
+        found, this routine raises :exc:`AuthenticationFailureException` to
+        signal that the email originated from a source which did not
+        authenticate.
+
+        """
         if not "_user" in self.__dict__:
             try:
                 self._user = self._get_user()

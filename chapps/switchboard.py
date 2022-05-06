@@ -1,6 +1,13 @@
-"""chapps.switchboard
+"""Switchboard
 
-Message multiplexing objects and/or routines for CHAPPS
+Classes defined here exist mainly to be factories which return the main-loop
+closure for :mod:`asyncio`.
+
+TODO: :class:`.RequestHandler` should be a subclass of
+`.CascadingPolicyHandler` which simply only ever has one policy within it.
+This is to avoid maintaining two nearly-identical code-paths.  Running only one
+policy is obviously a special case of running many.
+
 """
 from chapps.config import config  # the global instance of the config object
 from chapps.policy import (
@@ -17,6 +24,7 @@ from chapps.signals import (
     AuthenticationFailureException,
 )
 from functools import cached_property
+from typing import Type
 import logging
 import asyncio
 
@@ -32,9 +40,45 @@ logger = logging.getLogger(__name__)  # pragma: no cover
 
 
 class RequestHandler:
-    """Wrap handling in an object-oriented factory so we can supply a policy"""
+    """Deprecated base class for wrapping policy managers in an event loop
 
-    def __init__(self, policy, *, pprclass=PostfixPolicyRequest):
+    This workhorse base class generalizes creating an event loop around an
+    email policy.  It has been superseded by :class:`.CascadingPolicyHandler`,
+    which expands on the logic of this (original) class by allowing any number
+    of policies to be applied in order.
+
+    Instance attributes:
+
+      :policy: the :class:`~chapps.policy.EmailPolicy` manager instance
+
+      :config: a reference to the :class:`~chapps.config.CHAPPSConfig` stored
+        on the policy instance.
+
+      :pprclass: a reference to the particular kind of
+        :class:`~chapps.util.PostfixPolicyRequest` to instantiate
+
+    """
+
+    def __init__(
+        self,
+        policy,
+        *,
+        pprclass: Type[PostfixPolicyRequest] = PostfixPolicyRequest,
+    ):
+        """Setup a Postfix policy request handler
+
+        :param chapps.policy.EmailPolicy policy: an instance of a policy
+          manager (a subclass of :class:`~chapps.policy.EmailPolicy`)
+
+        :param Type[PostfixPolicyRequest] pprclass: the subclass of :class:`~chapps.util.PostfixPolicyRequest` to instantiate from the Postfix payloads; defaults to :class:`~chapps.util.PostfixPolicyRequest`
+
+        .. note::
+
+          Unlike in other class families with in CHAPPS, the handlers in this
+          module do not accept config-override arguments.  They obtain their
+          references to the config from their attached policy managers.
+
+        """
         self.policy = policy
         self.config = self.policy.config  # in case a custom config is in use
         self.pprclass = pprclass
@@ -48,7 +92,21 @@ class RequestHandler:
         return self.policy.params.listen_port
 
     def async_policy_handler(self):
-        """Returns a coroutine which handles requests by to the policy"""
+        """Coroutine factory
+
+        :returns: a coroutine which handles requests by Postfix to the policy
+
+        The policy handler closure is meant to do all the weird grunt work
+        associated with talking to some other application over a socket.  It
+        listens, and it minimally processes the payload it receives in order to
+        pass something sane to the rest of the library.
+
+        Part of this is accomplished through use of the utility class
+        :class:`~chapps.util.PostfixPolicyRequest` and its subclass(es).  The
+        utility class turns the payload into something that the rest of the
+        code can work with easily.
+
+        """
         pprclass = self.pprclass
         policy = self.policy
         accept = policy.params.acceptance_message
@@ -108,7 +166,33 @@ class RequestHandler:
 
 
 class CascadingPolicyHandler:
-    """A handler class which cascades multiple yes/no policies"""
+    """Second-generation handler class which cascades multiple yes/no policies
+
+    This class started out nearly identical to :class:`.RequestHandler`, but as
+    the software has moved on, so has this handler, which is the main one in
+    general use.
+
+    This handler accepts a list of policy manager instances, all of which
+    should produce True/False results.  The handler applies each policy to each
+    request, and passes those which pass both, or returns the message from the
+    policy which failed.  Once a policy has failed, no further policies are
+    consulted.
+
+    Instance attributes:
+
+      :policies: a list of :class:`~chapps.policy.EmailPolicy` objects
+
+      :pprclass: the class of :class:`~PostfixPolicyRequest` to instantiate
+        from the Postfix request payload
+
+      :config: a reference to the :class:`~chapps.config.CHAPPSConfig` stored
+        on the first policy in the list
+
+      :listen_address: the IP address to bind to; see :meth:`.listen_address`
+
+      :listen_port: the port to listen on; see :meth:`.listen_port`
+
+    """
 
     def __init__(self, policies=[], *, pprclass=PostfixPolicyRequest):
         self.policies = policies
@@ -133,9 +217,15 @@ class CascadingPolicyHandler:
             None,
         )
 
-    ### an asynchronous policy handler which cascades through all the policies; fails stop execution
+    # an asynchronous policy handler which cascades through all the policies;
+    # fails stop execution
     def async_policy_handler(self):
-        """Returns a coroutine which handles requests according to the policies, in order"""
+        """Coroutine factory
+
+        :returns: a coroutine which handles requests according to the policies,
+          in order
+
+        """
         pprclass = self.pprclass
         policies = self.policies
         encoding = self.config.chapps.payload_encoding
@@ -243,11 +333,28 @@ class CascadingPolicyHandler:
 
 
 class OutboundMultipolicyHandler(CascadingPolicyHandler):
-    """Could be thought of as a concrete subclass of CPH, but meant more as a convenience"""
+    """Convenience subclass for combining outbound P/F policies
 
-    def __init__(
-        self, policies=[], *, pprclass=OutboundPPR
-    ):  # note that we default to OutboundPPR here
+    Could be thought of as a concrete subclass of
+    :class:`~.CascadingPolicyHandler`, but meant more as a convenience.
+
+    """
+
+    def __init__(self, policies=[], *, pprclass=OutboundPPR):
+        """Setup an OutboundMultipolicyHandler
+
+        :param List[EmailPolicy] policies: a list of policy manager instances
+
+        :param Type[PostfixPolicyRequest] pprclass: kind of
+          :class:`~PostfixPolicyRequest` to instantiate from Postfix request
+          payloads
+
+        If none are provided, default-configured instances of
+        :class:`~SenderDomainAuthPolicy` and :class:`~OutboundQuotaPolicy` are
+        used, in that order.
+
+        """
+        # note that we default to OutboundPPR here
         policies = policies or [
             SenderDomainAuthPolicy(),
             OutboundQuotaPolicy(),
@@ -256,18 +363,24 @@ class OutboundMultipolicyHandler(CascadingPolicyHandler):
 
 
 class OutboundQuotaHandler(RequestHandler):
+    """Convenience class for wrapping :class:`~OutboundQuotaPolicy`"""
+
     def __init__(self, policy=None):
         p = policy or OutboundQuotaPolicy()
         super().__init__(p, pprclass=OutboundPPR)
 
 
 class GreylistingHandler(RequestHandler):
+    """Convenience class for wrapping :class:`~GreylistingPolicy`"""
+
     def __init__(self, policy=None):
         p = policy or GreylistingPolicy()
         super().__init__(p)
 
 
 class SenderDomainAuthHandler(RequestHandler):
+    """Convenience class for wrapping :class:`~SenderDomainAuthPolicy`"""
+
     def __init__(self, policy=None):
         p = policy or SenderDomainAuthPolicy()
         super().__init__(p, pprclass=OutboundPPR)
@@ -276,6 +389,16 @@ class SenderDomainAuthHandler(RequestHandler):
 if HAVE_SPF:
 
     class SPFEnforcementHandler(RequestHandler):
+        """Special handler class for :class:`~SPFEnforcementPolicy`
+
+        This one came along last and forced a reconsideration of how all this
+        worked, because it produces more than two possible states as output.
+        The plan is to retrofit all the older policies so that they also can
+        use an action-translation layer, but that will also require some
+        adjustment of the cascading handler.
+
+        """
+
         def __init__(self, policy=None):
             p = policy or SPFEnforcementPolicy()
             super().__init__(p)

@@ -7,7 +7,7 @@ extra dependencies which are isolated that way.
 import time
 from contextlib import contextmanager
 from collections import deque
-from typing import List, Union, Optional, Tuple
+from typing import List, Dict, Union, Optional, Tuple
 import functools
 import redis
 import logging
@@ -183,6 +183,7 @@ class GreylistingPolicy(EmailPolicy):
     """
 
     redis_key_prefix = "grl"
+    """Greylisting Redis key prefix"""
 
     def __init__(
         self,
@@ -359,6 +360,7 @@ class OutboundQuotaPolicy(EmailPolicy):
     """
 
     redis_key_prefix = "oqp"
+    """OutboundQuotaPolicy Redis prefix"""
 
     def __init__(self, cfg=None, *, enforcement_interval=None, min_delta=0):
         """Set up an outbound quota policy manager
@@ -446,7 +448,7 @@ class OutboundQuotaPolicy(EmailPolicy):
             db_user=self.config.adapter.db_user,
             db_pass=self.config.adapter.db_pass,
         )
-        try:  # possibly yield from adapter.adapter_context() ?
+        try:
             yield adapter
         finally:
             adapter.conn.close()
@@ -656,15 +658,13 @@ class OutboundQuotaPolicy(EmailPolicy):
             self.redis.delete(key)
         return res
 
-    def acquire_policy_for(self, user: str, quota: Optional[Quota] = None):
+    def acquire_policy_for(self, user: str, quota: Optional[int] = None):
         """Populate Redis with policy config data for a user
 
         :param str user: user-identifier
 
-        :param chapps.rest.models.Quota quota: optional
-          :class:`~chapps.rest.models.Quota` reference containing the quota to
-          load for the user.  This is provided mainly to optimize queries
-          coming from the API.
+        :param int quota: optional quota to load for the user.  This is
+          provided mainly to optimize actions taken by the API.
 
         Go get the policy for a sender from the policy adapter.
 
@@ -831,6 +831,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     # every subclass of EmailPolicy must set a key prefix
     redis_key_prefix = "sda"
+    """Sender domain auth Redis key prefix"""
     # initialization is when we plug in the config
     def __init__(self, cfg: CHAPPSConfig = None):
         """Set up a new sender domain authorization policy manager
@@ -871,6 +872,15 @@ class SenderDomainAuthPolicy(EmailPolicy):
     # factored out for use in API
     def _sender_domain_key(self, user: str, domain: str) -> str:
         """Passes its two string params to _fmtkey
+
+        :meta public:
+        :param str user: user-identifier
+
+        :param str domain: origin domain or email address
+
+        :returns: a Redis key
+
+        :rtype: str
 
         Should be called ``_sender_auth_key`` since it works with both domains
         and email addresses.
@@ -977,10 +987,11 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     # We will need a database adapter context manager
     @contextmanager
-    def _adapter_handle(
-        self
-    ):  # TODO: identical to OQP -- should be factored up into a superclass
+    def _adapter_handle(self):
         """Context manager for policy config access; yields a database handle"""
+        # TODO: identical to OQP -- should be factored up into a superclass
+        #       complemented by similar TODO regarding refactorization to avoid
+        #       passing these arguments
         adapter = MariaDBSenderDomainAuthAdapter(
             db_host=self.config.adapter.db_host,
             db_port=self.config.adapter.db_port,
@@ -1117,7 +1128,21 @@ class SenderDomainAuthPolicy(EmailPolicy):
             self.redis.delete(self._sender_domain_key(user, domain))
         return prev
 
-    def bulk_clear_policy_cache(self, users, domains=None, emails=None):
+    def bulk_clear_policy_cache(
+        self,
+        users: List[str],
+        domains: List[str] = None,
+        emails: List[str] = None,
+    ):
+        """Clear SDA policy cache
+        for **User**\ s x [**Domain**\ s + **User**\ s]
+
+        :param List[str] users: a list of user-identifiers
+        :param Optional[List[str]] domains: a list of domain names
+        :param Optional[List[str]] emails: a list of email addresses
+        :rtype: None
+
+        """
         # there seems to be no max pipeline size
         # but if things get sketchy, we can chunk this
         domains = domains or []
@@ -1130,8 +1155,39 @@ class SenderDomainAuthPolicy(EmailPolicy):
             pipe.execute()
             pipe.reset()
 
-    def bulk_check_policy_cache(self, users, domains=None, emails=None):
-        """Build a map based on domain, full of maps from username to status"""
+    def bulk_check_policy_cache(
+        self,
+        users: List[str],
+        domains: List[str] = None,
+        emails: List[str] = None,
+    ) -> Dict[str, Dict[str, SDAStatus]]:
+        """Map auth subject onto user status
+
+        :param List[str] users: a list of user-identifiers
+        :param Optional[List[str]] domains: a list of domain names
+        :param Optional[List[str]] emails: a list of email addresses
+
+        :returns: an auth subject => user => status map as described below
+
+        :rtype: Dict[str, Dict[str, SDAStatus]]
+
+        Builds a map keyed on auth subject (**Domain** and/or **Email**), full
+        of maps from username to status.  It looks a bit like this:
+
+        .. code::python
+
+            bulk_check_result = {
+                'example.com': { 'user@example.com': SDAStatus.AUTH,
+                                 'terminated@example.com': SDAStatus.PROH,
+                },
+                'chapps.io': { 'user@example.com': SDAStatus.NONE,
+                               'terminated@example.com': SDAStatus.NONE,
+                }
+            }
+
+        Mainly intended for use by the API.
+
+        """
         emails = emails or []
         domains = domains or []
         with self.redis.pipeline() as pipe:
