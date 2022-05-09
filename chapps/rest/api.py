@@ -1,4 +1,10 @@
-"""API-related objects for CHAPPS"""
+"""Top level API definition
+
+This module includes the other API-related modules
+and configures the main :mod:`FastAPI` object which
+answers web requests.  That object's name is ``api``,
+making its absolute symbol path ``chapps.rest.api.api``
+"""
 # Note that the API is powered by FastAPI and as such, the main API object
 # itself is designed to be executed by uvicorn, probably a uvicorn worker
 # coordinated by gunicorn (see FastAPI deployment docs)
@@ -17,7 +23,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
 rest_readme = Path(config.chapps.docpath) / "README-API.md"
+# Use the VenvDetector-derived docpath to locate the API readme
+
 desc = rest_readme.open("rt").read()
+# Read in the contents of the API readme
 
 tags_metadata = [
     dict(
@@ -88,6 +97,8 @@ api = FastAPI(
     license_info=dict(name="MIT License", url="https://mit-license.org/"),
     openapi_tags=tags_metadata,
 )
+# The top-level :class:`fastapi.FastAPI` object
+
 verstr = config.chapps.version
 api.include_router(users.api)
 api.include_router(domains.api)
@@ -100,6 +111,11 @@ api.include_router(live.api)
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ):
+    """Creates a log entry upon request validation error
+
+    Also returns a reasonable response with code 422 to the browser.
+
+    """
     exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
     body = await request.json()
     logging.error(f"{body!r}: {exc_str}")

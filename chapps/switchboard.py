@@ -74,7 +74,7 @@ class RequestHandler:
 
         .. note::
 
-          Unlike in other class families with in CHAPPS, the handlers in this
+          Unlike other class families within CHAPPS, the handlers in this
           module do not accept config-override arguments.  They obtain their
           references to the config from their attached policy managers.
 
@@ -346,12 +346,13 @@ class OutboundMultipolicyHandler(CascadingPolicyHandler):
         :param List[EmailPolicy] policies: a list of policy manager instances
 
         :param Type[PostfixPolicyRequest] pprclass: kind of
-          :class:`~PostfixPolicyRequest` to instantiate from Postfix request
-          payloads
+          :class:`~chapps.util.PostfixPolicyRequest` to instantiate from
+          Postfix request payloads; defaults to
+          :class:`~chapps.outbound.OutboundPPR`
 
         If none are provided, default-configured instances of
-        :class:`~SenderDomainAuthPolicy` and :class:`~OutboundQuotaPolicy` are
-        used, in that order.
+        :class:`~chapps.policy.SenderDomainAuthPolicy` and
+        :class:`~chapps.policy.OutboundQuotaPolicy` are used, in that order.
 
         """
         # note that we default to OutboundPPR here
@@ -363,25 +364,43 @@ class OutboundMultipolicyHandler(CascadingPolicyHandler):
 
 
 class OutboundQuotaHandler(RequestHandler):
-    """Convenience class for wrapping :class:`~OutboundQuotaPolicy`"""
+    """Convenience class for wrapping :class:`~chapps.policy.OutboundQuotaPolicy`"""
 
-    def __init__(self, policy=None):
+    def __init__(self, policy: OutboundQuotaPolicy = None):
+        """Setup an OutboundQuotaHandler
+
+        :param chapps.policy.OutboundQuotaPolicy policy: an instance of
+          :class:`~chapps.policy.OutboundQuotaPolicy`
+
+        """
         p = policy or OutboundQuotaPolicy()
         super().__init__(p, pprclass=OutboundPPR)
 
 
 class GreylistingHandler(RequestHandler):
-    """Convenience class for wrapping :class:`~GreylistingPolicy`"""
+    """Convenience class for wrapping :class:`~chapps.policy.GreylistingPolicy`"""
 
-    def __init__(self, policy=None):
+    def __init__(self, policy: GreylistingPolicy = None):
+        """Setup a GreylistingHandler
+
+        :param chapps.policy.GreylistingPolicy policy: an instance of
+          :class:`~chapps.policy.GreylistingPolicy`
+
+        """
         p = policy or GreylistingPolicy()
         super().__init__(p)
 
 
 class SenderDomainAuthHandler(RequestHandler):
-    """Convenience class for wrapping :class:`~SenderDomainAuthPolicy`"""
+    """Convenience class for wrapping :class:`~chapps.policy.SenderDomainAuthPolicy`"""
 
-    def __init__(self, policy=None):
+    def __init__(self, policy: SenderDomainAuthPolicy = None):
+        """Setup a SenderDomainAuthHandler
+
+        :param chapps.policy.SenderDomainAuthPolicy policy: an instance of
+          :class:`~chapps.policy.SenderDomainAuthPolicy`
+
+        """
         p = policy or SenderDomainAuthPolicy()
         super().__init__(p, pprclass=OutboundPPR)
 
@@ -389,7 +408,7 @@ class SenderDomainAuthHandler(RequestHandler):
 if HAVE_SPF:
 
     class SPFEnforcementHandler(RequestHandler):
-        """Special handler class for :class:`~SPFEnforcementPolicy`
+        """Special handler class for :class:`~chapps.spf_policy.SPFEnforcementPolicy`
 
         This one came along last and forced a reconsideration of how all this
         worked, because it produces more than two possible states as output.
@@ -397,14 +416,53 @@ if HAVE_SPF:
         use an action-translation layer, but that will also require some
         adjustment of the cascading handler.
 
+        .. note::
+
+          This class will not be defined if the relevant SPF libraries could
+          not be loaded.  They may be installed via ``pip`` using the extras
+          mechanism: ``pip install chapps[SPF]``
+
         """
 
-        def __init__(self, policy=None):
+        def __init__(self, policy: SPFEnforcementPolicy = None):
+            """Set up an SPFEnforcementHandler
+
+            :param chapps.spf_policy.SPFEnforcementPolicy policy: an instance
+              of :class:`~chapps.spf_policy.SPFEnforcementPolicy`
+
+            """
             p = policy or SPFEnforcementPolicy()
             super().__init__(p)
 
         def async_policy_handler(self):
-            """Returns a coroutine which handles requests according to the policy"""
+            """Returns a coroutine which handles results according to the configuration
+
+            The policy being enforced is stored in the SPF-related TXT record
+            on the sender's domain.  The local configuration of this policy
+            amounts to instructions about responses to different outcomes of
+            the SPF check, along with what IP address and port to listen on.
+
+            This policy handler is different from others in that, because it
+            does not expect a PASS/FAIL response, it simply wraps the return
+            value of
+            :func:`~chapps.spf_policy.SPFEnforcementPolicy.approve_policy_request()`
+            in a Postfix response packet, and sends it.  Rather than refer to
+            pre-configured acceptance and rejection messages, it expects the
+            approval routine to send a string which can be interpreted by
+            Postfix as a command.
+
+            TODO: In order to be able to cascade *through* this kind of policy,
+            it is going to have to return a first-class object which can be
+            annotated as being a pass or a fail, so that a cascading handler
+            can decide whether to continue.  That object's ``str`` dunder
+            method will need to return the Postfix command.
+
+            TODO: In order to support more than one MTA (tho no such support is
+            planned), the action-translation layer might be refactored out of
+            the policy itself, to be applied here, in order to switch between
+            different types.
+
+            """
             ### This override version for SPF enforcement does not assume a yes-or-no response pattern
             logger.debug(
                 f"Policy handler requested for {type(self.policy).__name__}."
