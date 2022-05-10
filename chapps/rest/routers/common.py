@@ -1,4 +1,12 @@
-"""Common code between routers; mainly dependencies"""
+"""Common code between routers
+
+API route factories and also some :mod:`FastAPI` dependencies are defined in this module.
+
+The route factories perform the repetitive grunt work required to set up the typical 'create', 'read', 'update', 'delete' and 'list' functions needed for basic object management.  In order to avoid extra levels of metaprogramming, the parameter name for the record ID of the main object involved in a factory-generated API call is ``item_id``, since it is clear, brief and generic.  Apologies to future subclassors who want an 'items' table.
+
+These route factories are used to create all the routes for :mod:`~chapps.rest.routers.users`, :mod:`~chapps.rest.routers.emails`, :mod:`~chapps.rest.routers.domains`, and :mod:`~chapps.rest.routers.quotas`.
+
+"""
 from typing import Optional, List
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
@@ -20,14 +28,42 @@ async def list_query_params(
     limit: Optional[int] = 1000,
     q: Optional[str] = "%",
 ):
+    """FastAPI dependency for list queries"""
     return dict(q=q, skip=skip, limit=limit)
 
 
 def model_name(cls):
+    """Convenience function to get the lowercase name of a model"""
     return cls.__name__.lower()
 
 
 def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
+    """Create a closure which loads an object along with arbitrary associations
+
+    :param chapps.rest.models.CHAPPSModel cls: a data model class
+    :param List[JoinAssoc] assoc: a list of associations (as
+      :class:`JoinAssoc` objects)
+    :param Optional[sqlalchemy.engine.Engine] engine: defaults to
+      :const:`chapps.rest.dbsession.sql_engine` if not specified
+    :rtype: callable
+    :returns: a closure as follows:
+
+      .. py:function:: f(item_id: int, name: Optional[str])
+
+        :param int item_id: if non-zero, the ID of the main record
+        :param Optional[str] name: if `item_id` is 0, the `name` of the record
+          to match.
+        :rtype: Tuple[~chapps.rest.models.CHAPPSModel, Dict[str, List[~chapps.rest.models.CHAPPSModel]], List[str]]
+        :returns: a :obj:`tuple` containing:
+
+          1. the object loaded by ID or name
+
+          2. that object's associations in a :obj:`dict` keyed on attribute
+             name (e.g. 'quota', 'domains')
+
+          3. a list of string remarks, which may have no contents
+
+    """
     mname = model_name(cls)
     assoc_s = "_".join([a.assoc_name for a in assoc])
     fname = f"load_{mname}_with_{assoc_s}"
@@ -85,13 +121,44 @@ def db_interaction(  # a decorator with parameters
     exception_message: str = ("{route_name}:{model}"),
     empty_set_message: str = ("Unable to find a matching {model}"),
 ):
-    """
-    the db_interaction decorator requires a couple of parameters,
-    and provides optional arguments to override the messages for
-    either of two eventualities:
-    1. any exception occurs; the argument list is automatically appended
-    2. the set of return values (from an access operation) is empty, OR
-       a delete operation could not find any objects to delete
+    """Decorator for database interactions
+
+    :param ~chapps.rest.models.CHAPPSModel cls: the data model class
+
+    :param ~sqlalchemy.engine.Engine engine: an :mod:`SQLAlchemy` engine, which
+      defaults to the package-wide one declared in
+      :mod:`~chapps.rest.dbsession`
+
+    :param str exception_message: a message to include if any untrapped
+      exception occurs; defaults to '{route_name}:{model}'.  Only those two
+      symbols are available for expansion.  All arguments are appended.
+
+    :param str empty_set_message: included if a SELECT results in an empty set;
+      defaults to 'Unable to find a matching {model}' and supports both
+      substitutions that `exception_message` does
+
+    :returns: a `decorator`_ closure, which will be called with the function to
+      be `decorated`_as its argument.  In this case, the function is expected
+      to be an async closure which is being manufactured for use in the API,
+      and so the decorator closure returned by this routine defines a coroutine
+      as the inner function, which is ultimately returned and used as the API
+      route.
+
+    :rtype: callable
+
+    The decorator sets up some global symbols for use inside the API route
+    closure coroutines:
+
+      :session: a :class:`~sqlalchemy.orm.Session` instance created in a
+        context containing the execution of the wrapped coroutine, suitable for
+        performing database interactions, and which will be automatically
+        closed after the coroutine completes
+
+      :model_name: a string containing the lowercase name of the model
+
+    .. _decorator: https://docs.python.org/3/glossary.html#term-decorator
+    .. _decorated: https://peps.python.org/pep-0318/
+
     """
 
     mname = model_name(cls)
@@ -125,14 +192,42 @@ def db_interaction(  # a decorator with parameters
     return interaction_wrapper  # a regular function
 
 
-def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
-    """
-    Build a route to get an item by ID:
-    first argument is the main datamodel for the request
-    named arguments supply the DB engine for session creation
-    and the Pydantic response model for the output
-    the optional dict assoc maps the names of associated models
-    onto the data model for the associated objects
+def get_item_by_id(
+    cls,
+    *,
+    response_model,
+    engine=sql_engine,
+    assoc: Optional[List[JoinAssoc]] = None,
+):
+    """Build a route coroutine closure to get an item by ID
+
+    :param ~chapps.rest.models.CHAPPSModel: the main data model for the request
+
+    :param ~chapps.rest.models.CHAPPSResponse response_model: the response
+      model
+
+    :param ~sqlalchemy.engine.Engine engine: defaults to
+      :const:`~chapps.rest.dbsession.sql_engine`
+
+    :param List[~chapps.rest.dbmodels.JoinAssoc] assoc: if included, these
+      associations will be included in the return
+
+    At present there is no provision for dealing with extremely long
+    association lists.  Even if there were 500 elements, the response would not
+    be extremely large.  TODO: provide option to suppress each association
+
+    .. note::
+
+      An alternate closure factory for creating route closures which
+      specifically list associations does provide pagination, etc.  See
+      :func:`~.`list_associated`
+
+    The factory produces a coroutine closure decorated with the
+    :func:`~.db_interaction` decorator, with a signature of ``(item_id: int)``.
+    The final closure's name and doc metadata (dunder attributes) are set
+    properly to ensure that the automatic documentation is coherent and
+    accurate.
+
     """
     mname = model_name(cls)
 
@@ -161,11 +256,26 @@ def get_item_by_id(cls, *, response_model, engine=sql_engine, assoc=None):
 
 
 def list_items(cls, *, response_model, engine=sql_engine):
-    """
-    Build a route to list items.
-    The factory just needs the control data -- the engine, the response model
+    """Build a route coroutine closure to list items
+
+    :param ~chapps.rest.models.CHAPPSModel: the main data model for the request
+
+    :param ~chapps.rest.models.CHAPPSResponse response_model: the response
+      model
+
+    :param ~sqlalchemy.engine.Engine engine: defaults to
+      :const:`~chapps.rest.dbsession.sql_engine`
+
     The returned closure expects to receive the query parameters as a dict,
-    since that is what the dependency will yield.
+    since that is what the dependency will yield.  Its signature is
+
+      .. code:: python
+
+        async def list_i(qparams: dict = Depends(list_query_params))
+
+    The closure's name and document metadata are updated to ensure coherence
+    and accuracy of the automatic API documentation.
+
     """
     mname = model_name(cls)
 

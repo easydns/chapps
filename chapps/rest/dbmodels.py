@@ -1,4 +1,4 @@
-"""CHAPPS data schemata expressed as SQLAlchemy ORM Models
+"""CHAPPS data schemata expressed as `SQLAlchemy`_ `ORM Models`_
 
 Basic data models correspond to Pydantic models for API, but more models are
 required for the database side:
@@ -14,6 +14,9 @@ required for the database side:
     (TODO: it seems like there must be some way to obtain some of the data
     tracked by :class:`.JoinAssoc` from the :mod:`SQLAlchemy` metadata but I
     have not figured much of it out yet.)
+
+.. _sqlalchemy: https://docs.sqlalchemy.org/en/14/index.html
+.. _orm models: https://docs.sqlalchemy.org/en/14/orm/quickstart.html
 
 """
 from typing import Dict, List, Union, Optional
@@ -149,7 +152,7 @@ class DB_Customizations(DeclarativeMeta):
 
 # declare DB model base class
 DB_Base = declarative_base(metaclass=DB_Customizations)
-"""DB_Base serves as the base of all ORM classes
+"""DB_Base serves as the base of all `ORM models`_
 
 This class itself contains literally no code apart from documentation.
 All of the magic provided for the ORM layer is implemented in the metaclass,
@@ -275,7 +278,9 @@ class User(DB_Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
+    """integer auto-incremented primary key"""
     name = Column(String(128), unique=True)
+    """unique string of up to 128 chars"""
     quota = relationship(
         Quota,
         secondary=quota_user,  # using m2m mainly for optimization
@@ -286,6 +291,7 @@ class User(DB_Base):
         primaryjoin=id == quota_user.c.user_id,
         secondaryjoin=Quota.id == quota_user.c.quota_id,
     )
+    """associated **Quota** object; there can be only one **Quota** associated to a **User**"""
     domains = relationship(
         Domain,
         secondary=domain_user,  # really m2m
@@ -293,6 +299,12 @@ class User(DB_Base):
         order_by=Domain.id,  # order by id
         passive_deletes=True,  # protect domains
     )
+    """list of associated **Domain** objects
+
+    a **User** may be associated to more than one **Domain**, and
+    a **Domain** may be associated to more than one **User**
+
+    """
     emails = relationship(
         Email,
         secondary=email_user,
@@ -300,6 +312,12 @@ class User(DB_Base):
         order_by=Email.id,
         passive_deletes=True,
     )
+    """list of associated **Email** objects
+
+    a **User** may be associated to more than one **Email**, and
+    an **Email** may be associated to more than one **User**
+
+    """
 
     def __repr__(self):
         return f"User[ORM](id={self.id!r}, name={self.name!r})"
@@ -335,8 +353,8 @@ class JoinAssoc:
 
         :param str assoc_name: attribute name of the association
 
-        :param type assoc_type: usually :obj:`int` or :obj:`List[int]`; should be the type for the
-          API to expect when setting up the route metadata
+        :param type assoc_type: usually :obj:`int` or :obj:`List[int]`; should
+          be the type for the API to expect when setting up the route metadata
 
         :param DB_Base assoc_model: a reference to the dbmodel class of the
           associated object
@@ -415,8 +433,8 @@ class JoinAssoc:
 
         Using the ``item`` passed in, which may be an ORM object descended from
         :class:`~.DB_Base` or an :obj:`int`, construct a list of dictionaries
-        mapping the join table's ID column names correctly onto the source item ID and the
-        associated item ID(s).
+        mapping the join table's ID column names correctly onto the source item
+        ID and the associated item ID(s).
 
         """
 
@@ -432,8 +450,6 @@ class JoinAssoc:
         """Get tuples suitable for use in an SQLAlchemy WHERE clause
 
         :param int item_id:
-
-        There may be a way to use the same sort of data structure for both of INSERT/UPDATE and also WHERE, but if there is, I do not yet know it.
 
         """
         try:

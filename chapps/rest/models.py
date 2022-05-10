@@ -6,12 +6,17 @@ from pydantic.main import ModelMetaclass
 from enum import Enum
 import time
 
-verstr = config.chapps.version
+VERSTR = config.chapps.version
 
 
 class AssocOperation(str, Enum):
-    """
-    'add', 'subtract', or 'set'; use 'set' only with unitary associations
+    """'add', 'subtract', or 'replace'
+
+    use 'replace' only with unitary associations; logic in
+    :class:`~chapps.rest.dbmodels.JoinAssoc` which responds
+    to the ``replace`` operation is designed to work only with
+    scalar values.
+
     """
 
     add = "add"
@@ -20,6 +25,8 @@ class AssocOperation(str, Enum):
 
 
 class SDAStatus(str, Enum):
+    """sender-domain auth status: AUTH, PROH, or NONE"""
+
     AUTH = "AUTHORIZED"
     PROH = "PROHIBITED"
     NONE = "NOT CACHED"
@@ -27,6 +34,17 @@ class SDAStatus(str, Enum):
 
 # a metaclass for passing calls through to the orm_model
 class CHAPPSMetaModel(ModelMetaclass):
+    """Metaclass for CHAPPS Pydantic models
+
+    We inject an override for ``__getattr__()`` in order to attempt to find
+    missing attributes on the ORM class attached via the ``Meta`` subclass of
+    each model class.  This allows the Pydantic data-model class to serve as a
+    proxy for the ORM class, meaning that we can handle Pydantic models in the
+    API code, and still call ORM methods on them, and cause corresponding ORM
+    objects to be instantiated on demand, etc.
+
+    """
+
     def __getattr__(cls, var):
         orm_method = getattr(cls.Meta.orm_model, var, None)
         return orm_method or super().__getattr__(var)
@@ -36,21 +54,49 @@ class CHAPPSMetaModel(ModelMetaclass):
 # the names of subclasses of CHAPPSModel and automatically hook up their
 # Meta.orm_model data ... if the number of tables starts to grow
 class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
-    """Base API data model"""
+    """Base API data model
+
+    All models should define a class called ``Meta`` and define within it a
+    variable called ``orm_model`` as a reference to the ORM model class
+    (generally defined in :mod:`chapps.rest.dbmodels`) corresponding to the
+    data model.  In this abstract superclass, the ORM model reference is to the
+    parallel abstract ORM model superclass.
+
+    Models also define a class called ``Config``, which is used by
+    :mod:`Pydantic`.  In it, ``orm_mode`` should be set to ``True``.  It is
+    also possible to include additional detail for the OpenAPI documentation
+    parser.
+
+    All models have these attributes/columns:
+
+    """
 
     id: int
+    """integer auto-incrementing primary identifier"""
     name: str
+    """unique string label"""
 
     class Meta:
+        """Used by CHAPPS"""
+
         orm_model = dbmodels.DB_Base
+        """The ORM model class corresponding to this data model"""
 
     @classmethod
-    def id_name(cls):
+    def id_name(cls) -> str:
+        """:returns: name of the ID column in a join table"""
         return "_".join(str(cls.Meta.orm_model.id).lower().split("."))
 
     @classmethod
     def wrap(cls, orm_instance):
-        """create a pydantic model from an ORM model"""
+        """Wrap an ORM instance in its corresponding Pydantic data model
+
+        :param cls.Meta.orm_model orm_instance: an ORM instance of the
+          appropriate type
+
+        :returns: a pydantic model created from an ORM model
+
+        """
         if not orm_instance:  # could be None or []
             return orm_instance
         try:
@@ -60,7 +106,28 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
             return cls.from_orm(orm_instance)
 
     @classmethod
-    def join_assoc(cls, **kwargs):
+    def join_assoc(cls, **kwargs) -> dbmodels.JoinAssoc:
+        """Create a :class:`~chapps.rest.dbmodels.JoinAssoc` with this class as the source
+
+        :param str assoc_name: attribute name of the association
+
+        :param type assoc_type: usually :obj:`int` or :obj:`List[int]`; should
+          be the type for the API to expect when setting up the route metadata
+
+        :param DB_Base assoc_model: a reference to the dbmodel class of the
+          associated object
+
+        :param str assoc_id: label of associated object's ID column in the
+          join table
+
+        :param sqlalchemy.schema.Table table: a reference to the join table
+          schema; it will be a constant in this module, generally
+
+        This convenience routine for generating a
+        :class:`~chapps.rest.dbmodels.JoinAssoc` provides the source model and
+        ID-column info as it passes on the other arguments.
+
+        """
         # if it became necessary to track some other arbitrary id-column name
         # we could accomplish that with a metaclass, and then just set it
         # in each subclass
@@ -68,7 +135,19 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
 
 
 class User(CHAPPSModel):
-    """User objects have a name and ID"""
+    """**User** objects represent entities authorized to send email
+
+    The **User** is central to CHAPPS's policy-enforcement strategy.
+    When a **User** attempts to send email, CHAPPS is able to check:
+
+    1. That **User**\ 's **Quota**
+
+    2. Whether the **User** is authorized to send email from the proposed
+       email's apparent sender-\ **Domain**, or whether they might be
+       authorized to send email appearing to come from the entire **Email**
+       address.
+
+    """
 
     class Config:
         orm_mode = True
@@ -81,9 +160,19 @@ class User(CHAPPSModel):
 
 
 class Quota(CHAPPSModel):
-    """Quota objects have ID, string `name` and integer `quota`"""
+    """**Quota** objects represent transmission count limits
+
+    The time-interval over which **Quota** objects are enforced is 24 hr.  They
+    therefore have an integer ``quota`` field which contains the limit of
+    transmissions per 24 hours.  A sliding window is applied to a
+    transmission-attempt history, in order to avoid having a daily reset.
+
+    **Quota** objects also have `id` and `name` fields, like all models.
+
+    """
 
     quota: int
+    """unique integer outbound transmission limit"""
 
     class Config:
         orm_mode = True
@@ -96,7 +185,9 @@ class Quota(CHAPPSModel):
 
 
 class Domain(CHAPPSModel):
-    """Domain objects have a name and ID; the name never contains an `@`"""
+    """Domain objects have a name and ID; the name never contains an ``@``
+
+    TODO: implement validation of domain names"""
 
     class Config:
         orm_mode = True
@@ -107,7 +198,9 @@ class Domain(CHAPPSModel):
 
 
 class Email(CHAPPSModel):
-    """Email objects have a name and ID; the name always contains an `@`"""
+    """Email objects have a name and ID; the name always contains an ``@``
+
+    TODO: implement validation of email addresses"""
 
     class Config:
         orm_mode = True
@@ -118,87 +211,139 @@ class Email(CHAPPSModel):
 
 
 class CHAPPSResponse(BaseModel):
+    """Base :mod:`Pydantic` model for API responses"""
+
     version: str
+    """The CHAPPS version as a string"""
     timestamp: float
+    """When this response was generated"""
     response: object
+    """Whatever piece of data was requested"""
 
     class Config:
-        schema_extra = dict(version="CHAPPS v0.4", timestamp=time.time())
+        schema_extra = dict(version=VERSTR, timestamp=time.time())
 
     @classmethod
     def send(model, response=None, **kwargs):
         """Utility function for encapsulating responses in a standard body"""
-        mkwargs = dict(version=verstr, timestamp=time.time())
+        mkwargs = dict(version=VERSTR, timestamp=time.time())
         if response:
             mkwargs["response"] = response
         return model(**mkwargs, **kwargs)
 
 
 class UserResp(CHAPPSResponse):
+    """Data model for responding with a single **User** record"""
+
     response: User
+    """The ``response`` field contains a **User** record"""
     domains: Optional[List[Domain]] = None
+    """A list of associated **Domain** records may be included"""
     emails: Optional[List[Email]] = None
+    """A list of associated **Email** records may be included"""
     quota: Optional[Quota] = None
+    """The **Quota** record associated with the **User** may be included"""
 
 
 class UsersResp(CHAPPSResponse):
+    """Data model for responding with a list of **User** records"""
+
     response: List[User]
+    """A list of **User** objects"""
 
 
 class DomainResp(CHAPPSResponse):
+    """Data model for responding with a single **Domain** record"""
+
     response: Domain
+    """A **Domain** object"""
     users: Optional[List[User]] = None
+    """A list of **User** objects associated to the **Domain** may be included
+    """
 
 
 class DomainsResp(CHAPPSResponse):
+    """Data model for responding with a list of **Domain** records"""
+
     response: List[Domain]
+    """A list of **Domain** objects"""
 
 
 class EmailResp(CHAPPSResponse):
+    """Data model for responding with a single **Email** record"""
+
     response: Email
+    """An **Email** object"""
     users: Optional[List[User]] = None
+    """A list of associated **User** objects may be included"""
 
 
 class EmailsResp(CHAPPSResponse):
+    """Data model for responding with a list of **Email** records"""
+
     response: List[Email]
+    """A list of **Email** objects"""
 
 
 class QuotaResp(CHAPPSResponse):
+    """Data model for responding with a single **Quota** record"""
+
     response: Quota
+    """A **Quota** object"""
 
 
 class QuotasResp(CHAPPSResponse):
+    """Data model for responding with a list of **Quota** records"""
+
     response: List[Quota]
+    """A list of **Quota** objects"""
 
 
 class IntResp(CHAPPSResponse):
+    """Data model for responding with an integer"""
+
     response: int
+    """An integer"""
 
 
 class TextResp(CHAPPSResponse):
+    """Data model for responding with a string"""
+
     response: str
+    """A string"""
 
 
 class LiveQuotaResp(CHAPPSResponse):
+    """Data model for responses from the Live API"""
+
     response: int
+    """An integer"""
     remarks: List[str] = []
+    """A list of string remarks may be included"""
 
 
 class SourceUserMapResp(CHAPPSResponse):
     """
-    A dict-of-dicts:
-      top level key is domain or email name
-      second key is user
-      value is SDAStatus
+    A source-user map is a dict-of-dicts:
+      - top level key is domain or email name
+      - second key is user
+      - value is SDAStatus
     """
 
     response: Dict[str, Dict[str, SDAStatus]]
+    """A map of auth-subject to dicts of username mapping to status"""
 
 
 class DeleteResp(TextResp):
+    """Data model for responding to deletion requests"""
+
     response: str = "deleted"
+    """The string 'deleted'"""
 
 
 # the following classes are somewhat speculative for now
-class FloatResp(CHAPPSResponse):
-    response: float
+# class FloatResp(CHAPPSResponse):
+#     """Data model for responding with a float"""
+
+#     response: float
+#     """A float"""
