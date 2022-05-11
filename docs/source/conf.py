@@ -45,6 +45,7 @@ exclude_patterns = []
 # Intersphinx mapping
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
+default_role = "py:obj"
 
 # -- Options for HTML output -------------------------------------------------
 
