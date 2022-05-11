@@ -120,7 +120,8 @@ api.delete("/{item_id}/domains/", response_model=TextResp)(
     )
 )
 
-api.put("/{item_id}/quota/{quota_id}")(
+# note that the correct name of the quota parameter is necessary here
+api.put("/{item_id}/quota/{quota}")(
     adjust_associations(
         User, assoc=[user_quota_assoc], assoc_op=AssocOperation.replace
     )
