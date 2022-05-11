@@ -135,19 +135,17 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
 
 
 class User(CHAPPSModel):
-    """**User** objects represent entities authorized to send email
+    """**User** objects represent entities authorized to send email"""
 
-    The **User** is central to CHAPPS's policy-enforcement strategy.
-    When a **User** attempts to send email, CHAPPS is able to check:
+    # The **User** is central to CHAPPS's policy-enforcement strategy.
+    # When a **User** attempts to send email, CHAPPS is able to check:
 
-    1. That **User**\ 's **Quota**
+    # 1. That **User**\ 's **Quota**
 
-    2. Whether the **User** is authorized to send email from the proposed
-       email's apparent sender-\ **Domain**, or whether they might be
-       authorized to send email appearing to come from the entire **Email**
-       address.
-
-    """
+    # 2. Whether the **User** is authorized to send email from the proposed
+    #    email's apparent sender-\ **Domain**, or whether they might be
+    #    authorized to send email appearing to come from the entire **Email**
+    #    address.
 
     class Config:
         orm_mode = True
@@ -160,16 +158,14 @@ class User(CHAPPSModel):
 
 
 class Quota(CHAPPSModel):
-    """**Quota** objects represent transmission count limits
+    """**Quota** objects represent transmission count limits"""
 
-    The time-interval over which **Quota** objects are enforced is 24 hr.  They
-    therefore have an integer ``quota`` field which contains the limit of
-    transmissions per 24 hours.  A sliding window is applied to a
-    transmission-attempt history, in order to avoid having a daily reset.
+    # The time-interval over which **Quota** objects are enforced is 24 hr.
+    # They therefore have an integer ``quota`` field which contains the limit
+    # of transmissions per 24 hours.  A sliding window is applied to a
+    # transmission-attempt history, in order to avoid having a daily reset.
 
-    **Quota** objects also have `id` and `name` fields, like all models.
-
-    """
+    # **Quota** objects also have `id` and `name` fields, like all models.
 
     quota: int
     """unique integer outbound transmission limit"""
@@ -185,9 +181,9 @@ class Quota(CHAPPSModel):
 
 
 class Domain(CHAPPSModel):
-    """Domain objects have a name and ID; the name never contains an ``@``
+    """Domain objects have a name and ID; the name never contains an ``@``"""
 
-    TODO: implement validation of domain names"""
+    # TODO: implement validation of domain names
 
     class Config:
         orm_mode = True
@@ -198,9 +194,9 @@ class Domain(CHAPPSModel):
 
 
 class Email(CHAPPSModel):
-    """Email objects have a name and ID; the name always contains an ``@``
+    """Email objects have a name and ID; the name always contains an ``@``"""
 
-    TODO: implement validation of email addresses"""
+    # TODO: implement validation of email addresses
 
     class Config:
         orm_mode = True
