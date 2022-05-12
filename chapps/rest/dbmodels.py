@@ -15,7 +15,6 @@ required for the database side:
     tracked by :class:`.JoinAssoc` from the :mod:`SQLAlchemy` metadata but I
     have not figured much of it out yet.)
 
-.. _sqlalchemy: https://docs.sqlalchemy.org/en/14/index.html
 .. _orm models: https://docs.sqlalchemy.org/en/14/orm/quickstart.html
 
 """
