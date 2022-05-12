@@ -1,3 +1,13 @@
+"""Defines routes for **Quota** definitions
+
+This module defines the API router for **Quota** record manipulation,
+and defines the :class:`~.JoinAssoc` which describes the relationship between
+**Quota** and **User** tables.
+
+Implementation of **Quota** routes is a little simpler than for other models because some functionality is intentionally excluded.  Because it is expected that a large number of users might share the same **Quota** record, it is not supported to retrieve the **User** records associated with a **Quota** object.
+
+"""
+
 from fastapi import APIRouter, status
 from chapps.rest.models import Quota, QuotaResp, QuotasResp, DeleteResp
 from .common import (
@@ -18,7 +28,7 @@ api = APIRouter(
     tags=["quotas"],
     responses={404: {"description": "Quota not found."}},
 )
-
+"""The **Quota** record management API router"""
 
 api.get("/", response_model=QuotasResp)(
     list_items(Quota, response_model=QuotasResp)
@@ -41,10 +51,6 @@ api.post(
         Quota, response_model=QuotaResp, params=dict(name=str, quota=int)
     )
 )
-
-logger.debug("Created Quota::create_i")
-# @api.post("/")
-# async def create_quota(name: str=Body(...), limit: int=Body(...)):
 
 api.delete("/", response_model=DeleteResp)(delete_item(Quota))
 

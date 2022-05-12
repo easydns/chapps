@@ -1,3 +1,11 @@
+"""Defines routes for **User** record management
+
+This module defines API routes for managing **User** records, and defines the :class:`JoinAssoc` data to describe the relationship between **User** records and other record types: **Domain**, **Email**, and **Quota**.
+
+As such, this is the only router where the factories are used to create or update records with multiple associations.  It seems a good opportunity for another example.
+
+"""
+
 from typing import List
 from fastapi import status, APIRouter
 from ..models import (
@@ -33,6 +41,75 @@ api = APIRouter(
     tags=["users"],
     responses={404: {"description": "User not found."}},
 )
+"""The API router for **User** record maintenance
+
+This router is once again full of calls to the factories in the :mod:`~.common`
+module.  The **User** model is the most connected to other things, however, and
+so seems like a good spot for examples related to associations.
+
+.. _creating-users:
+.. rubric:: Creating Users
+
+When creating a **User** record, it seems likely that the caller might like to
+automatically associate the new **User** with an existing **Quota** record, and
+at least one **Domain** record, perhaps even an **Email** record.  The factory
+will provide a coroutine which will optionally accept ID lists for these
+associations.  That is to say, the coroutine will treat them as optional
+arguments and do nothing if they are not provided.
+
+All of the logic and magic behind making this go smoothly is hidden within the
+:class:`.JoinAssoc` class.  We simply provide a list of these associations to
+the factory and it handles the rest:
+
+.. code:: python
+
+    api.post(
+        "/",
+        status_code=201,
+        response_model=UserResp,
+        responses={
+            status.HTTP_400_BAD_REQUEST: {"description": "Could not create user."},
+            status.HTTP_409_CONFLICT: {"description": "Unique key error."},
+        },
+    )(create_item(User, response_model=UserResp, assoc=user_join_assoc))
+
+In the above example, the `FastAPI`_ code for specifying details about the POST
+route takes up more space than the factory call to obtain the actual **User**
+creation coroutine.
+
+The definition of :const:`.user_join_assoc` may be found below.  It is a list
+containing references to all three :class:`~.JoinAssoc` instances, relating to
+a **Quota** and lists of **Domain** and **Email** records.
+
+.. _handling-associations:
+.. rubric:: Handling Associations
+
+Sometimes there is a need to remove a specific association from a list, or add
+one or a handful.  It would be helpful if it were not necessary to obtain or
+manufacture a list of IDs in order to use a replacement-type edit such as the
+basic model update route.  The **User** model has a number of different
+associations to manage, so here is an example of adding domains:
+
+.. code:: python
+
+    api.put("/{item_id}/domains/", response_model=TextResp)(
+        adjust_associations(
+            User, assoc=[user_domains_assoc], assoc_op=AssocOperation.add
+        )
+    )
+
+I chose to use PUT because it is associated with partial updates.  Within the
+API router wrapper, we use a call to the :func:`~.adjust_associations` route
+factory, which returns a coroutine which will take a **User** ID and a list of
+**Domain** IDs as arguments.  When invoked via the API, that coroutine will
+ensure that all the existing **Domain** records listed are associated to the
+**User**.  :exc:`~sqlalchemy.exc.IntegrityError` is ignored during the process,
+so any attempts to add an existing association or to add a nonexistent
+**Domain** will not raise errors -- all existing **Domain** records identified
+by ID will be associated to the **User**, and other associations to that
+**User** will be preserved.
+
+"""
 
 user_quota_assoc = User.join_assoc(
     assoc_name="quota",

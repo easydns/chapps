@@ -14,9 +14,6 @@ These route factories are used to create all the routes for
 :mod:`~chapps.rest.routers.users`, :mod:`~chapps.rest.routers.emails`,
 :mod:`~chapps.rest.routers.domains`, and :mod:`~chapps.rest.routers.quotas`.
 
-.. _fastapi: https://fastapi.tiangolo.com/
-.. _sqlalchemy: https://sqlalchemy.org/
-
 """
 from typing import Optional, List
 from sqlalchemy.orm import sessionmaker
@@ -301,6 +298,9 @@ def list_items(cls, *, response_model, engine=sql_engine):
     The closure's name and document metadata are updated to ensure coherence
     and accuracy of the automatic API documentation.
 
+    For an example of using this factory, see :ref:`Listing Domains
+    <listing-domains>`.
+
     """
     mname = model_name(cls)
 
@@ -469,6 +469,9 @@ def adjust_associations(
     It all seems quite complicated when stated this way, but when viewed in the
     API documentation, it makes much more sense.
 
+    For an example of using this factory, see :ref:`Handling Associations
+    <handling-associations>`
+
     """
 
     mname = model_name(cls)
@@ -568,6 +571,9 @@ def update_item(
     sets the `__doc__` and `__name__` metadata so that `FastAPI`_ will be able
     to find all the required data to create an API route with good
     documentation.
+
+    For an example of how to use this factory, see :ref:`Updating Domains
+    <updating-domains>`
 
     """
     mname = model_name(cls)
@@ -673,11 +679,11 @@ def create_item(
       model
 
     :param dict params: defaults to ``dict(name=str)``; specify to provide
-      additional column names and types, and be sure to include name, as all
+      additional column names and types, and be sure to include `name`, as all
       models currently are expected to have a `name` column, which is not
       allowed to be null.
 
-    :param ~chapps.rest.dbmodels.JoinAssoc assoc: the associations to manage,
+    :param ~chapps.rest.dbmodels.JoinAssoc assoc: the associations to attach,
       if any
 
     :param ~sqlalchemy.engine.Engine engine: defaults to
@@ -687,6 +693,8 @@ def create_item(
     setting all its elements (other than ID) to whatever values are provided.
     Currently all values must be provided.  If desired, associations may also
     be provided to the factory, and they will be accommodated by the coroutine.
+
+    For an example invocation of this factory, see :ref:`Creating Users <creating-users>`
 
     TODO: in a generalized version of this for wider use in gluing
     `SQLAlchemy`_ to `FastAPI`_, it would need to allow arbitrary attributes of

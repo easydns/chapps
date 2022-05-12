@@ -1,3 +1,11 @@
+"""Defined the **Email** record maintenance API router
+
+This module defines the management routes for **Email** records, and also the :class:`~.JoinAssoc` between **Email** and **User** tables.
+
+It is implemented using factory functions from the :mod:`~.common` module, in a nearly-identical way to the :mod:`~.domains` module, just using :class:`~chapps.rest.models.Email` as the main data model.
+
+"""
+
 from typing import List
 from starlette import status
 from fastapi import APIRouter  # , Body, Path, HTTPException
@@ -41,6 +49,7 @@ email_join_assoc = [
         table=Email.Meta.orm_model.metadata.tables["email_user"],
     )
 ]
+"""List of join associations for **Email** objects"""
 
 api.get("/", response_model=EmailsResp)(
     list_items(Email, response_model=EmailsResp)
