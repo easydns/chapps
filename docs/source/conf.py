@@ -45,7 +45,12 @@ exclude_patterns = []
 # Intersphinx mapping
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
+# session setup
 default_role = "py:obj"
+rst_prolog = """
+.. _fastapi: https://fastapi.tiangolo.com/
+.. _sqlalchemy: https://sqlalchemy.org/
+"""
 
 # -- Options for HTML output -------------------------------------------------
 
