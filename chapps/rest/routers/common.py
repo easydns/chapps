@@ -51,6 +51,12 @@ def model_name(cls):
 def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
     """Create a closure which loads an object along with arbitrary associations
 
+    This isn't meant to create an API route on its own, but it may be used in
+    API routes.  It is mainly used in :mod:`~chapps.rest.routers.live` routes,
+    which are currently all one-offs, not created by factories.  In order to
+    return a closure which can work in any context, it does not return a
+    coroutine but a standard synchronous closure.
+
     :param ~chapps.rest.models.CHAPPSModel cls: a data model class
     :param List[JoinAssoc] assoc: a list of associations (as
       :class:`JoinAssoc` objects)
@@ -155,10 +161,10 @@ def db_interaction(  # a decorator with parameters
       `coroutine`_ as the inner function, which is ultimately returned and used
       as the API route.
 
-    :rtype: callable
+    :rtype: callable which wraps and returns a coroutine
 
     The decorator sets up some global symbols for use inside the API route
-    closure coroutines:
+    coroutines:
 
       :session: a :class:`~sqlalchemy.orm.Session` instance created in a
         context containing the execution of the wrapped coroutine, suitable for
@@ -222,7 +228,7 @@ def get_item_by_id(
       :const:`~chapps.rest.dbsession.sql_engine`
 
     :param List[~chapps.rest.dbmodels.JoinAssoc] assoc: if included, these
-      associations will be included in the return
+      associations will be included as optional keys in the response
 
     At present there is no provision for dealing with extremely long
     association lists.  Even if there were 500 elements, the response would not
@@ -232,18 +238,19 @@ def get_item_by_id(
 
       An alternate closure factory for creating routes which
       specifically list associations does provide pagination, etc.  See
-      :func:`~.`list_associated`
+      :func:`~.list_associated`
 
     The factory produces a coroutine decorated with the
-    :func:`~.db_interaction` decorator.  Its signature is:
+    :func:`~.db_interaction` decorator, as do all the route factories.  Its
+    signature is:
 
       .. code:: python
 
         async def get_i(item_id: int) -> response_model
 
-    The final closure's name and doc metadata are set
-    properly to ensure that the automatic documentation is coherent and
-    accurate.
+    The factory sets the final closure's name and doc metadata properly to
+    ensure that the automatic documentation is coherent and accurate.  All the
+    route factories do this to a greater or lesser extent.
 
     """
     mname = model_name(cls)
@@ -285,7 +292,7 @@ def list_items(cls, *, response_model, engine=sql_engine):
       :const:`~chapps.rest.dbsession.sql_engine`
 
     The returned closure expects to receive the query parameters as a dict,
-    since that is what the dependency will yield.  Its signature is
+    since that is what the dependency will return.  Its signature is
 
       .. code:: python
 
@@ -350,6 +357,7 @@ def list_associated(
 
     @db_interaction(cls=cls, engine=engine)
     async def assoc_list(*pargs, **args):
+        # TODO: signature can be simplified
         # item_id for source object of type cls
         # the specified association is listed according to qparams
         stmt = assoc.assoc_model.windowed_list_by_ids(
@@ -449,12 +457,14 @@ def adjust_associations(
     exact signature is dependent on what associations are listed.  After
     `item_id`, which is an ID to use to look up the main object, it will expect
     further arguments named as the association (`assoc_name`) which are of the
-    specified type (`assoc_type`).  If only one association is adjusted by the
-    route, there will be just the one list as a body argument, which doesn't
-    get a label, making the API call very easy to format and looking very clean
-    in the API docs.  If more than one are specified, :mod:`FastAPI` will
-    expect a JSON object in the body with keys named as the ID columns and
-    values which are lists of IDs.
+    specified type (`assoc_type`).
+
+    If only one association is adjusted by the route, there will be just the
+    one list (or scalar) as a body argument, which doesn't get a label, making
+    the API call very easy to format and looking very clean in the API docs.
+    If more than one are specified, :mod:`FastAPI` will expect a JSON object in
+    the body with keys named as the ID columns and values which are lists of
+    IDs.
 
     It all seems quite complicated when stated this way, but when viewed in the
     API documentation, it makes much more sense.
@@ -552,7 +562,12 @@ def update_item(
     of IDs.
 
     Its signature is determined by the contents of the
-    :class:`~chapps.rest.dbmodels.JoinAssoc` passed to it.
+    :class:`~chapps.rest.dbmodels.JoinAssoc` passed to it.  The factory
+    constructs :mod:`~inspect.Parameter` elements and uses them to create a
+    correct :mod:`~inspect.Signature` for the new, decorated closure.  It also
+    sets the `__doc__` and `__name__` metadata so that `FastAPI`_ will be able
+    to find all the required data to create an API route with good
+    documentation.
 
     """
     mname = model_name(cls)
