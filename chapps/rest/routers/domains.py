@@ -119,7 +119,7 @@ This has the added side-effect of not creating any function definitions within
 the :mod:`~.domains` module, or any other concrete route module, which handily
 prevents any other code from calling those routines.
 
-The following parameters and return type correspond to the :class:`~fastapi.APIRouter` instance, which is callable.  Sphinx autodoc makes it quite difficult to suppress this output.
+(The following parameters and return type correspond to the :class:`~fastapi.APIRouter` instance, which is callable.  Sphinx autodoc makes it quite difficult to suppress this output.)
 
 """
 
@@ -152,12 +152,7 @@ api.post(
     "/",
     status_code=201,
     response_model=DomainResp,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {
-            "description": "Unable to create domain"
-        },
-        status.HTTP_409_CONFLICT: {"description": "Unique key error."},
-    },
+    responses={status.HTTP_409_CONFLICT: {"description": "Unique key error."}},
 )(
     create_item(
         Domain,

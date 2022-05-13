@@ -39,6 +39,7 @@ api = APIRouter(
     tags=["emails"],
     responses={status.HTTP_404_NOT_FOUND: {"description": "Email not found."}},
 )
+"""The **Email** object API router"""
 
 email_join_assoc = [
     Email.join_assoc(
@@ -67,10 +68,7 @@ api.post(
     "/",
     status_code=201,
     response_model=EmailResp,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Unable to create email"},
-        status.HTTP_409_CONFLICT: {"description": "Unique key error."},
-    },
+    responses={status.HTTP_409_CONFLICT: {"description": "Unique key error."}},
 )(
     create_item(
         Email,

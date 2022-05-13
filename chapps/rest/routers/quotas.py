@@ -4,7 +4,11 @@ This module defines the API router for **Quota** record manipulation,
 and defines the :class:`~.JoinAssoc` which describes the relationship between
 **Quota** and **User** tables.
 
-Implementation of **Quota** routes is a little simpler than for other models because some functionality is intentionally excluded.  Because it is expected that a large number of users might share the same **Quota** record, it is not supported to retrieve the **User** records associated with a **Quota** object.
+Implementation of **Quota** routes is a little simpler than for other models
+because some functionality is intentionally excluded.  It is expected that a
+large number of users might share the same **Quota** record, therefore it is
+not supported to retrieve the **User** records associated with a **Quota**
+object.
 
 """
 
@@ -43,9 +47,7 @@ api.post(
     "/",
     status_code=201,
     response_model=QuotaResp,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Unique key error."}
-    },
+    responses={status.HTTP_409_CONFLICT: {"description": "Unique key error."}},
 )(
     create_item(
         Quota, response_model=QuotaResp, params=dict(name=str, quota=int)

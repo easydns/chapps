@@ -55,9 +55,9 @@ def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
     coroutine but a standard synchronous closure.
 
     :param ~chapps.rest.models.CHAPPSModel cls: a data model class
-    :param List[JoinAssoc] assoc: a list of associations (as
-      :class:`JoinAssoc` objects)
-    :param Optional[sqlalchemy.engine.Engine] engine: defaults to
+    :param assoc: a list of associations (as
+      :class:`~.JoinAssoc` objects)
+    :param Optional[~sqlalchemy.engine.Engine] engine: defaults to
       :const:`chapps.rest.dbsession.sql_engine` if not specified
     :rtype: callable
     :returns: a closure as follows:
@@ -153,10 +153,10 @@ def db_interaction(  # a decorator with parameters
 
     :returns: a `decorator`_ closure, which will be called with the function to
       be `decorated`_ as its argument.  In this case, the function is expected
-      to be an async closure which is being manufactured for use in the API,
-      and so the decorator closure returned by this routine defines a
-      `coroutine`_ as the inner function, which is ultimately returned and used
-      as the API route.
+      to be a coroutine which is being manufactured for use in the API, and so
+      the decorator closure returned by this routine defines a `coroutine`_ to
+      wrap and await its argument, which is ultimately returned and used as the
+      API route.
 
     :rtype: callable which wraps and returns a coroutine
 
@@ -575,6 +575,13 @@ def update_item(
     For an example of how to use this factory, see :ref:`Updating Domains
     <updating-domains>`
 
+    TODO: in a generalized version of this for wider use in gluing
+    `SQLAlchemy`_ to `FastAPI`_, it would need to allow arbitrary attributes of
+    the model to be optional/required/defaulted.  This might easily be achieved
+    through the use of an additional alternate Pydantic_ data model for
+    updates, wherein those elements which ought to be optional may be marked as
+    such.
+
     """
     mname = model_name(cls)
     fname = f"update_{mname}"
@@ -695,10 +702,6 @@ def create_item(
     be provided to the factory, and they will be accommodated by the coroutine.
 
     For an example invocation of this factory, see :ref:`Creating Users <creating-users>`
-
-    TODO: in a generalized version of this for wider use in gluing
-    `SQLAlchemy`_ to `FastAPI`_, it would need to allow arbitrary attributes of
-    the updated model to be optional/required/defaulted.
 
     """
     params = params or dict(name=str)

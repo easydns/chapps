@@ -67,10 +67,7 @@ the factory and it handles the rest:
         "/",
         status_code=201,
         response_model=UserResp,
-        responses={
-            status.HTTP_400_BAD_REQUEST: {"description": "Could not create user."},
-            status.HTTP_409_CONFLICT: {"description": "Unique key error."},
-        },
+        responses={status.HTTP_409_CONFLICT: {"description": "Unique key error."}},
     )(create_item(User, response_model=UserResp, assoc=user_join_assoc))
 
 In the above example, the `FastAPI`_ code for specifying details about the POST
@@ -141,10 +138,7 @@ api.post(
     "/",
     status_code=201,
     response_model=UserResp,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Could not create user."},
-        status.HTTP_409_CONFLICT: {"description": "Unique key error."},
-    },
+    responses={status.HTTP_409_CONFLICT: {"description": "Unique key error."}},
 )(create_item(User, response_model=UserResp, assoc=user_join_assoc))
 
 
