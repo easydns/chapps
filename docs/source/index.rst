@@ -7,11 +7,9 @@ Caching, Highly-Available Postfix Policy Service
 ================================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
-   README.md
-   INSTALLATION.md
    modules.rst
 
 
