@@ -1,8 +1,10 @@
 """
-Signals and signal handlers
+Signal handlers and custom exceptions
+-------------------------------------
 
-In order to shut down gracefully, we want to provide a signal handler when
-a service loop starts.  Also, CHAPPS raises a few different custom exceptions, which are defined here.
+In order to shut down gracefully, we want to provide a signal handler when a
+service (handler) loop starts.  Also, CHAPPS raises a few different custom
+exceptions, which are defined here.
 
 """
 import signal, asyncio

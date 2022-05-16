@@ -1,4 +1,6 @@
-"""Logging
+"""
+Logging
+-------
 
 This module's purpose is to ensure that CHAPPS modules
 end up instantiating loggers which all share a common

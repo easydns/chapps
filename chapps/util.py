@@ -1,4 +1,6 @@
-"""Utility classes
+"""
+Utility classes
+---------------
 
 Since CHAPPS mainly deals with policy requests coming from Postfix,
 there is a utility object for representing them in a way which makes

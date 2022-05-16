@@ -1,6 +1,6 @@
 """
-Adapters
---------
+Policy Configuration Adapters
+-----------------------------
 
 Policy-configuration source data adapters.
 

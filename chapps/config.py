@@ -1,5 +1,6 @@
-"""Config
-------
+"""
+Operational Configuration
+-------------------------
 
 CHAPPS configures itself at the library level.  When it is first launched,
 the library will create a config file for itself if it does not find one

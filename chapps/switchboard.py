@@ -1,4 +1,13 @@
-"""Switchboard
+"""
+Communication handlers
+----------------------
+
+This module encapsulates the particular logic of:
+
+  1. receiving data payloads from Postfix, and then
+
+  2. sending back an appropriately-formatted response once the policy manager
+     has had a chance to weigh in on the payload contents
 
 Classes defined here exist mainly to be factories which return the main-loop
 closure for :mod:`asyncio`.

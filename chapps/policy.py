@@ -1,8 +1,13 @@
 """
 Policy managers
+---------------
 
-So far, all but the SPF enforcement policy are contained here; it has
-extra dependencies which are isolated that way.
+All email policy managers inherit from :class:`~.EmailPolicy`, which provides a
+fair amount of base functionality useful to its subclasses.  So far, all but
+the :class:`~.SPFEnforcementPolicy` are contained here.  That one has
+extra dependencies which are thus kept isolated.  Find it in
+:mod:`.spf_policy`.
+
 """
 import time
 from contextlib import contextmanager

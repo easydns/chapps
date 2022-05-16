@@ -1,7 +1,11 @@
-"""Classes related to outbound traffic
+"""
+OutboundPPR
+-----------
 
-Right now there is only one, which is an outbound-only subclass of
+And possibly other classes related to outbound traffic, but right now there is
+only one, which is an outbound-only subclass of
 :py:class:`chapps.util.PostfixPolicyRequest`.
+
 """
 from chapps.util import PostfixPolicyRequest
 from chapps.config import config

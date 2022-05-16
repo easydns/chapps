@@ -1,4 +1,11 @@
-"""SPF Enforcement policy manager"""
+"""
+SPF Enforcement policy manager
+------------------------------
+
+Isolated here to prevent the core codebase from depending upon the SPF
+libraries.
+
+"""
 import spf
 from chapps.policy import EmailPolicy
 from chapps.actions import PostfixSPFActions
