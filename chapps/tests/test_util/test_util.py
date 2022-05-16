@@ -28,9 +28,9 @@ class Test_AttrDict:
 class Test_PostfixPolicyRequest:
     def test_instantiate_ppr(self, postfix_policy_request_message):
         """
-        GIVEN a policy data payload from Postfix
-        WHEN  a new ppr object is instantiated from it
-        THEN  a new ppr object should be returned containing a copy of that data
+        :GIVEN: a policy data payload from Postfix
+        :WHEN:  a new ppr object is instantiated from it
+        :THEN:  a new ppr object should be returned containing a copy of that data
         """
         pprp = postfix_policy_request_message()
         new_ppr = PostfixPolicyRequest(pprp)
@@ -39,9 +39,9 @@ class Test_PostfixPolicyRequest:
 
     def test_attribute(self, postfix_policy_request_message):
         """
-        GIVEN a ppr object with contents
-        WHEN  an attribute is requested
-        THEN  its value (from the payload) should be returned
+        :GIVEN: a ppr object with contents
+        :WHEN:  an attribute is requested
+        :THEN:  its value (from the payload) should be returned
         """
         pprp = postfix_policy_request_message()
         new_ppr = PostfixPolicyRequest(pprp)
@@ -51,9 +51,9 @@ class Test_PostfixPolicyRequest:
 
     def test_dereference(self, postfix_policy_request_message):
         """
-        GIVEN a ppr object with contents
-        WHEN  an attribute is dereferenced
-        THEN  its value (from the payload) should be returned
+        :GIVEN: a ppr object with contents
+        :WHEN:  an attribute is dereferenced
+        :THEN:  its value (from the payload) should be returned
         """
         pprp = postfix_policy_request_message()
         new_ppr = PostfixPolicyRequest(pprp)
@@ -63,9 +63,9 @@ class Test_PostfixPolicyRequest:
 
     def test_iterable(self, postfix_policy_request_message):
         """
-        GIVEN a ppr object with contents
-        WHEN  an iterable is requested (as with items())
-        THEN  a dict-iterator should be returned, containing the payload data
+        :GIVEN: a ppr object with contents
+        :WHEN:  an iterable is requested (as with items())
+        :THEN:  a dict-iterator should be returned, containing the payload data
         """
         pprp = postfix_policy_request_message()
         new_ppr = PostfixPolicyRequest(pprp)
