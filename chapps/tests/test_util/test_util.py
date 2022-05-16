@@ -74,11 +74,12 @@ class Test_PostfixPolicyRequest:
             assert f"{k}={v}" in pprp
 
     def test_len(self, postfix_policy_request_message):
-        """
-        GIVEN a ppr object with contents
-        WHEN  asked for length
-        THEN  the number of parameters from the payload should be returned
-          NB: (the payload ends with an extra blank line)
+        """:GIVEN: a ppr object with contents
+        :WHEN:  asked for length
+        :THEN:  the number of parameters from the payload should be returned
+
+          :NB: (the payload ends with an extra blank line)
+
         """
         pprp = postfix_policy_request_message()
         new_ppr = PostfixPolicyRequest(pprp)
@@ -86,10 +87,19 @@ class Test_PostfixPolicyRequest:
         assert len(new_ppr) == len([l for l in pprp if len(l) > 0])
 
     def test_recipients(self, postfix_policy_request_message):
+        """:GIVEN: a PPR w/ more than one recipient listed
+        :WHEN: the pseudo-attribute `recipients` is accessed
+        :THEN: a list should be returned with one element per recipient
+
+        """
         new_ppr = PostfixPolicyRequest(
             postfix_policy_request_message(
                 "underquota@chapps.io",
-                ["one@recipient.com", "two@recipient.com", "three@recipient.com"],
+                [
+                    "one@recipient.com",
+                    "two@recipient.com",
+                    "three@recipient.com",
+                ],
             )
         )
 
