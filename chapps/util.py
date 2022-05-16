@@ -116,7 +116,7 @@ class VenvDetector:
 
     @property
     def sb(self) -> bool:
-        """Property which memoizes :meth:`~.sphinx_build"""
+        """Property which memoizes :meth:`~.sphinx_build`"""
         if "_sb" not in vars(self):
             self._sb = self.sphinx_build()
         return self._sb
