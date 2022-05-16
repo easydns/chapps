@@ -94,12 +94,32 @@ class VenvDetector:
         """
         return self.get_base_prefix_compat() != sys.prefix
 
+    # return whether a Sphinx build launched the library
+    def sphinx_build(self) -> bool:
+        """Determine whether invoked by Sphinx
+
+        :returns: `True` if Sphinx invoked the library
+
+        """
+        try:
+            if __sphinx_build__:
+                return True
+        except NameError:
+            return False
+
     @property
     def ve(self) -> bool:
         """Property which memoizes :meth:`~.in_virtualenv`"""
         if "_ve" not in vars(self):
             self._ve = self.in_virtualenv()
         return self._ve
+
+    @property
+    def sb(self) -> bool:
+        """Property which memoizes :meth:`~.sphinx_build"""
+        if "_sb" not in vars(self):
+            self._sb = self.sphinx_build()
+        return self._sb
 
     @property
     def docpath(self) -> Path:

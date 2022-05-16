@@ -6,6 +6,8 @@ from chapps.util import AttrDict, PostfixPolicyRequest
 
 pytestmark = pytest.mark.order(1)
 
+# TODO: tests for VenvDetector
+
 
 class Test_AttrDict:
     def test_attr_dict_return_int(self, mock_config_dict):

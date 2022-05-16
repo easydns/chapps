@@ -200,12 +200,12 @@ class CHAPPSConfig:
         """
         ### Create and initialize the config
         self.venvdetector = VenvDetector()
-        config_file = CHAPPSConfig.what_config_file()
+        config_file = CHAPPSConfig.what_config_file(self.venvdetector.confpath)
         self.configparser = configparser.ConfigParser(interpolation=None)
         CHAPPSConfig.setup_config(self.configparser)
 
         ### Initialize a config file if none
-        if not config_file.exists():
+        if not config_file.exists() and not self.venvdetector.sb:
             CHAPPSConfig.write_config(self.configparser, config_file)
         else:
             self.configparser.read(str(config_file))
