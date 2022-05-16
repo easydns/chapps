@@ -10,11 +10,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-from chapps._version import __version__ as chapps_version
+import os
+import sys
 
-# sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath("../.."))
+from chapps._version import __version__ as chapps_version
 
 
 # -- Project information -----------------------------------------------------
@@ -55,6 +55,9 @@ default_role = "py:obj"
 rst_prolog = """
 .. _fastapi: https://fastapi.tiangolo.com/
 .. _sqlalchemy: https://sqlalchemy.org/
+.. _pydantic: https://pydantic-docs.helpmanual.io/
+.. _readme: https://github.com/easydns/chapps
+.. _installation: https://github.com/easydns/chapps/blob/main/INSTALLATION.md
 """
 
 # -- Options for HTML output -------------------------------------------------
