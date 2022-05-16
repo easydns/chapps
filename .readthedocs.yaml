@@ -7,6 +7,9 @@ build:
   apt_packages:
     - "libmariadb3"
     - "libmariadb-dev"
+  jobs:
+    pre_build:
+      - "sphinx-apidoc -Mef -o docs/source/ chapps"
 
 sphinx:
   fail_on_warning: True
