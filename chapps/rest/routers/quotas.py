@@ -1,4 +1,6 @@
-"""Defines routes for **Quota** definitions
+"""
+**Quota** record management implemented by factories
+----------------------------------------------------
 
 This module defines the API router for **Quota** record manipulation,
 and defines the :class:`~.JoinAssoc` which describes the relationship between

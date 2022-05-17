@@ -12,7 +12,7 @@ It does attempt to be the first thing to get a handler,
 and thereby be able to set the basic config.
 
 But it also instantiates a logger at the top of the hierarchy,
-one named simply ``chapps``, so that all further CHAPPS loggers
+one named simply `chapps`, so that all further CHAPPS loggers
 (using the recommended pattern) will be under that parent logger
 and inherit its config.
 
@@ -21,10 +21,10 @@ import logging
 from logging.handlers import SysLogHandler
 
 DEFAULT_LEVEL = logging.DEBUG
-"""Default minimum severity ``DEBUG``"""
+"""Default minimum severity `DEBUG`"""
 
 DEFAULT_FACILITY = SysLogHandler.LOG_LOCAL0
-"""Default **syslog** facility ``LOCAL0``"""
+"""Default **syslog** facility `LOCAL0`"""
 
 
 class LogSetup:  # pragma: no cover
@@ -39,12 +39,12 @@ class LogSetup:  # pragma: no cover
     The default formatter is very basic, simply prepending "CHAPPS:" and the
     severity level to the message.
 
-    The default minimum severity at present is ``DEBUG``.
+    The default minimum severity at present is `DEBUG`.
 
-    The default **syslog** facility is ``LOCAL0``.
+    The default **syslog** facility is `LOCAL0`.
 
     It is possible to use **rsyslog** configuration to send different levels of
-    the ``LOCAL0`` facility to different destinations, or to ignore ``DEBUG``
+    the `LOCAL0` facility to different destinations, or to ignore `DEBUG`
     level messages entirely.  An example config is included in the project's
     ancillary materials.
 
@@ -68,7 +68,7 @@ class LogSetup:  # pragma: no cover
     syslog_handler = SysLogHandler(
         facility=DEFAULT_FACILITY, address="/dev/log"
     )
-    """A handler which uses ``/dev/log`` to send messages to **syslog**"""
+    """A handler which uses `/dev/log` to send messages to **syslog**"""
 
     syslog_handler.setLevel(DEFAULT_LEVEL)
     syslog_handler.setFormatter(maillog_formatter)  # or debug_formatter
@@ -77,7 +77,7 @@ class LogSetup:  # pragma: no cover
         """Setup logging
 
         If there are not yet any handlers, this routine calls
-        :py:func:``logging.basicConfig`` to set up basic logging configuration.
+        :py:func:`logging.basicConfig` to set up basic logging configuration.
 
         If there are already handlers, for instance due to running within
         :mod:`pytest`, then nothing happens.

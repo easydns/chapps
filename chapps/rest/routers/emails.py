@@ -1,4 +1,6 @@
-"""Defined the **Email** record maintenance API router
+"""
+**Email** record management implemented by factories
+----------------------------------------------------
 
 This module defines the management routes for **Email** records, and also the :class:`~.JoinAssoc` between **Email** and **User** tables.
 

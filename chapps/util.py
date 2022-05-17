@@ -73,7 +73,7 @@ class VenvDetector:
     def get_base_prefix_compat(self) -> str:
         """Return the non-virtual base prefix
 
-        Sometimes called ``sys.real_prefix``, so we check for both.
+        Sometimes called `sys.real_prefix`, so we check for both.
 
         :returns: the base path prefix
         :rtype: str
@@ -162,7 +162,7 @@ class VenvDetector:
 
         :rtype: Optional[pathlib.Path]
 
-        If no virtual environment is active, then ``None`` is returned,
+        If no virtual environment is active, then `None` is returned,
         otherwise as :class:`Path` instance is returned, containing the path to
         the virtual environment.  This hasn't been tested with all types of
         virtual environment.
@@ -194,7 +194,7 @@ class AttrDict:
 
       Given the stated purpose of the class, all *internal instance variables*,
       i.e. ones not associated to a key-value pair in the source object, should
-      begin with an ``_`` (underscore).
+      begin with an `_` (underscore).
 
     """
 
@@ -208,11 +208,11 @@ class AttrDict:
 
         :param Optional[Dict[str, Any]] kwargs: arbitrary keyword arguments
 
-        If, and only if, ``data`` is not provided, then the keyword arguments will be used in place of data provided as a :obj:`dict`.
-        TODO: add any ``kwargs`` to an existing ``data`` :obj:`dict`.  Henceforth whatever is rounded up to use shall be referred to as the ``data``.
+        If, and only if, `data` is not provided, then the keyword arguments will be used in place of data provided as a :obj:`dict`.
+        TODO: add any `kwargs` to an existing `data` :obj:`dict`.  Henceforth whatever is rounded up to use shall be referred to as the `data`.
 
         The initialization routine creates an attribute on the instance for
-        each key in the ``data``, and then attempts to cast the data:
+        each key in the `data`, and then attempts to cast the data:
 
             1. to an :obj:`int`.
 
@@ -309,7 +309,7 @@ class PostfixPolicyRequest(Mapping):
     documentation <http://www.postfix.org/SMTPD_POLICY_README.html>`
     for more information.
 
-    As an example of the class's utility, and using the above definition of ``payload``, consider:
+    As an example of the class's utility, and using the above definition of `payload`, consider:
 
     .. code:: python
 
@@ -330,9 +330,9 @@ class PostfixPolicyRequest(Mapping):
       :_payload: the Postfix policy delegation request payload in string-per-line format
 
       :recipients: a pseudo-attribute of the policy request derived from the
-         value of ``recipient``, provided by Postfix, which may contain more
+         value of `recipient`, provided by Postfix, which may contain more
          than one comma-separated email address.  For reasons unknown, Postfix
-         always provides a ``recipient_count`` of 0 before the DATA phase, so
+         always provides a `recipient_count` of 0 before the DATA phase, so
          we rely upon counting the email addresses directly.
 
       :_recipients: memoization attribute for :meth:`.recipients`
@@ -355,7 +355,7 @@ class PostfixPolicyRequest(Mapping):
           including an empty entry at the end.
 
         This routine discards the last element of the list and stores the rest
-        as ``self._payload``.
+        as `self._payload`.
 
         """
         self._payload = payload[0:-2]
@@ -372,21 +372,21 @@ class PostfixPolicyRequest(Mapping):
 
         :rtype: Optional[str]
 
-        First, if the value of ``attr`` starts with an underscore, ``None`` is
+        First, if the value of `attr` starts with an underscore, `None` is
         returned.  No lines of the payload start with an underscore.  This
         ensures that references to internal attributes of the class are not
         snarled up with the payload searches.
 
         Next, the payload is searched for the requested key-value pair,
-        attempting to match ``attr`` against everything before the ``=`` sign.
-        When a line is found, the contents after the ``=`` are stored as an
-        attribute named ``attr`` (and so memoized), and the value is returned.
+        attempting to match `attr` against everything before the `=` sign.
+        When a line is found, the contents after the `=` are stored as an
+        attribute named `attr` (and so memoized), and the value is returned.
         Future attempts to obtain the value will encounter the attribute and
         not invoke :meth:`.__getattr__` again.
 
-        A ``DEBUG`` level message is currently produced if no lines in the
+        A `DEBUG` level message is currently produced if no lines in the
         payload matched the requested payload data.  No errors are produced
-        if a nonexistent ``attr`` starting with ``_`` is encountered.
+        if a nonexistent `attr` starting with `_` is encountered.
 
         """
         if attr[0] == "_":  # leading underscores do not occur in the payload

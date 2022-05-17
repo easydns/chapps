@@ -27,7 +27,7 @@ class PolicyConfigAdapter:
     to be the source of policy data.
 
     Ideally there should be a second-level base class called something like
-    ``MariaDBPolicyConfigAdapter`` which would hold all the SQL-specific stuff,
+    `MariaDBPolicyConfigAdapter` which would hold all the SQL-specific stuff,
     but that would make a lot more sense if
 
       a) there were going to be a lot of weird, different adapters.  We may yet get there!
@@ -176,7 +176,7 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         " WHERE u.name = %(user)s"
         ")"
     )
-    """SQL query for selecting a **Quota**'s ``quota`` value for a named **User**."""
+    """SQL query for selecting a **Quota**'s `quota` value for a named **User**."""
     quota_map_query = (
         "SELECT u.name AS user, p.quota FROM quotas AS p"  # pragma: no cover
         " LEFT JOIN quota_user AS j ON p.id = j.quota_id"

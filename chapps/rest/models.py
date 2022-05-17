@@ -1,3 +1,41 @@
+"""CHAPPS Data Validation Models
+-----------------------------
+
+This module consists of the Pydantic_ data models required to represent and
+also communicate about the various database records which control CHAPPS.
+There are a few types of models, and perhaps more types to come, so some short
+discussion of what they are and why they are needed seems reasonable.
+
+Representational Models
+~~~~~~~~~~~~~~~~~~~~~~~
+
+There are (currently quite simple) objects which control CHAPPS: **User**
+objects are at the root of that tree, and they are linked to one (outbound)
+**Quota** object each to control how much email they may send.  **User**
+objects may also be linked to multiple **Domain** and **Email** objects, to
+represent who they are allowed to appear to be while sending email.
+
+FastAPI_ uses Pydantic_ for data validation during API execution.  It behooves
+us to define Pydantic_ models as representations of the objects, therefore.
+This could be considered the front-facing identity of the object, which has a
+back-facing identity represented by its database model, defined in
+:mod:`~.dbmodels`.
+
+A metaclass is defined which implements `__getattr__`, in order to allow the
+validation model to masquerade as a database model to a certain extent.  That
+routine expects the validation model to define a subclass called `Meta` with a
+class attribute called `orm_model` which refers to the database model for the
+object.  In this way, the validation model (class) is empowered to marshall a
+set of instances from the database, without a lot of messy dereferencing.
+
+TODO: perhaps construct as a completely separate project a framework for
+creating arbitrary 'double-ended' Pydantic_ / SQLAlchemy_ data model objects,
+with arbitrary join tables and basic route factories for FastAPI_.  There are
+some similar projects but I couldn't find one which supported compound primary
+keys.
+
+"""
+
 from chapps.config import config
 from chapps.rest import dbmodels
 from typing import Optional, List, Dict
@@ -14,7 +52,7 @@ class AssocOperation(str, Enum):
 
     use 'replace' only with unitary associations; logic in
     :class:`~chapps.rest.dbmodels.JoinAssoc` which responds
-    to the ``replace`` operation is designed to work only with
+    to the `replace` operation is designed to work only with
     scalar values.
 
     """
@@ -36,8 +74,8 @@ class SDAStatus(str, Enum):
 class CHAPPSMetaModel(ModelMetaclass):
     """Metaclass for CHAPPS Pydantic models
 
-    We inject an override for ``__getattr__()`` in order to attempt to find
-    missing attributes on the ORM class attached via the ``Meta`` subclass of
+    We inject an override for `__getattr__()` in order to attempt to find
+    missing attributes on the ORM class attached via the `Meta` subclass of
     each model class.  This allows the Pydantic data-model class to serve as a
     proxy for the ORM class, meaning that we can handle Pydantic models in the
     API code, and still call ORM methods on them, and cause corresponding ORM
@@ -56,14 +94,14 @@ class CHAPPSMetaModel(ModelMetaclass):
 class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
     """Base API data model
 
-    All models should define a class called ``Meta`` and define within it a
-    variable called ``orm_model`` as a reference to the ORM model class
+    All models should define a class called `Meta` and define within it a
+    variable called `orm_model` as a reference to the ORM model class
     (generally defined in :mod:`chapps.rest.dbmodels`) corresponding to the
     data model.  In this abstract superclass, the ORM model reference is to the
     parallel abstract ORM model superclass.
 
-    Models also define a class called ``Config``, which is used by
-    :mod:`Pydantic`.  In it, ``orm_mode`` should be set to ``True``.  It is
+    Models also define a class called `Config`, which is used by
+    :mod:`Pydantic`.  In it, `orm_mode` should be set to `True`.  It is
     also possible to include additional detail for the OpenAPI documentation
     parser.
 
@@ -161,7 +199,7 @@ class Quota(CHAPPSModel):
     """**Quota** objects represent transmission count limits"""
 
     # The time-interval over which **Quota** objects are enforced is 24 hr.
-    # They therefore have an integer ``quota`` field which contains the limit
+    # They therefore have an integer `quota` field which contains the limit
     # of transmissions per 24 hours.  A sliding window is applied to a
     # transmission-attempt history, in order to avoid having a daily reset.
 
@@ -181,7 +219,7 @@ class Quota(CHAPPSModel):
 
 
 class Domain(CHAPPSModel):
-    """Domain objects have a name and ID; the name never contains an ``@``"""
+    """Domain objects have a name and ID; the name never contains an `@`"""
 
     # TODO: implement validation of domain names
 
@@ -194,7 +232,7 @@ class Domain(CHAPPSModel):
 
 
 class Email(CHAPPSModel):
-    """Email objects have a name and ID; the name always contains an ``@``"""
+    """Email objects have a name and ID; the name always contains an `@`"""
 
     # TODO: implement validation of email addresses
 
@@ -232,7 +270,7 @@ class UserResp(CHAPPSResponse):
     """Data model for responding with a single **User** record"""
 
     response: User
-    """The ``response`` field contains a **User** record"""
+    """The `response` field contains a **User** record"""
     domains: Optional[List[Domain]] = None
     """A list of associated **Domain** records may be included"""
     emails: Optional[List[Email]] = None

@@ -1,4 +1,6 @@
-"""Defines the **Domain** record maintenance API router
+"""
+**Domain** record management implemented by factories
+-----------------------------------------------------
 
 This module defines the various routes for manipulating **Domain** records.  It
 also defines the :class:`~.dbmodels.JoinAssoc` between **Domain** and **User**

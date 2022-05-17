@@ -13,21 +13,21 @@ class PostfixActions:
 
     @staticmethod
     def dunno(*args, **kwargs):
-        """Return the Postfix directive ``DUNNO``"""
+        """Return the Postfix directive `DUNNO`"""
         return "DUNNO"
 
     @staticmethod
     def okay(*args, **kwargs):
-        """Return the Postfix directive ``OK``"""
+        """Return the Postfix directive `OK`"""
         return "OK"
 
     ok = okay
-    """``ok()`` is an alias for ``okay()``"""
+    """`ok()` is an alias for `okay()`"""
 
     @staticmethod
     def defer_if_permit(msg, *args, **kwargs):
         """
-        Return the Postfix ``DEFER_IF_PERMIT`` directive with the provided
+        Return the Postfix `DEFER_IF_PERMIT` directive with the provided
         message
         """
         return f"DEFER_IF_PERMIT {msg}"
@@ -35,15 +35,15 @@ class PostfixActions:
     @staticmethod
     def reject(msg, *args, **kwargs):
         """
-        Return the Postfix ``REJECT`` directive along with the provided message
+        Return the Postfix `REJECT` directive along with the provided message
         """
         return f"REJECT {msg}"
 
     @staticmethod
     def prepend(*args, **kwargs):
         """
-        Return the Postfix ``PREPEND`` directive.
-        Include the header to prepend as keyword-argument ``prepend``
+        Return the Postfix `PREPEND` directive.
+        Include the header to prepend as keyword-argument `prepend`
         """
         new_header = kwargs.get("prepend", None)
         if new_header is None or len(new_header) < 5:
@@ -136,8 +136,8 @@ class PostfixActions:
 class PostfixPassfailActions(PostfixActions):
     """Postfix Actions adapter for PASS/FAIL policy responses.
 
-    Many policies return ``True`` if the email should be accepted/forwarded and
-    return ``False`` if the email should be rejected/dropped.  This class
+    Many policies return `True` if the email should be accepted/forwarded and
+    return `False` if the email should be rejected/dropped.  This class
     encapsulates the common case, and includes some logic to extract precise
     instructions from the config.
 
@@ -193,12 +193,12 @@ class PostfixPassfailActions(PostfixActions):
     def action_for(self, pf_result):
         """Return an action closure for a pass/fail policy
 
-        Evaluates its argument ``pf_result`` as a boolean and returns the
+        Evaluates its argument `pf_result` as a boolean and returns the
         action closure for 'passing' if True, otherwise the action closure for
         'fail'.  To provide backwards-compatibility with older versions, and to
         allow for more descriptive configuration elements, the actions may be
-        attached to keys named ``acceptance_message`` or ``rejection_message``
-        instead of ``passing`` and ``fail`` respectively.  This is only true
+        attached to keys named `acceptance_message` or `rejection_message`
+        instead of `passing` and `fail` respectively.  This is only true
         of policies with action factories inheriting from
         :py:class:`chapps.actions.PostfixPassfailActions`
 
@@ -230,7 +230,7 @@ class PostfixOQPActions(PostfixPassfailActions):
         """
         Optionally provide an instance of :py::class`chapps.config.CHAPPSConfig`.
 
-        All this class does is wire up ``self.config`` to
+        All this class does is wire up `self.config` to
         point at the :py:class:`chapps.policy.OutboundQuotaPolicy` config block.
         """
         super().__init__(cfg)
@@ -277,8 +277,8 @@ class PostfixSPFActions(PostfixActions):
         """This method is meant to share the same signature as the other
         action methods, mainly defined on :py:class:`chapps.actions.PostfixActions`
 
-        The ``greylist`` action causes the email in question to be
-        greylisted, according to the policy.  The ``msg`` is used as
+        The `greylist` action causes the email in question to be
+        greylisted, according to the policy.  The `msg` is used as
         the message for the Postfix directive, or if the message has
         no contents and the email is being deferred, the string
         "due to SPF enforcement policy" is used.  Because the greylisting
@@ -309,8 +309,8 @@ class PostfixSPFActions(PostfixActions):
     def __init__(self, cfg=None):
         """Optionally pass CHAPPSConfig override.
 
-        All this init routine needs to do is adjust ``self.config`` to refer to
-        the ``PostfixSPFActions`` config block.
+        All this init routine needs to do is adjust `self.config` to refer to
+        the `[PostfixSPFActions]` config block.
 
         """
         super().__init__(cfg)

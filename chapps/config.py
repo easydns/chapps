@@ -4,8 +4,8 @@ Operational Configuration
 
 CHAPPS configures itself at the library level.  When it is first launched,
 the library will create a config file for itself if it does not find one
-at its default config path, ``/etc/chapps/chapps.ini``, or the value of
-the environment variable ``CHAPPS_CONFIG`` if it is set.  When it does,
+at its default config path, `/etc/chapps/chapps.ini`, or the value of
+the environment variable `CHAPPS_CONFIG` if it is set.  When it does,
 default settings for all available submodules will be produced.
 
 Any instance of CHAPPS requires the general CHAPPS settings, adapter settings,
@@ -24,8 +24,8 @@ simultaneously on the same server.
 .. note::
 
     For multi-policy handlers, the settings used are taken from the first
-    handler found to have config elements named ``listen_address`` and
-    ``listen_port``.  It is recommended to configure those elements only on one
+    handler found to have config elements named `listen_address` and
+    `listen_port`.  It is recommended to configure those elements only on one
     active policy, or to keep them in sync on all policies which are handled
     together.
 
@@ -66,7 +66,7 @@ class CHAPPSConfig:
 
         This is to allow for easier addition of a command-line option.
         Also encapsulates search for possible file pointed to by the
-        environment setting ``CHAPPS_CONFIG``
+        environment setting `CHAPPS_CONFIG`
 
         """
         config_file = Path(env.get("CHAPPS_CONFIG", default_pathname))
@@ -158,7 +158,7 @@ class CHAPPSConfig:
 
         If the location's parent directory does not exist, CHAPPS
         will attempt to create it.  If CHAPPS can open the file, it
-        writes the contents of ``cp`` into the file referred to by ``fn``.
+        writes the contents of `cp` into the file referred to by `fn`.
 
         Returns a :class:`pathlib.Path` which points at the newly-written file.
 
@@ -187,7 +187,7 @@ class CHAPPSConfig:
 
         It creates a :mod:`chapps.util.VenvDetector` in order to set up the
         path to the README-API.md file.  This could also be used to change the
-        default config location when running in a ``venv``.  That would
+        default config location when running in a `venv`.  That would
         eliminate the need for prefacing commands with a phrase setting the
         config-file location.
 
@@ -228,7 +228,7 @@ class CHAPPSConfig:
 
         :param str blockname: the name of the block
 
-        Return ``None`` if it cannot be found.
+        Return `None` if it cannot be found.
 
         """
         try:
@@ -242,7 +242,7 @@ class CHAPPSConfig:
 
         :param Union[str,pathlib.Path] location: where to write the file
 
-        Currently manages exceptions for elements of the ``CHAPPS`` section of
+        Currently manages exceptions for elements of the `[CHAPPS]` section of
         the config, for parameters which are not specified in the file.  It
         removes them from the config, writes the file, then restores their
         values.  These are:

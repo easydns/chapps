@@ -1,9 +1,11 @@
-"""Top level API definition
+"""
+Top level API definition
+------------------------
 
 This module includes the other API-related modules
 and configures the main :mod:`FastAPI` object which
-answers web requests.  That object's name is ``api``,
-making its absolute symbol path ``chapps.rest.api.api``
+answers web requests.  That object's name is `api`,
+making its absolute symbol path :const:`chapps.rest.api.api`
 """
 # Note that the API is powered by FastAPI and as such, the main API object
 # itself is designed to be executed by uvicorn, probably a uvicorn worker

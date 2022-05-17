@@ -43,7 +43,7 @@ class EmailPolicy:
     """Abstract policy manager
 
     Subclasses must:
-      * set class attribute ``redis_key_prefix`` to a unique value.
+      * set class attribute `redis_key_prefix` to a unique value.
       * define an instance method called :meth:`~.approve_policy_request`.
 
     This abstract superclass provides a standard framework for constructing
@@ -58,7 +58,7 @@ class EmailPolicy:
       :params: :class:`chapps.util.AttrDict` corresponding to the config
         for the policy manager
 
-      :sentinel: a :class:`redis.Sentinel` handle, or ``None`` if using
+      :sentinel: a :class:`redis.Sentinel` handle, or `None` if using
         only Redis
 
       :redis: a :class:`redis.Redis` handle
@@ -85,7 +85,7 @@ class EmailPolicy:
         uses to construct the key is not relevant to any other entities, though
         it must be sent as a string.
 
-        This routine simply joins up all the tokens with colon (``:``)
+        This routine simply joins up all the tokens with colon (`:`)
         characters, so it is not recommended to use them as part of the
         key-components (although it should 'just work').
 
@@ -128,7 +128,7 @@ class EmailPolicy:
 
         :param bool read_only: if Sentinel is in use, get a read-only handle
 
-        If you're not using Sentinel, the ``read_only`` parameter is
+        If you're not using Sentinel, the `read_only` parameter is
         meaningless.
 
         """
@@ -234,11 +234,11 @@ class GreylistingPolicy(EmailPolicy):
     def tuple_key(self, ppr: PostfixPolicyRequest) -> str:
         """Return the greylisting tuple as a Redis key
 
-        The names of the values taken from ``ppr`` are as follows (in order):
+        The names of the values taken from `ppr` are as follows (in order):
 
-             - ``client_address``
-             - ``sender``
-             - ``recipient``
+             - `client_address`
+             - `sender`
+             - `recipient`
 
         """
         return self._fmtkey(ppr.client_address, ppr.sender, ppr.recipient)
@@ -551,7 +551,7 @@ class OutboundQuotaPolicy(EmailPolicy):
 
         The caller is anticipated to be the API.  The **User** and **Quota**
         are both available, so the **Quota** may be provided, but it is not
-        required.  The ``user`` parameter is expected to contain a string at
+        required.  The `user` parameter is expected to contain a string at
         present, though this may change as the :mod:`pydantic` data models
         become more tightly integrated into the codebase.
 
@@ -691,10 +691,10 @@ class OutboundQuotaPolicy(EmailPolicy):
 
         Returns True if this email is within the quota.
 
-        This routine implements memoization on ``ppr.instance`` in order to
+        This routine implements memoization on `ppr.instance` in order to
         overcome the Postfix double-checking weirdness.  Sometimes, Postfix
         sends a request about a given email twice, but this is easy to spot
-        because they will have the same value for ``ppr.instance``.
+        because they will have the same value for `ppr.instance`.
 
         """
         user = ppr.user
@@ -826,11 +826,11 @@ class SenderDomainAuthPolicy(EmailPolicy):
     of matches are handled, in succession.
 
     First, the domain part of the email address, the entire string after the
-    ``@``, is matched against **Domain** entries linked to the **User**.
+    `@`, is matched against **Domain** entries linked to the **User**.
 
     If there is no **Domain** match, then **Email** entries linked to the
     **User** are checked.  **Email** entries must match the entirety of a
-    policy request's ``sender`` attribute in order to pass.
+    policy request's `sender` attribute in order to pass.
 
     """
 
@@ -854,7 +854,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
         :param chapps.outbound.OutboundPPR ppr: a Postfix payload
 
         :returns: the sender domain key, by obtaining the domain part of the
-          email address from ``ppr.sender``
+          email address from `ppr.sender`
 
         :rtype: str
 
@@ -867,7 +867,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
         :param chapps.outbound.OutboundPPR ppr: a Postfix payload
 
         :returns: the sender email key, by obtaining the email address from
-          ``ppr.sender``
+          `ppr.sender`
 
         :rtype: str
 
@@ -887,7 +887,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
         :rtype: str
 
-        Should be called ``_sender_auth_key`` since it works with both domains
+        Should be called `_sender_auth_key` since it works with both domains
         and email addresses.
 
         """
@@ -896,22 +896,22 @@ class SenderDomainAuthPolicy(EmailPolicy):
     # determine the domain of the sender address, if any
     @functools.lru_cache(maxsize=2)
     def _get_sender_domain(self, ppr: OutboundPPR) -> str:
-        """Returns the domain portion of ``ppr.sender``
+        """Returns the domain portion of `ppr.sender`
 
         :param chapps.outbound.OutboundPPR ppr: a Postfix payload
 
-        :returns: the domain part of ``ppr.sender``
+        :returns: the domain part of `ppr.sender`
 
         :rtype: str
 
         :raise chapps.signals.TooManyAtsException: if there are more than one
-          ``@`` in ``ppr.sender``
+          `@` in `ppr.sender`
 
-        :raise chapps.signals.NotAnEmailAddressException: if there is no ``@``
-          in ``ppr.sender``
+        :raise chapps.signals.NotAnEmailAddressException: if there is no `@`
+          in `ppr.sender`
 
-        :raise chapps.signals.NullSenderException: if ``ppr.sender`` is
-          ``None``
+        :raise chapps.signals.NullSenderException: if `ppr.sender` is
+          `None`
 
         :meta public:
 
@@ -1015,11 +1015,11 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
         :param chapps.outbound.OutboundPPR ppr: a Postfix payload
 
-        :returns: whether the policy allows ``ppr``
+        :returns: whether the policy allows `ppr`
 
         :rtype: bool
 
-        Populates Redis and return the policy result for ``ppr``.
+        Populates Redis and return the policy result for `ppr`.
 
         """
         logger.debug(f"acq pol for {ppr!r}")
@@ -1044,11 +1044,11 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     # This is the main purpose of the class, to answer this question
     def approve_policy_request(self, ppr: OutboundPPR) -> bool:
-        """Returns true if ``ppr`` represents an authorized email
+        """Returns true if `ppr` represents an authorized email
 
         :param chapps.outbound.OutboundPPR ppr: a Postfix payload
 
-        :returns: whether the email represented by ``ppr`` should be
+        :returns: whether the email represented by `ppr` should be
           transmitted
 
         :rtype: bool
@@ -1082,7 +1082,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
         :params int result: b'0', b'1', or None
 
-        :returns: an SDAStatus corresponding to ``result``
+        :returns: an SDAStatus corresponding to `result`
 
         :rtype: chapps.rest.models.SDAStatus
 

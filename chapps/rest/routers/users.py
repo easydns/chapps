@@ -1,4 +1,6 @@
-"""Defines routes for **User** record management
+"""
+**User** record management implemented by factories
+---------------------------------------------------
 
 This module defines API routes for managing **User** records, and defines the :class:`JoinAssoc` data to describe the relationship between **User** records and other record types: **Domain**, **Email**, and **Quota**.
 

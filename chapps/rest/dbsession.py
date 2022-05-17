@@ -1,4 +1,11 @@
-"""SQLAlchemy DB session global setup"""
+"""
+SQLAlchemy DB session global setup
+----------------------------------
+
+This module's purpose is to present a simple and unencumbered module to include
+in order to access the database according to the configured credentials.
+
+"""
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 from chapps.config import config

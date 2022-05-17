@@ -36,7 +36,7 @@ class OutboundPPR(PostfixPolicyRequest):
     .. admonition:: Notes about subclassing
 
        Don't forget that the normal attribute space is reserved for the payload
-       data.  All internal attributes should start with ``_`` (underscore).
+       data.  All internal attributes should start with `_` (underscore).
 
     """
 
@@ -58,9 +58,9 @@ class OutboundPPR(PostfixPolicyRequest):
         cls._memoized_routines.clear()
 
     def __str__(self):
-        """In certain contexts, ``str(<o_ppr>)`` is used for brevity
+        """In certain contexts, `str(<o_ppr>)` is used for brevity
 
-        The routine tries to use the ``user`` which is the point of the class,
+        The routine tries to use the `user` which is the point of the class,
         but if it cannot determine a non-nil user name, it falls back to
         printing a bit of extra detail.
 
@@ -92,7 +92,7 @@ class OutboundPPR(PostfixPolicyRequest):
         :rtype: str
 
         :raise AuthenticationFailureException: when no user-identifier can be
-          found, and the ``require_user_key`` setting of the ``CHAPPS`` section
+          found, and the `require_user_key` setting of the `[CHAPPS]` section
           of the config is set to :obj:`True`
 
         :raise ValueError: when no user-identifier is found, but user keys

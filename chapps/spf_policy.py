@@ -21,7 +21,7 @@ class SPFEnforcementPolicy(EmailPolicy):
       :actions: a :class:`~chapps.actions.PostfixSPFActions` instance
 
     Behavior of the SPF enforcer is configured under the
-    ``[PostfixSPFActions]`` heading in the config file.
+    `[PostfixSPFActions]` heading in the config file.
 
     """
 

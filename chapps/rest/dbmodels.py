@@ -1,4 +1,8 @@
-"""CHAPPS data schemata expressed as `SQLAlchemy`_ `ORM Models`_
+"""
+CHAPPS data schemata
+--------------------
+
+Database schema expressed as `SQLAlchemy`_ `ORM Models`_
 
 Basic data models correspond to Pydantic models for API, but more models are
 required for the database side:
@@ -75,19 +79,19 @@ class DB_Customizations(DeclarativeMeta):
         :param Optional[List[int]] ids: a list of IDs
         :param Optional[~sqlalchemy.sql.expression.Subquery] subquery: a
           sub-SELECT which yields IDs
-        :param Optional[int] skip: start the window after ``skip`` entries
-        :param Optional[int] limit: include up to ``limit`` entries in the
+        :param Optional[int] skip: start the window after `skip` entries
+        :param Optional[int] limit: include up to `limit` entries in the
           result
-        :param Optional[str] q: a substring to match against the ``name`` field
+        :param Optional[str] q: a substring to match against the `name` field
 
-        :raises ValueError: unless one of ``ids`` or ``subquery`` is provided
+        :raises ValueError: unless one of `ids` or `subquery` is provided
 
         :returns: a :class:`~sqlalchemy.sql.expression.Select` implementing the window
 
         :rtype: sqlalchemy.sql.expression.Select
 
-        If both of ``subquery`` and ``ids`` are not empty, ``subquery``
-        prevails and ``ids`` is ignored.
+        If both of `subquery` and `ids` are not empty, `subquery`
+        prevails and `ids` is ignored.
 
         """
         if subquery is not None:
@@ -109,11 +113,11 @@ class DB_Customizations(DeclarativeMeta):
         return select(cls.name).where(tuple_(cls.id).in_([(i,) for i in ids]))
 
     def select_by_pattern(cls, q: str):
-        """Return a Select for all records with names which include ``q`` as a substring"""
+        """Return a Select for all records with names which include `q` as a substring"""
         return select(cls).where(cls.name.like(q))
 
     def select_by_name(cls, q: str):
-        """Return a Select for the record whose name exactly matches ``q``"""
+        """Return a Select for the record whose name exactly matches `q`"""
         return select(cls).where(cls.name == q)
 
     def windowed_list(cls, q: str = "%", skip: int = 0, limit: int = 1000):
@@ -125,7 +129,7 @@ class DB_Customizations(DeclarativeMeta):
     def remove_by_id(
         cls, ids: Union[int, List[int]]
     ):  # (i,) creates a tuple w/ 1 element
-        """Return a Delete for the listed IDs (``ids`` may be a scalar ID also)"""
+        """Return a Delete for the listed IDs (`ids` may be a scalar ID also)"""
         if type(ids) == int:
             ids = [ids]
         return delete(cls).where(tuple_(cls.id).in_([(i,) for i in ids]))
@@ -134,9 +138,9 @@ class DB_Customizations(DeclarativeMeta):
         """Return an Update statement for the specified item
 
         :param type cls: an ORM model class (subclass of :const:`~chapps.rest.dbmodels.DB_Base`)
-        :param cls item: an instance of an ORM model of the type stored in ``cls``
+        :param cls item: an instance of an ORM model of the type stored in `cls`
 
-        :returns: an :class:`~sqlalchemy.sql.expression.Update` statement object representing the new values of ``item``
+        :returns: an :class:`~sqlalchemy.sql.expression.Update` statement object representing the new values of `item`
 
         :rtype: sqlalchemy.sql.expression.Update
 
@@ -176,7 +180,7 @@ quota_user = Table(
         nullable=False,
     ),
 )
-"""the ``quota_user`` join table"""
+"""the `quota_user` join table"""
 
 domain_user = Table(
     "domain_user",
@@ -192,7 +196,7 @@ domain_user = Table(
         primary_key=True,
     ),
 )
-"""the ``domain_user`` join table"""
+"""the `domain_user` join table"""
 
 email_user = Table(
     "email_user",
@@ -208,7 +212,7 @@ email_user = Table(
         primary_key=True,
     ),
 )
-"""the ``email_user`` join table"""
+"""the `email_user` join table"""
 
 
 class Quota(DB_Base):
@@ -430,7 +434,7 @@ class JoinAssoc:
         :param Union[int,List[int]] assoc: the association or associations to
           specify
 
-        Using the ``item`` passed in, which may be an ORM object descended from
+        Using the `item` passed in, which may be an ORM object descended from
         :class:`~.DB_Base` or an :obj:`int`, construct a list of dictionaries
         mapping the join table's ID column names correctly onto the source item
         ID and the associated item ID(s).

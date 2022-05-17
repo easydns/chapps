@@ -428,7 +428,7 @@ if HAVE_SPF:
         .. note::
 
           This class will not be defined if the relevant SPF libraries could
-          not be loaded.  They may be installed via ``pip`` using the extras
+          not be loaded.  They may be installed via `pip` using the extras
           mechanism: ``pip install chapps[SPF]``
 
         """
@@ -463,7 +463,7 @@ if HAVE_SPF:
             TODO: In order to be able to cascade *through* this kind of policy,
             it is going to have to return a first-class object which can be
             annotated as being a pass or a fail, so that a cascading handler
-            can decide whether to continue.  That object's ``str`` dunder
+            can decide whether to continue.  That object's `__str__()`
             method will need to return the Postfix command.
 
             TODO: In order to support more than one MTA (tho no such support is

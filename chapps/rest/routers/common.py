@@ -1,7 +1,10 @@
-"""Common code between routers
+"""
+Route factories and other reusable code
+---------------------------------------
 
-API route factories and also some `FastAPI`_ dependencies are defined in
-this module.
+Factories for utility functions and API routes
+are defined in this module
+along with some `FastAPI`_ dependencies.
 
 The route factories perform the repetitive grunt work required to set up the
 typical 'create', 'read', 'update', 'delete' and 'list' functions needed for
