@@ -57,7 +57,7 @@ class VenvDetector:
     def __init__(self, *, datapath: Optional[Union[str, Path]] = None):
         """Detect virtual environments and provide local package paths
 
-        :param Optional[Union[str, Path]] datapath: optional override to point
+        :param datapath: optional override to point
           at the data installation path of the package (or a surrogate).  The
           API uses this value to load the API readme into the live docs.
 
@@ -163,7 +163,7 @@ class VenvDetector:
         :rtype: Optional[pathlib.Path]
 
         If no virtual environment is active, then `None` is returned,
-        otherwise as :class:`Path` instance is returned, containing the path to
+        otherwise a :class:`Path` instance is returned, containing the path to
         the virtual environment.  This hasn't been tested with all types of
         virtual environment.
 
@@ -192,27 +192,29 @@ class AttrDict:
 
     .. admonition:: Subclassing
 
-      Given the stated purpose of the class, all *internal instance variables*,
+      Given the stated purpose of the class, all *internal instance attributes*,
       i.e. ones not associated to a key-value pair in the source object, should
-      begin with an `_` (underscore).
+      begin with  `_` (an underscore).
 
     """
 
     boolean_pattern = re.compile("^[Tt]rue|[Ff]alse$")
     """A regex to detect text-string boolean values"""
 
-    def __init__(self, data: Dict[str, Any] = None, **kwargs):
+    def __init__(
+        self, data: Dict[str, Any] = None, **kwargs: Optional[Dict[str, Any]]
+    ):
         """Populate an instance with attributes
 
-        :param Optional[Dict[str, Any]] data: a :obj:`dict` mapping strings (attribute names) onto arbitrary values
+        :param data: a :obj:`dict` mapping strings (attribute names) onto arbitrary values
 
-        :param Optional[Dict[str, Any]] kwargs: arbitrary keyword arguments
+        :param kwargs: arbitrary keyword arguments
 
         If, and only if, `data` is not provided, then the keyword arguments will be used in place of data provided as a :obj:`dict`.
         TODO: add any `kwargs` to an existing `data` :obj:`dict`.  Henceforth whatever is rounded up to use shall be referred to as the `data`.
 
         The initialization routine creates an attribute on the instance for
-        each key in the `data`, and then attempts to cast the data:
+        each key in the `data`, and then attempts to cast the value:
 
             1. to an :obj:`int`.
 
@@ -227,13 +229,21 @@ class AttrDict:
                "false".
 
             5. If so, a simple check is conducted to determine whether the
-               match was four characters long: True.
+               match was four characters long: `True`.
 
             6. If it does not test positive for truth, it is considered to be
-               false.
+               `False`.
 
             7. But if it wasn't a match for the :const:`.boolean_pattern` at
                all, then its original value is preserved.
+
+        Generally, instances of this class are used to present a particular
+        module, such as a policy manager, with its configuration in a form
+        which can be dereferenced with dot notation.  As such, values which
+        cannot be casted to some other type are almost always left in their
+        original form as `str`\ ings, because the `AttrDict` is being
+        initialized with a sub-block of a :class:`~configparser.ConfigParser`
+        as the source object, and its values will all be strings.
 
         """
         if not data:
@@ -268,7 +278,8 @@ class PostfixPolicyRequest(Mapping):
 
     Once parsed, results are memoized.
 
-    For example, a payload might look a bit like this, when it is first received from Postfix and turned into an array of one string per line:
+    For example, a payload might look a bit like this, when it is first
+    received from Postfix and turned into an array of one string per line:
 
     .. code:: python
 
@@ -309,7 +320,8 @@ class PostfixPolicyRequest(Mapping):
     documentation <http://www.postfix.org/SMTPD_POLICY_README.html>`
     for more information.
 
-    As an example of the class's utility, and using the above definition of `payload`, consider:
+    As an example of the class's utility, and using the above definition of
+    `payload`, consider:
 
     .. code:: python
 

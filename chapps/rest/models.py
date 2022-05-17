@@ -28,11 +28,56 @@ class attribute called `orm_model` which refers to the database model for the
 object.  In this way, the validation model (class) is empowered to marshall a
 set of instances from the database, without a lot of messy dereferencing.
 
-TODO: perhaps construct as a completely separate project a framework for
-creating arbitrary 'double-ended' Pydantic_ / SQLAlchemy_ data model objects,
-with arbitrary join tables and basic route factories for FastAPI_.  There are
-some similar projects but I couldn't find one which supported compound primary
-keys.
+API Response Models
+~~~~~~~~~~~~~~~~~~~
+
+In order to specify to the API constructors and the automatic API documentation
+generators what the response for a particular API route should look like
+(contain), more Pydantic_ models are defined.
+
+All responses contain the CHAPPS version string and UNIX epoch time stamp in
+them, as well as the response to the query, and possibly optional data
+regarding an object's associations.  A fair number of response models are
+defined, and they also fall into a few categories.
+
+Unitary Data Model Responses
+++++++++++++++++++++++++++++
+
+When a single object of the primary type is being returned, that object is the
+value of the `response` key in the object returned by the API.  If the object
+has associations to objects of other types, the expectation is that a list of
+those objects will be returned as the value of a key named for the association,
+as if it were to be accessed via the ORM.  Those associated objects are listed
+without any of their own associations included.
+
+Data Model Listing Responses
+++++++++++++++++++++++++++++
+
+These response models are named almost exactly the same as their unitary
+counterparts, but with their model names pluralized.  They will contain a list
+of objects of the relevant type in their `response` attributes, without any
+associations.
+
+Custom Live Responses
++++++++++++++++++++++
+
+Some of the response models are meant to relay information from the
+:mod:`~.live` API routes, which deal with the current state of CHAPPS as
+reflected in Redis.  These are each explained in their own documentation.
+
+Basic Datatype Responses
+++++++++++++++++++++++++
+
+Some operations return a very simple value, such as an integer or string, and
+so there are some response models to use in such cases.
+
+.. todo::
+
+  perhaps construct as a completely separate project a framework for creating
+  arbitrary 'double-ended' Pydantic_ / SQLAlchemy_ data model objects, with
+  arbitrary join tables and basic route factories for FastAPI_.  There are some
+  similar projects but I couldn't find one which supported compound primary
+  keys.
 
 """
 
@@ -74,17 +119,29 @@ class SDAStatus(str, Enum):
 class CHAPPSMetaModel(ModelMetaclass):
     """Metaclass for CHAPPS Pydantic models
 
-    We inject an override for `__getattr__()` in order to attempt to find
+    We inject an override for :meth:`~.__getattr__` in order to attempt to find
     missing attributes on the ORM class attached via the `Meta` subclass of
     each model class.  This allows the Pydantic data-model class to serve as a
     proxy for the ORM class, meaning that we can handle Pydantic models in the
     API code, and still call ORM methods on them, and cause corresponding ORM
     objects to be instantiated on demand, etc.
 
+    .. document private functions
+    .. automethod:: __getattr__
+
     """
 
     def __getattr__(cls, var):
+        """ORM Masquerading
+
+        If the requested attribute exists on the :const:`~.orm_model`, return
+        it, or else `None`.  Note that while the variable name used assumes the
+        attribute will refer to a callable, it will work on any attribute.
+
+        """
         orm_method = getattr(cls.Meta.orm_model, var, None)
+        # TODO: ensure the superclass (ModelMetaclass) has __getattr__,
+        # or call getattr() instead? or check before attempting the call
         return orm_method or super().__getattr__(var)
 
 
