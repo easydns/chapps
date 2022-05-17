@@ -23,3 +23,4 @@ vars/local.yml
 docs/build/**
 docs/source/*rst
 !docs/source/index.rst
+!docs/source/todolist.rst
