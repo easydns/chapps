@@ -466,10 +466,12 @@ if HAVE_SPF:
             can decide whether to continue.  That object's `__str__()`
             method will need to return the Postfix command.
 
-            TODO: In order to support more than one MTA (tho no such support is
-            planned), the action-translation layer might be refactored out of
-            the policy itself, to be applied here, in order to switch between
-            different types.
+            .. todo::
+
+              In order to support more than one MTA (tho no such support is
+              planned), the action-translation layer might be refactored out of
+              the policy itself, to be applied here, in order to switch between
+              different types.
 
             """
             ### This override version for SPF enforcement does not assume a yes-or-no response pattern

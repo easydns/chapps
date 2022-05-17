@@ -28,15 +28,19 @@ class OutboundPPR(PostfixPolicyRequest):
     arbitrary bits of the Postfix policy request payload to identify users,
     CHAPPS allows for the key used to extract that data to be specified in the
     config file.  At present, there is no support for combining more than one
-    key.  TODO: Such functionality could be achieved by a classmethod setting
-    the user-getter routine, accepting as its argument a closure which accepts
-    a :class:`~chapps.util.PostfixPolicyRequest` and returns a string which is the
-    user-identifier.
+    key.
 
     .. admonition:: Notes about subclassing
 
        Don't forget that the normal attribute space is reserved for the payload
        data.  All internal attributes should start with `_` (underscore).
+
+    .. todo::
+
+      Arbitrary user-key composition functionality could be achieved by a
+      classmethod setting the user-getter routine, accepting as its argument a
+      closure which accepts a :class:`~chapps.util.PostfixPolicyRequest` and
+      returns a string which is the user-identifier.
 
     """
 

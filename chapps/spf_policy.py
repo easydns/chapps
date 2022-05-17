@@ -41,15 +41,21 @@ class SPFEnforcementPolicy(EmailPolicy):
     def approve_policy_request(self, ppr: PostfixPolicyRequest) -> str:
         """Perform SPF enforcement decision-making
 
-        :param chapps.util.PostfixPolicyRequest ppr: a Postfix payload
+        :param ppr: a Postfix payload
 
         :returns: a string which contains a Postfix instruction
-
-        :rtype: str
 
         The :class:`~chapps.actions.PostfixSPFActions` class translates
         between the outcome of the SPF check and the configured response
         thus indicated, which gets sent back to Postfix.
+
+        .. todo::
+
+          Allow configuration of the list of results of the HELO check which
+          should be honored, rather than resulting in proceeding to the MAIL
+          FROM check.  Currently, only `fail` is honored, meaning that any
+          other result will mean that a MAIL FROM check is to be conducted, and
+          its result used as the result.
 
         """
         # First, check the HELO name

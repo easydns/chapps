@@ -19,6 +19,12 @@ builtins.__sphinx_build__ = True
 sys.path.insert(0, os.path.abspath("../.."))
 from chapps._version import __version__ as chapps_version
 
+DEV_HOSTNAMES = ["velocipede", "nekobus"]
+
+
+def is_dev(hosts=DEV_HOSTNAMES):
+    return os.uname()[1] in hosts
+
 
 # -- Project information -----------------------------------------------------
 
@@ -84,8 +90,9 @@ autodoc_typehints = "description"
 autodoc_class_signature = "separated"
 autodoc_member_order = "bysource"
 
-# TODO options
-todo_include_todos = True
+# TODO options: only include if building on a development workstation
+# (if you are also developing, add your workstation's name in your fork/branch)
+todo_include_todos = is_dev()
 
 # Typehints options
 # typehints_defaults = "comma"

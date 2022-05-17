@@ -162,7 +162,16 @@ class EmailPolicy:
     def approve_policy_request(
         self, ppr: PostfixPolicyRequest
     ) -> Union[str, bool]:
-        """Placeholder method which must be implemented by subclasses."""
+        """Placeholder method which must be implemented by subclasses.
+
+        .. todo::
+
+          memoization can be factored into this superclass if
+          pre-evaluation hook and evaluation can be generalized or
+          implemented per-subclass in a predictable way.
+
+
+        """
         raise NotImplementedError(
             "Subclasses of EmailPolicy must implement this function."
         )
@@ -440,10 +449,13 @@ class OutboundQuotaPolicy(EmailPolicy):
         database and stuff it into Redis for future reference.
 
         Adapter configuration, in terms of how to access the database, is
-        obtained from the config object.  It is clear now that the (TODO:)
-        adapter classes should also accept an optional config argument, and
-        then use it for default values, so that this routine need not enumerate
-        all the options.
+        obtained from the config object.
+
+        .. todo::
+
+          It is clear now that the adapter classes should also accept an
+          optional config argument, and then use it for default values, so that
+          this routine need not enumerate all the options.
 
         """
         adapter = MariaDBQuotaAdapter(
@@ -771,8 +783,14 @@ class OutboundQuotaPolicy(EmailPolicy):
         return float("inf")  # return a large value
 
     def _evaluate_policy_request(self, ppr):
-        """
-        This actually checks to see if it's okay to send the email.
+        """This actually checks to see if it's okay to send the email.
+
+        .. todo::
+
+          in this routine, it would be possible to send pub/sub messages via
+          Redis to consumers who might be interested to know that a particular
+          user's send-attempts list is over a certain length
+
         """
         instance, user = ppr.instance, ppr.user
         try:  # this may raise TypeError if the user is unknown

@@ -14,8 +14,10 @@ an object is provided which detects whether the library is running
 within a virtual environment, and serves as a source of local paths
 to package resources.
 
-TODO: add Postfix command class, to store action output along with
-status information.
+.. todo::
+
+  add Postfix command class, to store action output along with
+  status information.
 
 """
 from collections.abc import Mapping
@@ -211,7 +213,12 @@ class AttrDict:
         :param kwargs: arbitrary keyword arguments
 
         If, and only if, `data` is not provided, then the keyword arguments will be used in place of data provided as a :obj:`dict`.
-        TODO: add any `kwargs` to an existing `data` :obj:`dict`.  Henceforth whatever is rounded up to use shall be referred to as the `data`.
+
+        .. todo::
+
+          add any `kwargs` to an existing `data` :obj:`dict`
+
+        Henceforth whatever is rounded up to use shall be referred to as the `data`.
 
         The initialization routine creates an attribute on the instance for
         each key in the `data`, and then attempts to cast the value:
