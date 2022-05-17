@@ -39,6 +39,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
     "myst_parser",
 ]
 
@@ -81,6 +83,9 @@ html_static_path = []  # "_static"]
 autodoc_typehints = "description"
 autodoc_class_signature = "separated"
 autodoc_member_order = "bysource"
+
+# TODO options
+todo_include_todos = True
 
 # Typehints options
 # typehints_defaults = "comma"
