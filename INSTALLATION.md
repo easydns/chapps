@@ -18,7 +18,7 @@ A number of community packages are used:
  - and `expiring-dict`: [**py-expiring-dict** by David Parker](https://pypi.org/project/expiring-dict/)
 
 For SPF:
- - `pyspf`: [by Stuart Gathman, et al.](https://pypi.org/project/pyspf/) for SPF enforcement
+ - `pyspf`: [by Stuart Gathman, Terence Way, et al.](https://pypi.org/project/pyspf/) for SPF enforcement
  - `dnspython`: [by Bob Halley](https://pypi.org/project/dnspython/) for **pyspf**, or `py3dns`
 
 For the API:
@@ -41,15 +41,15 @@ For testing and development:
  - 'python-dotenv': [Saurabh Kumar](https://pypi.org/project/python-dotenv/)
  - 'pylint-pytest': [Reverb Chu](https://pypi.org/project/pylint-pytest/)
 
-MariaDB (or MySQL; support for others is planned) is used as a source of
-policy config data.  At present, no other mechanisms are included to
-provide this data.  However, some effort was made to design the
-adapter mechanism within the service in such a way that other adapters
-might provide data from other flavors of database, or from a file
-potentially, in small/static deployments.  The database is not yet
-used for **Greylisting**; nor for **SPF enforcement**, which gets its
-config from the DNS.  Database schema information is provided in the
-README file, and a script is provided which will create all the
+MariaDB (or soon MySQL; support for others is planned) is used as a
+source of policy config data.  At present, no other mechanisms are
+included to provide this data.  However, some effort was made to
+design the adapter mechanism within the service in such a way that
+other adapters might provide data from other flavors of database, or
+from a file potentially, in small/static deployments.  The database is
+not yet used for **Greylisting**; nor for **SPF enforcement**, which
+gets its config from the DNS.  Database schema information is provided
+in the README file, and a script is provided which will create all the
 required tables, provided the configured database is present when it
 attempts to connect to the server.
 
@@ -62,42 +62,10 @@ Developers](https://pypi.org/project/aiosmtpd/).  This package is used
 for testing, but not in the policy server.
 
 The test suite has several more dependencies.  In order to run tests,
-or otherwise set up for development work, consider using `pip -r
-requirements.txt` to install the last set of frozen dependencies into
-a development venv created within a checkout of a fork of this repo.
-The tests are not as polished style-wise as the library code; perhaps
-when the major features are finished they can be cleaned up some.
-
-## Database Setup
-
-Probably the most important thing to remember is that the CHAPPS
-config file path is consciously decoupled from the `venv`, and so it
-must be specified as a preface on the commandline, at the least.  It
-could also be set in your environment by using `export`, or in your
-session setup script (i.e. `.bashrc`).  In some way, it must be
-correct when the database setup script runs, in order to ensure that
-the proper config is used.
-
-As an example:
-```
-> CHAPPS_CONFIG=/home/chapps/venv/etc/chapps.ini chapps_database_init.py
-```
-
-If you haven't, launch the app once to cause it to create a config
-file.  If you have one you want to use, just put it in place.
-
-Another prerequisite is that the database and user named in the config
-exist, with proper GRANTs.  If the CHAPPS library is able to log into
-the database it is configured to use, the script will cause it to
-create the tables it expects to use during normal operation.
-
-That said, running the script is pretty easy.  If the `venv` is
-activated, then it is in the path.  If not, it may be invoked by its
-full path, something like
-`/home/chapps/venv/bin/chapps_database_init.py`.
-
-Once this is done, you can start CHAPPS services once more, and start
-configuring and using them.
+or otherwise set up for development work, use `pip install
+chapps[dev]` to get the development dependencies installed.  The tests
+are not as polished style-wise as the library code; perhaps when the
+major features are finished they can be cleaned up some.
 
 ## CHAPPS Services
 
@@ -169,17 +137,38 @@ In order to start the service immediately, without rebooting, use:
 systemctl start <service>
 ```
 
-### REST API Service
+## Database Setup
 
-A SystemD service unit file is included, which should work in tandem with
-the included socket unit file to allow **nginx** to communicate with the
-API via a Unix domain socket (UDS), saving network file descriptors.  This
-follows the [SystemD deployment pattern](https://docs.gunicorn.org/en/stable/deploy.html#systemd) outlined in the [Gunicorn documentation](https://docs.gunicorn.org/en/stable/).
+Probably the most important thing to remember is that the CHAPPS
+config file path is consciously decoupled from the virtual env, and so
+it must be specified as a preface on the commandline, at the least.
+It could also be set in your environment by using `export`, or in your
+session setup script (i.e. `.bashrc`).  In some way, it must be
+correct when the database setup script runs, in order to ensure that
+the proper config is used.  The virtual env must be activated before
+running the script.
 
-Alternatively, the options included in a comment in the service unit
-might be uncommented, and the `Type` changed to "normal", the
-dependency on the gunicorn socket removed, and the service run as
-[Uvicorn workers managed by
+As an example:
+```
+> . /home/chapps/venv/bin/activate
+> CHAPPS_CONFIG=/home/chapps/venv/etc/chapps.ini chapps_database_init.py
+```
+
+If you haven't, launch the app once to cause it to create a config
+file.  If you have one you want to use, just put it in place.
+
+Another prerequisite is that the database and user named in the config
+exist, with proper GRANTs.  If the CHAPPS library is able to log into
+the database it is configured to use, the script will cause it to
+create the tables CHAPPS expects to use during normal operation.
+
+Once this is done, you can start CHAPPS services once more, and start
+configuring and using them.
+
+## REST API Service
+
+By default, the service unit provided by CHAPPS creates [Uvicorn
+workers managed by
 Gunicorn](https://fastapi.tiangolo.com/deployment/server-workers/).
 At the time of writing, little in-situ testing has ben done to
 determine which method is preferable.  This is a private API -- not
@@ -190,8 +179,7 @@ For those who might like to do things totally differently, the WSGI
 callable which implements the REST API is called `chapps.rest.api:api`,
 which is an instance of `FastAPI`.
 
-### To Sum Up
-#### (or: Getting the dumb thing to run)
+## To Sum Up
 
 In bullet points, there are the prerequisites:
 - the library (and its dependencies) must be in the Python search path
@@ -210,23 +198,3 @@ Optionally:
 - modify your Postfix service profile to add a `Requires=` line to
   ensure that the policy service is running before Postfix starts; we
   use RequiredBy= so this isn't strictly necessary.
-
-## Unrecommended: Global install via shell script
-
-The rest of the instructions are left below in hopes they will be helpful to people who are trying to install with a script, into global system directories.  This really is not a very good idea, and is unlikely to go well, and also is likely to make upgrading really difficult
-
-Proceed at your own risk.
-
-## Using the Install script -- only for git checkouts
-
-From the CHAPPS root, the top of the hierarchy checked out from the
-repository, run `install/install.sh`
-
-This script is currently quite stupid and just assumes that your
-Python hierarchy is in a particular place.  As I plan to move to
-PyPI-based installation in short order, I do not desire to put a lot
-of extra work into it.
-
-My plan at present is to create an alternative routine for installing
-the service files from a venv, but it is not an extremely high
-priority.

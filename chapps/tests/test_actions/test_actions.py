@@ -69,19 +69,24 @@ class Test_PostfixGRLActions:
 
 
 class Test_PostfixSPFActions:
-    """Tests for Postfix action strings to be sent in response to particular SPF results:
+    """Tests for Postfix action strings corresponding to particular SPF results
+
        The possible results are:
-           pass*
-           fail*
-           softfail
-           temperror*
-           permerror*
-           none/neutral (two which must be treated the same)
-       Starred items are ones for which RFC 7208 provides recommended SMTP result codes.
-       For now, configuration will be able to override how the non-starred results are mapped onto
-       actions taken for other classes of message.
-       Eventually a response which implements greylisting (say, for softfails) will be provided,
-       which could be applied also to none/neutral situations as well.
+
+         - pass*
+         - fail*
+         - softfail
+         - temperror*
+         - permerror*
+         - none/neutral (two which must be treated the same)
+
+       Starred items are ones for which RFC 7208 provides recommended SMTP
+       result codes.  For now, configuration will be able to override how the
+       non-starred results are mapped onto actions taken for other classes of
+       message.  Eventually a response which implements greylisting (say, for
+       softfails) will be provided, which could be applied also to none/neutral
+       situations as well.
+
     """
 
     def test_pass_produces_prepend(self, spf_actions, spf_reason):

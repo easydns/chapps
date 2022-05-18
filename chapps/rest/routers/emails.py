@@ -1,3 +1,13 @@
+"""
+**Email** record management implemented by factories
+----------------------------------------------------
+
+This module defines the management routes for **Email** records, and also the :class:`~.JoinAssoc` between **Email** and **User** tables.
+
+It is implemented using factory functions from the :mod:`~.common` module, in a nearly-identical way to the :mod:`~.domains` module, just using :class:`~chapps.rest.models.Email` as the main data model.
+
+"""
+
 from typing import List
 from starlette import status
 from fastapi import APIRouter  # , Body, Path, HTTPException
@@ -31,6 +41,7 @@ api = APIRouter(
     tags=["emails"],
     responses={status.HTTP_404_NOT_FOUND: {"description": "Email not found."}},
 )
+"""The **Email** object API router"""
 
 email_join_assoc = [
     Email.join_assoc(
@@ -41,6 +52,7 @@ email_join_assoc = [
         table=Email.Meta.orm_model.metadata.tables["email_user"],
     )
 ]
+"""List of join associations for **Email** objects"""
 
 api.get("/", response_model=EmailsResp)(
     list_items(Email, response_model=EmailsResp)
@@ -58,10 +70,7 @@ api.post(
     "/",
     status_code=201,
     response_model=EmailResp,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Unable to create email"},
-        status.HTTP_409_CONFLICT: {"description": "Unique key error."},
-    },
+    responses={status.HTTP_409_CONFLICT: {"description": "Unique key error."}},
 )(
     create_item(
         Email,

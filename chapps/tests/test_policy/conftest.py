@@ -429,12 +429,21 @@ def _spf_actions():
 
 
 def _auto_query_param_list(helo_list=["fail"]):
+    """Constructs a map for parameterized testing via pytest
+
+    The map is a list of tuples.
+    Each tuple's first element is a tuple of (helo_result, mf_result).
+    The second element is the action indicated by the `spf_actions` dict.
+
+    Right now `spf_actions` (not quite a fixture) is created from constants,
+    which are the same as the default configuration.  If the default config
+    changes, some of these tests may start to fail.
+
+    """
     result = []
     spf_actions = _spf_actions()
-    spf_results = (
-        _spf_results()
-    )  # TODO: profile to see if nested for would be faster
-    [
+    spf_results = _spf_results()
+    [  # list comps are faster than for loops
         result.extend(
             [
                 (

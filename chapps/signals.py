@@ -1,4 +1,12 @@
-"""Signal handlers for CHAPPS"""
+"""
+Signal handlers and custom exceptions
+-------------------------------------
+
+In order to shut down gracefully, we want to provide a signal handler when a
+service (handler) loop starts.  Also, CHAPPS raises a few different custom
+exceptions, which are defined here.
+
+"""
 import signal, asyncio
 import logging
 from chapps.config import config
@@ -9,13 +17,33 @@ logger = logging.getLogger(__name__)
 class SignalHandlerFactory:  # pragma: no cover
     """A class for containing classmethods to create signal handlers"""
 
+    # could be organized differently; instantiating the class would return
+    # an instance with __call__ defined, so that it is callable, and then
+    # would in turn call the closure function;
+
     @classmethod
-    def signal_handler(cls, loop):
-        """Pass in the asyncio event loop and get a closure which will end the program"""
+    def signal_handler(cls, loop=None) -> callable:
+        """Returns a signal-checking, exiting closure
+
+        :param loop: *Deprecated*
+
+        :returns: a closure that looks for :const:`~signal.SIGTERM` or
+          :const:`~signal.SIGINT` and raises :exc:`SystemExit` if it finds
+          either one.
+
+        .. todo::
+
+          Since the returned closure is actually completely static, this could
+          be simplified greatly.  However, it works and doesn't cost much, so
+          it low on the list.
+
+        """
 
         def signal_handler_closure(sig, frame=None):
             if sig in {signal.SIGTERM, sig.SIGINT}:
-                logger.info(f"CHAPPS exiting on {signal.Signals(sig)} ({sig}).")
+                logger.info(
+                    f"CHAPPS exiting on {signal.Signals(sig)} ({sig})."
+                )
                 raise SystemExit
 
         return signal_handler_closure
@@ -29,12 +57,8 @@ class CallableExhausted(CHAPPSException):
     """A special exception for use during testing"""
 
 
-class OutboundPolicyException(CHAPPSException):
-    """Exceptions which occur during outbound mail processing"""
-
-
 class NotAnEmailAddressException(CHAPPSException):
-    """The string in question is not an email address"""
+    """An email address contained no at-signs"""
 
 
 class TooManyAtsException(CHAPPSException):
@@ -45,9 +69,13 @@ class ConfigurationError(CHAPPSException):
     """There was an error in the setting of configuration elements"""
 
 
+class OutboundPolicyException(CHAPPSException):
+    """Parent of exceptions which occur during outbound mail processing"""
+
+
 class NullSenderException(OutboundPolicyException):
     """No sender address exists in the current policy request"""
 
 
 class AuthenticationFailureException(OutboundPolicyException):
-    """lack of user_key being treated as authentication failure"""
+    """Lack of user-identifier being treated as authentication failure"""

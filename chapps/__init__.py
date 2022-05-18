@@ -2,8 +2,10 @@
 
 Caching, Highly-Available Postfix Policy Service
 
-This package contains the following modules:
-    util -- utility functions
+In addition to module documentation found here, an introduction and overview of
+the project is presented in its README_.  Specific concerns and instructions
+about getting it running are discussed in the INSTALLATION_ file.
+
 """
 from ._version import __version__
 import chapps.logging

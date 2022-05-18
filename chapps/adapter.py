@@ -1,16 +1,49 @@
-"""Policy-configuration source data adapters"""
-import mariadb
+"""
+Policy Configuration Adapters
+-----------------------------
 
-# import re ### needed if implementing domain_re_for_user()
+Policy-configuration source data adapters.
+
+All of these currently interface to MariaDB as a fairly low level.
+A change is planned to convert all of this to use SQLAlchemy.
+
+"""
+import mariadb
 import logging
 from chapps.config import config
 from contextlib import contextmanager
+from typing import List, Dict, Union, Any
 
 logger = logging.getLogger(__name__)  # pragma: no cover
 
 
 class PolicyConfigAdapter:
-    """Base class for DB adapters for policy config parameter access"""
+    """Base class for policy config access
+
+    Right now, all of the adapters use MariaDB, but this will change
+    (as noted below).
+    Non-database adapters could also be created, which might use a
+    flat file, or a blockchain, or some sort of other API interaction,
+    to be the source of policy data.
+
+    Ideally there should be a second-level base class called something like
+    `MariaDBPolicyConfigAdapter` which would hold all the SQL-specific stuff,
+    but that would make a lot more sense if
+
+      a) there were going to be a lot of weird, different adapters.  We may yet get there!
+      b) there were anything else to put in the base class
+
+    For now, however, this
+    class serves to store instructions about how to create the **User** table,
+    since they are used for everything, just about.
+
+    .. admonition:: SQL constants are deprecated.
+
+       All of the SQL statement constant strings defined in this class are
+       deprecated.  In a future version, all of this logic will be accomplished
+       using SQLAlchemy.
+
+    """
 
     user_table = (
         "CREATE TABLE IF NOT EXISTS users ("  # pragma: no cover
@@ -18,18 +51,33 @@ class PolicyConfigAdapter:
         "name VARCHAR(128) UNIQUE NOT NULL"
         ")"
     )
+    """SQL query used to create the **user** table."""
     userid_query = "SELECT id FROM users WHERE name = %(user)s"
+    """
+    SQL query for obtaining the ID of a **user**.  These queries
+    will go away when the older codebase is adapted to use SQLAlchemy
+    """
 
     def __init__(
         self,
         *,
-        db_host=None,
-        db_port=None,
-        db_name=None,
-        db_user=None,
-        db_pass=None,
-        autocommit=True,
+        db_host: str = None,
+        db_port: int = None,
+        db_name: str = None,
+        db_user: str = None,
+        db_pass: str = None,
+        autocommit: bool = True,
     ):
+        """
+        :param str db_host: the hostname or IP address of the database server
+        :param int db_port: the port number of the database server
+        :param str db_name: the name of the database
+        :param str db_user: the username for login
+        :param str db_pass: the password for the user
+        :param bool autocommit: defaults to True
+
+
+        """
         self.host = db_host or config.adapter.db_host or "127.0.0.1"
         self.port = db_port or config.adapter.db_port or 3306
         self.user = db_user or config.adapter.db_user
@@ -47,15 +95,32 @@ class PolicyConfigAdapter:
         self.conn = mariadb.connect(**kwargs)
 
     def finalize(self):
+        """Close the database connection."""
         self.conn.close()
 
     def _initialize_tables(self):
+        """Set up required tables.
+
+        Everything requires User records, so those tables are created here.
+
+        """
         cur = self.conn.cursor()
         cur.execute(self.user_table)
         cur.close()
 
     @contextmanager
     def adapter_context(self):
+        """Database connection context manager.
+
+        This method is meant to be used as a context manager, like so:
+
+        .. code:: python
+
+          with someadapter.adapter_context() as cur:
+              cur.execute(some_sql)
+
+        The context manager closes the cursor once the context ends.
+        """
         cur = self.conn.cursor()
         try:
             yield cur
@@ -64,7 +129,15 @@ class PolicyConfigAdapter:
 
 
 class MariaDBQuotaAdapter(PolicyConfigAdapter):
-    """A class for adapting to MariaDB for quota policy data"""
+    """An adapter for obtaining quota policy data from MariaDB
+
+    .. admonition:: SQL constants are deprecated.
+
+       All of the SQL statement constant strings defined in this class are
+       deprecated.  In a future version, all of this logic will be accomplished
+       using SQLAlchemy.
+
+    """
 
     quota_table = (
         "CREATE TABLE IF NOT EXISTS quotas ("  # pragma: no cover
@@ -73,6 +146,7 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         "quota BIGINT UNIQUE NOT NULL"
         ")"
     )
+    """SQL statement for creating the **Quota** table."""
     join_table = (
         "CREATE TABLE IF NOT EXISTS quota_user ("  # pragma: no cover
         "quota_id BIGINT NOT NULL,"
@@ -87,12 +161,14 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         " ON UPDATE CASCADE"  # allow replacement of quota defs
         ")"
     )
+    """SQL statement for creating the join table between **Quota** and **User** tables."""
     basic_quotas = (
         "INSERT INTO quotas ( name, quota ) VALUES "  # pragma: no cover
         "('10eph', 240),"
         "('50eph', 1200),"
         "('200eph', 4800)"
     )
+    """Doubly deprecated insert statement for creating basic quotas."""
     quota_query = (
         "SELECT quota FROM quotas WHERE id = ("  # pragma: no cover
         "SELECT quota_id FROM quota_user AS j"
@@ -100,14 +176,24 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
         " WHERE u.name = %(user)s"
         ")"
     )
+    """SQL query for selecting a **Quota**'s `quota` value for a named **User**."""
     quota_map_query = (
         "SELECT u.name AS user, p.quota FROM quotas AS p"  # pragma: no cover
         " LEFT JOIN quota_user AS j ON p.id = j.quota_id"
         " LEFT JOIN users AS u ON j.user_id = u.id"
     )
+    """SQL query for selecting a list of users and their quotas."""
     quota_map_where = "WHERE u.name IN ({srch})"  # pragma: no cover
+    """SQL for specifying which **User**\\ s to returns quota values for."""
 
-    def _initialize_tables(self, *, defquotas=False):
+    def _initialize_tables(self, *, defquotas: bool = False):
+        """Initialize tables required for this adapter/policy
+
+        :py:mod:`chapps.policy.OutboundQuotaPolicy` requires a **Quota** object
+        representing the user's outbound transmission limit.  The **Quota** has
+        both a name and a value, for humans.
+
+        """
         super()._initialize_tables()
         cur = self.conn.cursor()
         cur.execute(self.quota_table)
@@ -118,8 +204,12 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
                 cur.execute(self.basic_quotas)
         cur.close()
 
-    def quota_for_user(self, user):
-        """Return the quota for an user account"""
+    def quota_for_user(self, user: str) -> Union[int, None]:
+        """Return the quota amount for an user account
+
+        :param str user: the user's name
+
+        """
         cur = self.conn.cursor()
         cur.execute(self.quota_query, dict(user=user))
         try:
@@ -133,7 +223,20 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
             cur.close()
         return res
 
-    def _quota_search(self, users=[]):
+    def _quota_search(self, users: List[str] = None):
+        """Return selected rows of username and quota-amount
+
+        Use deprecated stored constant SQL fragments to search for the
+        specified users, or select all users.
+
+        Return value is similar to:
+
+        .. code::python
+
+          [ ("username1", 200), ("username2", 400) ]
+
+        """
+        users = users or []
         cur = self.conn.cursor()
         if len(users) == 0:
             query = self.quota_map_query
@@ -146,14 +249,33 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
             cur.execute(query.format(srch=srch))
         return cur.fetchall()
 
-    def quota_dict(self, users=[]):
-        """Return a dict which maps users onto their quotas"""
+    def quota_dict(self, users: List[str] = None) -> Dict[str, str]:
+        """Return a dict which maps users onto their quotas
+
+        :param List[str] users: Optional limiting list of usernames; if
+          empty or not provided, all users will be listed.
+
+        """
+        users = users or []
         rows = self._quota_search(users)
         res = {r[0]: r[1] for r in rows}
         return res
 
-    def quota_map(self, func, users=[]):
-        """Provide a function to execute over each user and its quota.  Use this to directly wire the database-loading logic to the Redis-population logic."""
+    def quota_map(self, func: callable, users: List[str] = None) -> List[Any]:
+        """Map a callable over a set of users and their quotas
+
+        :param callable func: A callable which will be passed (username,
+           quota amount) for each user in the list
+
+        :param List[str] users: Optional limiting list of usernames; if
+          empty or not provided, all users will be listed.
+
+        Provide a function to execute over each user and its quota.  Use this
+        to directly wire the database-loading logic to the Redis-population
+        logic.
+
+        """
+        users = users or []
         if not callable(func):
             raise ValueError(
                 "The first non-self argument must be a callable which accepts the user and quota as arguments, in that order."
@@ -166,7 +288,15 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
 
 
 class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
-    """A class for adapting to MariaDB for sender domain authorization data"""
+    """An adapter to obtain sender domain authorization data from MariaDB
+
+    .. admonition:: SQL constants are deprecated.
+
+       All of the SQL statement constant strings defined in this class are
+       deprecated.  In a future version, all of this logic will be accomplished
+       using SQLAlchemy.
+
+"""
 
     domain_table = (
         "CREATE TABLE IF NOT EXISTS domains ("  # pragma: no cover
@@ -238,6 +368,17 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
     )
 
     def _initialize_tables(self, *args, **kwargs):
+        """Initialize tables required for this adapter/policy
+
+        :param List args: catch all positional arguments
+        :param Dict kwargs: catch all keyword arguments
+
+        Sender domain authorization also checks whole-email matches
+        as a fallback, and so the policy requires storage for domain
+        objects and also email objects.
+
+        Does not currently make use of any arguments.
+        """
         super()._initialize_tables()
         cur = self.conn.cursor()
         cur.execute(self.domain_table)
@@ -246,37 +387,28 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
         cur.execute(self.email_join_table)
         cur.close()
 
-    def check_domain_for_user(self, user, domain):
-        """Returns true if the user is authorized to send for this domain"""
+    def check_domain_for_user(self, user: str, domain: str) -> bool:
+        """Returns True if the user is authorized to send for this domain
+
+        :param str user: name of user
+        :param str domain: name of domain
+
+        """
         cur = self.conn.cursor()
         cur.execute(self.check_domain_query.format(user=user, domain=domain))
         result = cur.fetchone()[0]  ### returns 1 if a domain matched, 0 if not
         cur.close()
         return result
 
-    def check_email_for_user(self, user, email):
-        """Returns true if the user is authorized to send as this email"""
+    def check_email_for_user(self, user: str, email: str) -> bool:
+        """Returns True if the user is authorized to send as this email
+
+        :param str user: name of user
+        :param str email: email address
+
+        """
         cur = self.conn.cursor()
         cur.execute(self.check_email_query.format(user=user, email=email))
         result = cur.fetchone()[0]
         cur.close()
         return result
-
-    ### These methods would provide a similar functionality profile to the above
-    ###     but as yet, none of that code is being used either, so these are left
-    ###     as a suggestion for future expansion, as needed
-    def _domain_search(self, users=[]):
-        """Return a set of rows, either for specified users or all users"""
-        raise NotImplementedError
-
-    def domains_for_user(self, user):
-        """Return a list of domains the user is authorized to send from"""
-        raise NotImplementedError
-
-    def domain_re_for_user(self, user):
-        """Returns a regular expression useful for detecting a user's domains"""
-        raise NotImplementedError
-
-    def domain_map(self, func, users=[]):
-        """Pass in a closure which accepts (user, domain); useful for prepopulating Redis"""
-        raise NotImplementedError

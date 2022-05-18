@@ -1,5 +1,16 @@
 # Change Log
 
+##v0.4.6:
+	- Correcting dependency misalignments in setup.cfg which were preventing
+      CHAPPS from launching after installation from PyPI
+    - Massive documentation update, using rST and Sphinx
+	- Some minor code cleanup, mainly removing completely extraneous code
+	- logic added to `VenvDetector` to detect when the library is launched
+	  by Sphinx; depends on code added to `docs/source/conf.py`
+	- CHAPPS now defaults looking for its config in its venv by default if
+	  one is being used. (`<venv>/etc/chapps.ini`)
+	- CHAPPS does not attempt to write a config file when invoked by Sphinx
+
 ##v0.4.5:
     - Corrected missing statements which caused new email tables not to be
 	  created by `chapps_database_init.py`
