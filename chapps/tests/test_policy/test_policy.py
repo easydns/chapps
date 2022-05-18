@@ -583,12 +583,14 @@ class Test_OutboundQuotaPolicy:
     def test_deny_when_too_many_recipients(
         self, multisend_ppr_factory, well_spaced_attempts, populate_redis
     ):
-        """
-        Verify that when the recipient list would go over the quota, the attempt is denied.
-        This has the side-effect of meaning that rejected multi-recipient attempts add their
-        recipient count to the attempt history, meaning that the account will be fully over-quota
-        once this occurs.
-        TODO: consider removing failed multiple attempts from the sorted list, reducing their impact to 1
+        """:GIVEN: a multi-recipient PPR
+        :WHEN: the recipient list would go over the quota
+        :THEN: the attempt is denied.
+
+        This has the side-effect of meaning that rejected multi-recipient
+        attempts add their recipient count to the attempt history, meaning that
+        the account will be fully over-quota once this occurs.
+
         """
         groupsend_ppr = multisend_ppr_factory("overquota@chapps.io", 20)
         populate_redis(groupsend_ppr.sender, 100, well_spaced_attempts(95), 10)
