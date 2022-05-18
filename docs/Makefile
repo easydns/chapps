@@ -5,6 +5,11 @@
 # from the environment for the first two.
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
+AUTODOC       ?= sphinx-apidoc
+AUTODOCOPTS   ?= -Mef -o "$(SOURCEDIR)" "$(CODEROOT)"
+WORKSTATIONOPTS = -b html -t workstation
+TODOLIST      = build/doctrees/todolist.doctree
+CODEROOT      = ../chapps
 SOURCEDIR     = source
 BUILDDIR      = build
 
@@ -13,6 +18,13 @@ help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 .PHONY: help Makefile
+
+.PHONY: workstationhtml
+workstationhtml:
+	@rm $(TODOLIST) || echo "No todolist doctree to remove; continuing..."
+	@$(AUTODOC) $(AUTODOCOPTS)
+	@$(SPHINXBUILD) "$(SOURCEDIR)" "$(BUILDDIR)" $(WORKSTATIONOPTS)
+	@echo "Workstation documentation built with to-do list"
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
