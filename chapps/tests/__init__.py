@@ -13,7 +13,9 @@ The tests are only haphazardly documented, and contain some pretty glaring
 examples of malignant style inconsistency.  There are some comments, and there
 is some amount of documentation.
 
-TODO: clean up style weirdnesses within testing fixtures; provide better
-documentation of tests
+.. todo::
+
+  clean up style weirdnesses within testing fixtures; provide better
+  documentation of tests
 
 """

@@ -15,7 +15,9 @@ required for the database side:
 
   * There is a special class for generalizing the logic of joining the tables.
 
-    (TODO: it seems like there must be some way to obtain some of the data
+.. todo::
+
+    it seems like there must be some way to obtain more of the data
     tracked by :class:`.JoinAssoc` from the :mod:`SQLAlchemy` metadata but I
     have not figured much of it out yet.)
 

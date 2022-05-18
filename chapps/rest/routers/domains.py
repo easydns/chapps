@@ -114,12 +114,11 @@ instead of whatever is currently associated with the **Domain**.
 In order to specify the associations to support in the route, a list of
 :class:`~.JoinAssoc` objects may be provided to the `assoc` parameter.
 
-TODO: There is a further opportunity for automation through metaprogramming, to
-set up all the expected, basic routes for a given data model.
+.. todo::
 
-This has the added side-effect of not creating any function definitions within
-the :mod:`~.domains` module, or any other concrete route module, which handily
-prevents any other code from calling those routines.
+  There is a further opportunity for automation through metaprogramming, to set
+  up all the expected, basic routes for a given data model in a single function
+  call.
 
 (The following parameters and return type correspond to the :class:`~fastapi.APIRouter` instance, which is callable.  Sphinx autodoc makes it quite difficult to suppress this output.)
 

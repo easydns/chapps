@@ -50,10 +50,13 @@ class LogSetup:  # pragma: no cover
 
     It had been a conscious decision not to include the :mod:`chapps.config`
     module in this module, in order to avoid circular dependencies when this
-    module was included everywhere.  The rework has this module loaded as part
-    of package initialization, so it is no longer necessary to load it
-    anywhere, since once it is loaded its job is done.  TODO: add configuration
-    support for **syslog** facility and minimum severity.
+    module was included everywhere.  The rework has the config module loaded as
+    part of package initialization, so it is no longer necessary to load it
+    anywhere, since once it is loaded its job is done.
+
+    .. todo::
+
+      add configuration support for **syslog** facility and minimum severity.
 
     """
 

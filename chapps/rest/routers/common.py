@@ -232,7 +232,7 @@ def get_item_by_id(
 
     At present there is no provision for dealing with extremely long
     association lists.  Even if there were 500 elements, the response would not
-    be extremely large.  TODO: provide option to suppress each association
+    be extremely large.
 
     .. note::
 
@@ -251,6 +251,11 @@ def get_item_by_id(
     The factory sets the final closure's name and doc metadata properly to
     ensure that the automatic documentation is coherent and accurate.  All the
     route factories do this to a greater or lesser extent.
+
+    .. todo::
+
+      provide option for API user to suppress each association
+      perhaps something like `no_list_domains` as part of the query params
 
     """
     mname = model_name(cls)
@@ -351,6 +356,11 @@ def list_associated(
     It returns in the `response` key of its output a list of
     the associated object, goverened by the search and window parameters in
     `qparams`.
+
+    .. todo::
+
+      Simplify/clarify signature of inner coroutine -- it will always be the
+      same: `(item_id: int, qparams: dict = Depends(list_query_params))`
 
     """
     mname = model_name(cls)
@@ -578,12 +588,13 @@ def update_item(
     For an example of how to use this factory, see :ref:`Updating Domains
     <updating-domains>`
 
-    TODO: in a generalized version of this for wider use in gluing
-    `SQLAlchemy`_ to `FastAPI`_, it would need to allow arbitrary attributes of
-    the model to be optional/required/defaulted.  This might easily be achieved
-    through the use of an additional alternate Pydantic_ data model for
-    updates, wherein those elements which ought to be optional may be marked as
-    such.
+    .. todo::
+
+      in a generalized version of this for wider use in gluing `SQLAlchemy`_ to
+      `FastAPI`_, it would need to allow arbitrary attributes of the model to
+      be optional/required/defaulted.  This might easily be achieved through
+      the use of an additional alternate Pydantic_ data model for updates,
+      wherein those elements which ought to be optional may be marked as such.
 
     """
     mname = model_name(cls)

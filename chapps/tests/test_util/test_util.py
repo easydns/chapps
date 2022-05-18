@@ -1,12 +1,15 @@
-#!/usr/bin/env python
+"""CHAPPS Utilities Tests
 
+.. todo::
+
+  Write tests for :class:`~chapps.util.VenvDetector`
+
+"""
 import pytest
 from pprint import pprint as ppr
 from chapps.util import AttrDict, PostfixPolicyRequest
 
 pytestmark = pytest.mark.order(1)
-
-# TODO: tests for VenvDetector
 
 
 class Test_AttrDict:

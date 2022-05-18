@@ -261,15 +261,18 @@ class PostfixSPFActions(PostfixActions):
 
     """
 
-    # TODO:
-    # this should not be instantiated this way as it confounds config override
-    # make this a classmethod which accepts an optional config
     greylisting_policy = GreylistingPolicy()
     """
     Reference to a class-global :py:class:`chapps.policy.GreylistingPolicy`
     instance.
 
     This implementation is poor and will change in future revisions.
+
+    .. todo::
+
+      Implement `greylisting_policy` as a class-level pseudo-property,
+      using a class-attribute dict for memoization storage.
+
     """
 
     @staticmethod
@@ -297,8 +300,6 @@ class PostfixSPFActions(PostfixActions):
             raise ValueError(
                 f"PostfixSPFActions.greylist() expects a ppr= kwarg providing the PPR for greylisting."
             )
-        # TODO: make this a classmethod call
-        # if there is a 'config' key in kwargs, pass it as the config
         if PostfixSPFActions.greylisting_policy.approve_policy_request(ppr):
             passing = PostfixSPFActions().action_for("pass")
             return passing(msg, ppr, *args, **kwargs)

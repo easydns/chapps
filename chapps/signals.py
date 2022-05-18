@@ -31,11 +31,11 @@ class SignalHandlerFactory:  # pragma: no cover
           :const:`~signal.SIGINT` and raises :exc:`SystemExit` if it finds
           either one.
 
-        :rtype: callable
+        .. todo::
 
-        TODO: Since the returned closure is actually completely static, this
-        could be simplified greatly.  However, it works and doesn't cost much,
-        so it low on the list.
+          Since the returned closure is actually completely static, this could
+          be simplified greatly.  However, it works and doesn't cost much, so
+          it low on the list.
 
         """
 

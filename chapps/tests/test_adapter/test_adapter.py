@@ -76,11 +76,14 @@ class Test_MariaDBQuotaAdapter:
         cur.execute("SELECT COUNT(name) FROM quotas")
         assert cur.fetchone()[0] == 3
 
-    def test_finalize(
-        self, mdbqadapter_fixture
-    ):  # TODO: refactor to superclass tests
+    def test_finalize(self, mdbqadapter_fixture):
         """
         Verify that MDBQA's finalize routine closes the database connection
+
+        .. todo::
+
+          refactor to superclass tests
+
         """
         mdbqadapter_fixture.finalize()
         with pytest.raises(mariadb.Error):
