@@ -238,6 +238,7 @@ class CascadingPolicyHandler:
         pprclass = self.pprclass
         policies = self.policies
         encoding = self.config.chapps.payload_encoding
+        no_user_key_response = self.config.chapps.no_user_key_response
         logger.debug(
             f"Cascading policy handler requested for "
             f"{[ type(p) for p in policies ]} using PPR "
@@ -319,7 +320,7 @@ class CascadingPolicyHandler:
                                 f"{type(policy).__name__} FAIL NS {policy_data}"
                             )
                     except AuthenticationFailureException:
-                        resp = "action=" + config.no_user_key_response + "\n\n"
+                        resp = "action=" + no_user_key_response + "\n\n"
                         approval = False
                         logger.info(
                             f"{type(policy).__name__} FAIL NA {policy_data}"
