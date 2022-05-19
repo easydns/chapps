@@ -1156,7 +1156,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
         domains: List[str] = None,
         emails: List[str] = None,
     ):
-        """Clear SDA policy cache
+        r"""Clear SDA policy cache
         for **User**\ s x [**Domain**\ s + **User**\ s]
 
         :param List[str] users: a list of user-identifiers

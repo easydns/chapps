@@ -206,7 +206,7 @@ class AttrDict:
     def __init__(
         self, data: Dict[str, Any] = None, **kwargs: Optional[Dict[str, Any]]
     ):
-        """Populate an instance with attributes
+        r"""Populate an instance with attributes
 
         :param data: a :obj:`dict` mapping strings (attribute names) onto arbitrary values
 

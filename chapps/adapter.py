@@ -184,7 +184,7 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
     )
     """SQL query for selecting a list of users and their quotas."""
     quota_map_where = "WHERE u.name IN ({srch})"  # pragma: no cover
-    """SQL for specifying which **User**\\ s to returns quota values for."""
+    r"""SQL for specifying which **User**\ s to returns quota values for."""
 
     def _initialize_tables(self, *, defquotas: bool = False):
         """Initialize tables required for this adapter/policy

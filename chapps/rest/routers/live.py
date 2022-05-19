@@ -43,7 +43,7 @@ api = APIRouter(
 
 # define some useful functions
 load_user_with_quota = load_model_with_assoc(User, assoc=[user_quota_assoc])
-"""Create a `load_user_with_quota` function, using the factory.
+r"""Create a `load_user_with_quota` function, using the factory.
 
 :param int item_id: ID of user to load, or 0 if loading by name
 
