@@ -48,7 +48,7 @@ class PolicyConfigAdapter:
     user_table = (
         "CREATE TABLE IF NOT EXISTS users ("  # pragma: no cover
         "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
-        "name VARCHAR(128) UNIQUE NOT NULL"
+        "name VARCHAR(127) UNIQUE NOT NULL"
         ")"
     )
     """SQL query used to create the **user** table."""
@@ -142,7 +142,7 @@ class MariaDBQuotaAdapter(PolicyConfigAdapter):
     quota_table = (
         "CREATE TABLE IF NOT EXISTS quotas ("  # pragma: no cover
         "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
-        "name VARCHAR(32) UNIQUE NOT NULL,"
+        "name VARCHAR(31) UNIQUE NOT NULL,"
         "quota BIGINT UNIQUE NOT NULL"
         ")"
     )
@@ -301,7 +301,7 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
     domain_table = (
         "CREATE TABLE IF NOT EXISTS domains ("  # pragma: no cover
         "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
-        "name VARCHAR(64) UNIQUE NOT NULL"
+        "name VARCHAR(63) UNIQUE NOT NULL"
         ")"
     )
     domain_join_table = (
@@ -322,7 +322,7 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
     email_table = (
         "CREATE TABLE IF NOT EXISTS emails ("
         "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
-        "name VARCHAR(128) UNIQUE NOT NULL"
+        "name VARCHAR(127) UNIQUE NOT NULL"
         ")"
     )
     email_join_table = (
