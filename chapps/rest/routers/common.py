@@ -26,7 +26,13 @@ from functools import wraps
 import inspect
 import logging
 from chapps.rest.dbsession import sql_engine
-from chapps.rest.models import AssocOperation, DeleteResp, TextResp
+from chapps.rest.models import (
+    CHAPPSModel,
+    CHAPPSResponse,
+    AssocOperation,
+    DeleteResp,
+    TextResp,
+)
 from chapps.rest.dbmodels import JoinAssoc
 import chapps.logging
 
@@ -38,12 +44,12 @@ async def list_query_params(
     skip: Optional[int] = 0,
     limit: Optional[int] = 1000,
     q: Optional[str] = "%",
-):
+) -> dict:
     """FastAPI dependency for list queries"""
     return dict(q=q, skip=skip, limit=limit)
 
 
-def model_name(cls):
+def model_name(cls) -> str:
     """Convenience function to get the lowercase name of a model"""
     return cls.__name__.lower()
 
@@ -329,18 +335,21 @@ def list_items(cls, *, response_model, engine=sql_engine):
 
 
 def list_associated(
-    cls, *, assoc: JoinAssoc, response_model, engine=sql_engine
+    cls: CHAPPSModel,
+    *,
+    assoc: JoinAssoc,
+    response_model: CHAPPSResponse,
+    engine=sql_engine,
 ):
     """Build a route to list associated items with pagination
 
-    :param ~chapps.rest.models.CHAPPSModel cls: the main data model
+    :param cls: the main data model
 
-    :param ~chapps.rest.dbmodels.JoinAssoc assoc: the association to list
+    :param assoc: the association to list
 
-    :param ~chapps.rest.models.CHAPPSResponse response_model: the response
-      model
+    :param response_model: the response model
 
-    :param ~sqlalchemy.engine.Engine engine: defaults to
+    :param sqlalchemy.engine.Engine engine: defaults to
       :const:`~chapps.rest.dbsession.sql_engine`
 
     The returned coroutine will paginate a list of the associated objects,
@@ -357,41 +366,21 @@ def list_associated(
     the associated object, goverened by the search and window parameters in
     `qparams`.
 
-    .. todo::
-
-      Simplify/clarify signature of inner coroutine -- it will always be the
-      same: `(item_id: int, qparams: dict = Depends(list_query_params))`
-
     """
     mname = model_name(cls)
     fname = f"{mname}_list_{assoc.assoc_name}"
-    params = dict(item_id=int, qparams=dict)
-    p_dfls = dict(item_id=None, qparams=Depends(list_query_params))
 
     @db_interaction(cls=cls, engine=engine)
-    async def assoc_list(*pargs, **args):
-        # TODO: signature can be simplified
-        # item_id for source object of type cls
-        # the specified association is listed according to qparams
+    async def assoc_list(
+        item_id: int, qparams: dict = Depends(list_query_params)
+    ):
         stmt = assoc.assoc_model.windowed_list_by_ids(
-            subquery=assoc.select_ids_by_source_id(args["item_id"]),
-            **args["qparams"],
+            subquery=assoc.select_ids_by_source_id(item_id), **qparams
         )
         assocs = assoc.assoc_model.wrap(session.scalars(stmt))
         if assocs:
             return response_model.send(assocs)
 
-    routeparams = [
-        inspect.Parameter(
-            name=param,
-            kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            annotation=type_,
-            default=p_dfls[param],
-        )
-        for param, type_ in params.items()
-    ]
-    assoc_list.__signature__ = inspect.Signature(routeparams)
-    assoc_list.__annotations__ = params
     assoc_list.__name__ = fname
     assoc_list.__doc__ = (
         f"List **{assoc.assoc_name}** associated with a particular **{mname}**,"
