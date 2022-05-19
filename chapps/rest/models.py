@@ -89,9 +89,10 @@ so there are some response models to use in such cases.
 from chapps.config import config
 from chapps.rest import dbmodels
 from typing import Optional, List, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, constr, Field, validator
 from pydantic.main import ModelMetaclass
 from enum import Enum
+import validators
 import time
 
 VERSTR = config.chapps.version
@@ -249,6 +250,13 @@ class User(CHAPPSModel):
     #    authorized to send email appearing to come from the entire **Email**
     #    address.
 
+    name: constr(strip_whitespace=True, min_length=5, max_length=127) = Field(
+        ...,
+        title="user identifier",
+        description="may be an email address, or some other unique identifier",
+    )
+    """user identifiers may be from 5 to 127 chars long"""
+
     class Config:
         orm_mode = True
         schema_extra = dict(
@@ -269,6 +277,10 @@ class Quota(CHAPPSModel):
 
     # **Quota** objects also have `id` and `name` fields, like all models.
 
+    name: constr(strip_whitespace=True, min_length=3, max_length=31) = Field(
+        title="quota label", description="a descriptive tag"
+    )
+    """quota labels may be up to 31 chars long"""
     quota: int
     """unique integer outbound transmission limit"""
 
@@ -285,7 +297,10 @@ class Quota(CHAPPSModel):
 class Domain(CHAPPSModel):
     """Domain objects have a name and ID; the name never contains an `@`"""
 
-    # TODO: implement validation of domain names
+    name: constr(
+        strip_whitespace=True, to_lower=True, min_length=5, max_length=63
+    ) = Field(title="domain name")
+    """domain names may be up to 63 chars long"""
 
     class Config:
         orm_mode = True
@@ -294,11 +309,20 @@ class Domain(CHAPPSModel):
     class Meta:
         orm_model = dbmodels.Domain
 
+    @validator("name")
+    def domain_validator(cls, val):
+        result = validators.domain(val)
+        if result:
+            return val
+        raise ValueError("The name field must be a valid domain name.")
+
 
 class Email(CHAPPSModel):
     """Email objects have a name and ID; the name always contains an `@`"""
 
-    # TODO: implement validation of email addresses
+    name: constr(strip_whitespace=True, min_length=6, max_length=127) = Field(
+        ..., title="email address"
+    )
 
     class Config:
         orm_mode = True
@@ -306,6 +330,12 @@ class Email(CHAPPSModel):
 
     class Meta:
         orm_model = dbmodels.Email
+
+    @validator("name")
+    def email_validator(cls, val):
+        if validators.email(val):
+            return val
+        raise ValueError("The name field must be an email address.")
 
 
 class CHAPPSResponse(BaseModel):

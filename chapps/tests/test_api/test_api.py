@@ -1,4 +1,10 @@
-"""Tests of the REST API.  Not called test_rest obvs"""
+"""Tests of the REST API.  Not called test_rest obvs
+
+.. todo::
+
+  Write tests for data models -- specifically cover validation
+
+"""
 import pytest
 import pudb
 import chapps.config

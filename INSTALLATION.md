@@ -15,6 +15,7 @@ A number of community packages are used:
  - `redis`: [**redis-py** by Redis, Inc.](https://pypi.org/project/redis/)
  - `mariadb`: [**MariaDB Connector/Python** by Georg Richter](https://pypi.org/project/mariadb/)
  - `python-pidfile`: [**PIDFile** by Dmitry Orlov](https://pypi.org/project/python-pidfile/)
+ - `validators`: [**validators** by Konsta Vesterinen](https://github.com/kvesteri/validators/blob/master/docs/index.rst)
  - and `expiring-dict`: [**py-expiring-dict** by David Parker](https://pypi.org/project/expiring-dict/)
 
 For SPF:
