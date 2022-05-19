@@ -48,10 +48,15 @@ class Test_RequestHandler:
         Verify that if an exception is raised, it will be handled by logging
         """
         caplog.set_level(logging.DEBUG)
-        handle_policy_request = RequestHandler(testing_policy).async_policy_handler()
-        _ = await handle_policy_request(mock_reader_ok, mock_exc_raising_writer)
+        handle_policy_request = RequestHandler(
+            testing_policy
+        ).async_policy_handler()
+        _ = await handle_policy_request(
+            mock_reader_ok, mock_exc_raising_writer
+        )
         assert any(
-            "Exception raised trying to send" in rec.message for rec in caplog.records
+            "Exception raised trying to send" in rec.message
+            for rec in caplog.records
         )
 
 
@@ -133,7 +138,11 @@ class Test_GreylistingHandler:
         )
 
     async def test_handle_retry_too_fast(
-        self, clear_redis_grl, testing_policy_grl, grl_reader_too_fast, mock_writer
+        self,
+        clear_redis_grl,
+        testing_policy_grl,
+        grl_reader_too_fast,
+        mock_writer,
     ):
         """
         GIVEN two back-to-back attempts with the same tuple
@@ -152,7 +161,11 @@ class Test_GreylistingHandler:
         )
 
     async def test_handle_recognized_tuple(
-        self, clear_redis_grl, testing_policy_grl, grl_reader_recognized, mock_writer
+        self,
+        clear_redis_grl,
+        testing_policy_grl,
+        grl_reader_recognized,
+        mock_writer,
     ):
         """
         GIVEN an email delivery attempt
@@ -169,7 +182,11 @@ class Test_GreylistingHandler:
         mock_writer.write.assert_called_with(b"action=DUNNO\n\n")
 
     async def test_handle_allowed_client(
-        self, clear_redis_grl, testing_policy_grl, grl_reader_with_tally, mock_writer
+        self,
+        clear_redis_grl,
+        testing_policy_grl,
+        grl_reader_with_tally,
+        mock_writer,
     ):
         """
         GIVEN an email delivery attempt
@@ -191,7 +208,11 @@ class Test_SenderDomainAuthHandler:
     """Tests of the SenderDomainAuth handler"""
 
     async def test_handle_authorized_user(
-        self, clear_redis_sda, testing_policy_sda, mock_reader_sda_auth, mock_writer
+        self,
+        clear_redis_sda,
+        testing_policy_sda,
+        mock_reader_sda_auth,
+        mock_writer,
     ):
         """
         GIVEN an email attempt from an authorized user
@@ -207,7 +228,11 @@ class Test_SenderDomainAuthHandler:
         mock_writer.write.assert_called_with(b"action=DUNNO\n\n")
 
     async def test_handle_unauth_user(
-        self, clear_redis_sda, testing_policy_sda, mock_reader_sda_unauth, mock_writer
+        self,
+        clear_redis_sda,
+        testing_policy_sda,
+        mock_reader_sda_unauth,
+        mock_writer,
     ):
         """
         GIVEN an email attempt from an UNauthorized user
@@ -256,18 +281,30 @@ class Test_OutboundMultipolicyHandler:
         mock_apr.assert_called_once()
 
     async def test_handle_null_sender(
-        self, null_sender_policy_sda, testing_policy, mock_reader_sda_auth, mock_writer
+        self,
+        null_sender_policy_sda,
+        testing_policy,
+        mock_reader_sda_auth,
+        mock_writer,
     ):
-        handler = OutboundMultipolicyHandler([null_sender_policy_sda, testing_policy])
+        handler = OutboundMultipolicyHandler(
+            [null_sender_policy_sda, testing_policy]
+        )
         handle_policy_request = handler.async_policy_handler()
         with pytest.raises(CallableExhausted):
             await handle_policy_request(mock_reader_sda_auth, mock_writer)
         mock_writer.write.assert_called_once()  # if it was called, we handled the exception raised by null_sender_policy_sda
 
     async def test_reject_null_sender(
-        self, null_sender_policy_sda, testing_policy, mock_reader_sda_auth, mock_writer
+        self,
+        null_sender_policy_sda,
+        testing_policy,
+        mock_reader_sda_auth,
+        mock_writer,
     ):
-        handler = OutboundMultipolicyHandler([null_sender_policy_sda, testing_policy])
+        handler = OutboundMultipolicyHandler(
+            [null_sender_policy_sda, testing_policy]
+        )
         handle_policy_request = handler.async_policy_handler()
         with pytest.raises(CallableExhausted):
             await handle_policy_request(mock_reader_sda_auth, mock_writer)
@@ -300,5 +337,16 @@ class Test_OutboundMultipolicyHandler:
                     [testing_policy_sda, testing_policy]
                 )
                 handle_policy_request = handler.async_policy_handler()
-                await handle_policy_request(mock_reader_sda_unauth, mock_writer)
+                await handle_policy_request(
+                    mock_reader_sda_unauth, mock_writer
+                )
         mock_apr.assert_not_called()
+
+    @pytest.mark.xfail
+    async def test_missing_user_key(self):
+        """
+        :GIVEN: that we require a user-key
+        :WHEN: a PPR is evaluated which has no value for the user-key
+        :THEN: the email is rejected and the `no_user_key_response` is returned
+        """
+        raise NotImplementedError
