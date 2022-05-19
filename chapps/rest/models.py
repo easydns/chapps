@@ -73,11 +73,6 @@ so there are some response models to use in such cases.
 
 .. todo::
 
-  implement proper data (string contents) validation for **Domain** and
-  **Email**
-
-.. todo::
-
   perhaps construct as a completely separate project a framework for creating
   arbitrary 'double-ended' Pydantic_ / SQLAlchemy_ data model objects, with
   arbitrary join tables and basic route factories for FastAPI_.  There are some
@@ -144,13 +139,18 @@ class CHAPPSMetaModel(ModelMetaclass):
         it, or else `None`.  Note that while the variable name used assumes the
         attribute will refer to a callable, it will work on any attribute.
 
-        .. todo::
-
-          trap and handle AttributeError to account for missing `__getattr__`
-
         """
-        orm_method = getattr(cls.Meta.orm_model, var, None)
-        return orm_method or super().__getattr__(var)
+        orm_model = cls.Meta.orm_model
+        orm_method = getattr(orm_model, var, None)
+        try:
+            return orm_method or super().__getattr__(var)
+        except AttributeError:
+            raise AttributeError(
+                f"No attribute {var} could be found on "
+                + ".".join([cls.__module__, cls.__name__])
+                + "or on "
+                + ".".join([orm_model.__module__, orm_model.__name__])
+            )
 
 
 # there could be a metaclass which would look for dbmodels classes matching
