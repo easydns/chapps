@@ -13,6 +13,7 @@ from chapps.switchboard import (
 )
 from chapps.policy import OutboundQuotaPolicy
 from chapps.signals import CallableExhausted
+from chapps.outbound import OutboundPPR
 from chapps.tests.test_adapter.conftest import (
     base_adapter_fixture,
     finalizing_pcadapter,
@@ -31,10 +32,9 @@ pytestmark = pytest.mark.order(-2)
 
 
 @pytest.mark.asyncio
-class Test_RequestHandler:
-    """This class contains the actual async handler logic"""
+class Test_OutboundQuotaHandler:
+    """Tests for the OQP switchboard"""
 
-    @pytest.mark.xfail  # this needs to be tested differently now, or as part of OQH
     async def test_exception_handling(
         self,
         caplog,
@@ -48,7 +48,7 @@ class Test_RequestHandler:
         Verify that if an exception is raised, it will be handled by logging
         """
         caplog.set_level(logging.DEBUG)
-        handle_policy_request = RequestHandler(
+        handle_policy_request = OutboundQuotaHandler(
             testing_policy
         ).async_policy_handler()
         _ = await handle_policy_request(
@@ -59,11 +59,6 @@ class Test_RequestHandler:
             for rec in caplog.records
         )
 
-
-@pytest.mark.asyncio
-class Test_OutboundQuotaHandler:
-    """Tests for the OQP switchboard"""
-
     async def test_handle_policy_request(
         self,
         clear_redis,
@@ -71,9 +66,6 @@ class Test_OutboundQuotaHandler:
         mock_reader_ok,
         mock_writer,
         populated_database_fixture,
-        database_fixture,
-        finalizing_pcadapter,
-        base_adapter_fixture,
     ):
         """
         Verify that when a permissible request is received, it gets an OK.
@@ -280,6 +272,44 @@ class Test_OutboundMultipolicyHandler:
                 await handle_policy_request(mock_reader_sda_auth, mock_writer)
         mock_apr.assert_called_once()
 
+    async def test_missing_user_key(
+        self,
+        clear_redis,
+        clear_redis_sda,
+        null_user_oq_policy,
+        null_user_sda_policy,
+        mock_reader_factory,
+        mock_writer,
+        populated_database_fixture,
+    ):
+        """
+        :GIVEN: that we require a user-key
+        :WHEN: a PPR is evaluated which has no value for the user-key
+        :THEN: the email is rejected and the `no_user_key_response` is returned
+        """
+        OutboundPPR.clear_memoized_routines()
+        no_sasl_reader = mock_reader_factory(
+            sasl_username="", ccert_subject=""
+        )
+        handler = OutboundMultipolicyHandler(
+            [null_user_sda_policy, null_user_oq_policy]
+        )
+        handle_policy_request = handler.async_policy_handler()
+        with pytest.raises(CallableExhausted):
+            # with monkeypatch.context() as m:
+            # mock_apr = Mock(return_value=True)
+            # m.setattr(testing_policy, "approve_policy_request", mock_apr)
+            await handle_policy_request(no_sasl_reader, mock_writer)
+        # meaning the AuthenticationFailureException was handled
+        mock_writer.write.assert_called_with(
+            bytes(
+                "action="
+                + handler.config.chapps.no_user_key_response
+                + "\n\n",
+                handler.config.chapps.payload_encoding,
+            )
+        )
+
     async def test_handle_null_sender(
         self,
         null_sender_policy_sda,
@@ -341,12 +371,3 @@ class Test_OutboundMultipolicyHandler:
                     mock_reader_sda_unauth, mock_writer
                 )
         mock_apr.assert_not_called()
-
-    @pytest.mark.xfail
-    async def test_missing_user_key(self):
-        """
-        :GIVEN: that we require a user-key
-        :WHEN: a PPR is evaluated which has no value for the user-key
-        :THEN: the email is rejected and the `no_user_key_response` is returned
-        """
-        raise NotImplementedError
