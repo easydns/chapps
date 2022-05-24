@@ -155,7 +155,8 @@ class RequestHandler:
                     f"Payload received: {policy_payload.decode('utf-8')}"
                 )
                 policy_data = pprclass(
-                    policy_payload.decode(encoding).split("\n")
+                    policy_payload.decode(encoding).split("\n"),
+                    cfg=self.config,
                 )
                 if policy.approve_policy_request(policy_data):
                     resp = ("action=" + accept + "\n\n").encode()
@@ -211,6 +212,12 @@ class CascadingPolicyHandler:
         self.config = self.policies[
             0
         ].config  # all copies of the config are the same
+        logger.debug(
+            "Grabbing config from file "
+            + self.config.chapps.config_file
+            + " via "
+            + self.policies[0].__class__.__name__
+        )
 
     @cached_property
     def listen_address(self):

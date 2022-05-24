@@ -367,7 +367,7 @@ class PostfixPolicyRequest(Mapping):
 
     """
 
-    def __init__(self, payload: List[str]):
+    def __init__(self, payload: List[str], *args, **kwargs):
         """Store the payload.
 
         :param List[str] payload: strings which are formatted as 'key=val',

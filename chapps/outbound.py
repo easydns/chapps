@@ -7,8 +7,9 @@ only one, which is an outbound-only subclass of
 :py:class:`chapps.util.PostfixPolicyRequest`.
 
 """
+from typing import List
 from chapps.util import PostfixPolicyRequest
-from chapps.config import config
+from chapps.config import config, CHAPPSConfig
 from chapps.signals import ConfigurationError, AuthenticationFailureException
 import logging
 
@@ -46,14 +47,14 @@ class OutboundPPR(PostfixPolicyRequest):
 
     _memoized_routines = dict()
 
-    def __init__(self, payload, *, cfg=None):
+    def __init__(self, payload: List[str], *, cfg: CHAPPSConfig = None):
         """Create a new outbound policy request"""
         super().__init__(payload)
         self._config = cfg or config
-        self._config = self._config.chapps
+        self._params = self._config.chapps
 
     @classmethod
-    def clear_memoized_routines(cls):
+    def clear_memoized_routines(cls) -> None:
         """Clear all memoized routines
 
         This mainly exists to facilitate testing.
@@ -88,7 +89,7 @@ class OutboundPPR(PostfixPolicyRequest):
             )
 
     @property
-    def user(self):
+    def user(self) -> str:
         """Return and memoize the user-identifier.
 
         :returns: the user-identifier
@@ -113,7 +114,7 @@ class OutboundPPR(PostfixPolicyRequest):
             try:
                 self._user = self._get_user()
             except ValueError as e:
-                if self._config.require_user_key:
+                if self._params.require_user_key:
                     raise AuthenticationFailureException()
                 else:
                     raise e
@@ -121,7 +122,7 @@ class OutboundPPR(PostfixPolicyRequest):
 
     # this routine creates and memoizes a routine if need be
     # it also uses that routine to return the value to be used to track a user
-    def _get_user(self):
+    def _get_user(self) -> str:
         """Obtain the user value, and memoize the procedure
 
         In an attempt to support as many different configuration scenarios as
@@ -146,8 +147,9 @@ class OutboundPPR(PostfixPolicyRequest):
         """
         # see if we already have a procedure from some previous iteration
         get_user = self.__class__._memoized_routines.get("get_user", None)
-        cfg = self._config
+        cfg = self._params
         # if there is no procedure, we build one
+        logger.debug("Using config file: " + cfg.config_file)
         if not get_user:
             if cfg.require_user_key:
                 if not cfg.user_key:
@@ -158,6 +160,9 @@ class OutboundPPR(PostfixPolicyRequest):
                         )
                     )
                 qk_list = [cfg.user_key]
+                logger.debug(
+                    f"User key required; {cfg.user_key} must appear in PPRs."
+                )
             else:
                 qk_list = [
                     "sasl_username",
@@ -168,6 +173,10 @@ class OutboundPPR(PostfixPolicyRequest):
                 qk = cfg.user_key
                 if qk and qk != qk_list[0]:
                     qk_list = [qk, *qk_list]
+                logger.debug(
+                    "User key not required.  Using search path: "
+                    + (":".join(qk_list))
+                )
 
             def get_user(ppr):
                 for k in qk_list:
