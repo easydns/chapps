@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 verstr = "CHAPPS v" + __version__
 
+pytestmark = pytest.mark.order(-1)
+
 
 class Test_API_Health:
     """Tests of the overall API"""
