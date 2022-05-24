@@ -7,6 +7,7 @@ import pytest
 
 DEFAULT_CHAPPS_TEST_CONFIG = "etc/chapps/chapps_test.ini"
 DEFAULT_CHAPPS_MOCK_CONFIG = "etc/chapps/chapps_mock.ini"
+DEFAULT_CHAPPS_NULL_CONFIG = "etc/chapps/chapps_null.ini"  # null-user
 DEFAULT_CHAPPS_SENTINEL_CONFIG = "etc/chapps/chapps_sentinel.ini"
 DEFAULT_CHAPPS_TEST_DB_HOST = "localhost"
 DEFAULT_CHAPPS_TEST_DB_NAME = "chapps_test"
@@ -20,8 +21,8 @@ def chapps_remove_testing_config_files():
     for f in config_dir.glob("*.ini"):
         f.unlink()
     yield
-    for f in config_dir.glob("*.ini"):
-        f.unlink()
+    # for f in config_dir.glob("*.ini"):
+    #     f.unlink()
 
 
 @pytest.fixture(scope="session")
@@ -32,6 +33,11 @@ def chapps_test_cfg_path():
 @pytest.fixture(scope="session")
 def chapps_mock_cfg_path():
     return DEFAULT_CHAPPS_MOCK_CONFIG
+
+
+@pytest.fixture(scope="session")
+def chapps_null_cfg_path():
+    return DEFAULT_CHAPPS_NULL_CONFIG
 
 
 @pytest.fixture(scope="session")
@@ -52,6 +58,12 @@ def chapps_mock_env(monkeypatch, chapps_mock_cfg_path):
 
 
 @pytest.fixture
+def chapps_null_env(monkeypatch, chapps_null_cfg_path):
+    monkeypatch.setenv("CHAPPS_CONFIG", chapps_null_cfg_path)
+    return chapps_null_cfg_path
+
+
+@pytest.fixture
 def chapps_sentinel_env(monkeypatch, chapps_sentinel_cfg_path):
     monkeypatch.setenv("CHAPPS_CONFIG", chapps_sentinel_cfg_path)
     return chapps_sentinel_cfg_path
@@ -62,6 +74,43 @@ def chapps_mock_config():
     """Some settings are intentionally left out; their defaults shall prevail"""
     cp = configparser.ConfigParser(interpolation=None)
     cp["CHAPPS"] = {"payload_encoding": "UTF-8", "require_user_key": False}
+    cp["PolicyConfigAdapter"] = {
+        "adapter": "mysql",
+        "db_name": "chapps_test",
+        "db_user": "chapps_test",
+        "db_pass": "screwy%pass${word}",
+    }
+    cp["OutboundQuotaPolicy"] = {
+        "min_delta": 2,
+        "margin": 50.0,
+        "counting_recipients": False,
+        "rejection_message": "554 Rejected because I said so.",
+    }
+    cp["GreylistingPolicy"] = {
+        "rejection_message": "DEFER_IF_PERMIT Service temporarily stupid"
+    }
+    cp["SPFEnforcementPolicy"] = {
+        "whitelist": ["chapps.io"],
+        "adapter": "None",
+    }
+    cp["Redis"] = {
+        "sentinel_master": "",
+        "server": "127.0.0.1",
+        "port": "6379",
+        "db": "1",
+    }
+    return cp
+
+
+@pytest.fixture(scope="session")
+def chapps_null_user_config():
+    """Some settings are intentionally left out; their defaults shall prevail"""
+    cp = configparser.ConfigParser(interpolation=None)
+    cp["CHAPPS"] = {
+        "payload_encoding": "UTF-8",
+        "require_user_key": True,
+        "user_key": "sasl_username",
+    }
     cp["PolicyConfigAdapter"] = {
         "adapter": "mysql",
         "db_name": "chapps_test",
@@ -128,6 +177,13 @@ def chapps_sentinel_config():
 def chapps_mock_config_file(chapps_mock_config, chapps_mock_cfg_path):
     yield from _chapps_mock_config_file(
         chapps_mock_config, chapps_mock_cfg_path
+    )
+
+
+@pytest.fixture(scope="session")
+def chapps_null_config_file(chapps_null_user_config, chapps_null_cfg_path):
+    yield from _chapps_mock_config_file(
+        chapps_null_user_config, chapps_null_cfg_path
     )
 
 

@@ -43,18 +43,19 @@ from chapps.signals import NullSenderException
 seconds_per_day = 3600 * 24
 
 
+def testing_policy_factory(policy_type):
+    newconfig = CHAPPSConfig()
+    return policy_type(newconfig)
+
+
 @fixture
 def testing_policy(chapps_mock_env, chapps_mock_config_file):
-    newconfig = CHAPPSConfig()
-    policy = OutboundQuotaPolicy(newconfig)
-    return policy
+    return testing_policy_factory(OutboundQuotaPolicy)
 
 
 @fixture
 def testing_policy_sda(chapps_mock_env, chapps_mock_config_file):
-    newconfig = CHAPPSConfig()
-    policy = SenderDomainAuthPolicy(newconfig)
-    return policy
+    return testing_policy_factory(SenderDomainAuthPolicy)
 
 
 @fixture
