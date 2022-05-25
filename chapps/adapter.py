@@ -8,10 +8,11 @@ All of these currently interface to MariaDB as a fairly low level.
 A change is planned to convert all of this to use SQLAlchemy.
 
 """
-import mariadb
+import MySQLdb as dbmodule
 import logging
-from chapps.config import config
-from chapps.dbsession import sql_engine, sessionmaker
+from chapps.config import config, CHAPPSConfig
+
+# from chapps.dbsession import sql_engine, sessionmaker
 from chapps.models import User, Domain, Email, Quota
 from contextlib import contextmanager
 from typing import List, Dict, Union, Any
@@ -63,6 +64,7 @@ class PolicyConfigAdapter:
     def __init__(
         self,
         *,
+        cfg: CHAPPSConfig = None,
         db_host: str = None,
         db_port: int = None,
         db_name: str = None,
@@ -80,11 +82,13 @@ class PolicyConfigAdapter:
 
 
         """
-        self.host = db_host or config.adapter.db_host or "127.0.0.1"
-        self.port = db_port or config.adapter.db_port or 3306
-        self.user = db_user or config.adapter.db_user
-        self.pswd = db_pass or config.adapter.db_pass
-        self.db = db_name or config.adapter.db_name
+        self.config = cfg or config
+        self.params = self.config.adapter
+        self.host = db_host or self.params.db_host or "127.0.0.1"
+        self.port = db_port or self.params.db_port or 3306
+        self.user = db_user or self.params.db_user
+        self.pswd = db_pass or self.params.db_pass
+        self.db = db_name or self.params.db_name
         self.autocommit = autocommit
         kwargs = dict(
             user=self.user,
@@ -94,7 +98,7 @@ class PolicyConfigAdapter:
             database=self.db,
             autocommit=self.autocommit,
         )
-        self.conn = mariadb.connect(**kwargs)
+        self.conn = dbmodule.connect(**kwargs)
 
     def finalize(self):
         """Close the database connection."""

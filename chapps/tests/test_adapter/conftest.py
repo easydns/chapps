@@ -2,7 +2,7 @@
 from unittest.mock import Mock
 import pytest
 from pytest import fixture
-import mariadb
+import MySQLdb as dbmodule
 from chapps.adapter import (
     PolicyConfigAdapter,
     MariaDBQuotaAdapter,
@@ -10,11 +10,19 @@ from chapps.adapter import (
 )
 
 
+# @fixture
+# def mock_mariadb(monkeypatch):
+#     """Patch the mariadb module's connect function with a mock"""
+#     monkeypatch.setattr(
+#         mariadb, "connect", Mock(return_value="mock connection")
+#     )
+
+
 @fixture
-def mock_mariadb(monkeypatch):
+def mock_dbmodule(monkeypatch):
     """Patch the mariadb module's connect function with a mock"""
     monkeypatch.setattr(
-        mariadb, "connect", Mock(return_value="mock connection")
+        dbmodule, "connect", Mock(return_value="mock connection")
     )
 
 

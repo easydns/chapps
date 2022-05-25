@@ -1,7 +1,7 @@
 """Tests of CHAPPS adapters module"""
 from unittest.mock import call
 import pytest
-import mariadb
+import MySQLdb as dbmodule
 from chapps.adapter import (
     PolicyConfigAdapter,
     MariaDBQuotaAdapter,
@@ -10,7 +10,7 @@ from chapps.adapter import (
 
 
 class Test_PolicyConfigAdapter:
-    def test_adapter_superclass(self, mock_mariadb):
+    def test_adapter_superclass(self, mock_dbmodule):
         """
         Verify that the adapter stores instance data
         and attempts to open a database connection.
@@ -25,7 +25,7 @@ class Test_PolicyConfigAdapter:
         assert adapter.user == "mockuser"
         assert adapter.db == "mockdb"
         assert adapter.host == "mockhost"
-        assert mariadb.connect.call_args.kwargs == {
+        assert dbmodule.connect.call_args.kwargs == {
             "user": "mockuser",
             "host": "mockhost",
             "port": 3306,
@@ -76,6 +76,7 @@ class Test_MariaDBQuotaAdapter:
         cur.execute("SELECT COUNT(name) FROM quotas")
         assert cur.fetchone()[0] == 3
 
+    # @pytest.mark.xfail  # MySQLdb does not implement close for connections
     def test_finalize(self, mdbqadapter_fixture):
         """
         Verify that MDBQA's finalize routine closes the database connection
@@ -86,8 +87,8 @@ class Test_MariaDBQuotaAdapter:
 
         """
         mdbqadapter_fixture.finalize()
-        with pytest.raises(mariadb.Error):
-            assert mdbqadapter_fixture.conn.cursor()
+        with pytest.raises(dbmodule.OperationalError):
+            assert mdbqadapter_fixture.conn.next_result()
 
     def test_quota_for_user(
         self, populated_database_fixture, finalizing_mdbqadapter
