@@ -24,7 +24,7 @@ from chapps.signals import (
     NullSenderException,
     NotAnEmailAddressException,
 )
-from chapps.rest.models import Quota, SDAStatus
+from chapps.models import Quota, SDAStatus
 from chapps.util import PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
 
@@ -554,8 +554,8 @@ class OutboundQuotaPolicy(EmailPolicy):
 
         :param str user: user-identifier
 
-        :param chapps.rest.models.Quota quota: optional
-          :class:`~chapps.rest.models.Quota` record
+        :param chapps.models.Quota quota: optional
+          :class:`~chapps.models.Quota` record
 
         :returns: (*remaining quota count*, [*remarks*,...])
 
@@ -1101,9 +1101,9 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
         :returns: an SDAStatus corresponding to `result`
 
-        :rtype: chapps.rest.models.SDAStatus
+        :rtype: chapps.models.SDAStatus
 
-        The :class:`Enum` :class:`~chapps.rest.models.SDAStatus` represents
+        The :class:`Enum` :class:`~chapps.models.SDAStatus` represents
         these results as nonexistent, prohibited or authorized respectively.
 
         """
@@ -1126,7 +1126,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
         :returns: the cached policy
 
-        :rtype: chapps.rest.models.SDAStatus
+        :rtype: chapps.models.SDAStatus
 
         """
         return self._decode_policy_cache(

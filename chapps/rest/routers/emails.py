@@ -4,14 +4,14 @@
 
 This module defines the management routes for **Email** records, and also the :class:`~.JoinAssoc` between **Email** and **User** tables.
 
-It is implemented using factory functions from the :mod:`~.common` module, in a nearly-identical way to the :mod:`~.domains` module, just using :class:`~chapps.rest.models.Email` as the main data model.
+It is implemented using factory functions from the :mod:`~.common` module, in a nearly-identical way to the :mod:`~.domains` module, just using :class:`~chapps.models.Email` as the main data model.
 
 """
 
 from typing import List
 from starlette import status
 from fastapi import APIRouter  # , Body, Path, HTTPException
-from chapps.rest.models import (
+from chapps.models import (
     User,
     Email,
     EmailResp,
@@ -21,7 +21,7 @@ from chapps.rest.models import (
     TextResp,
     AssocOperation,
 )
-from .common import (
+from chapps.rest.routers.common import (
     get_item_by_id,
     list_items,
     create_item,

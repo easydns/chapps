@@ -12,7 +12,7 @@ import time
 from urllib.parse import quote as urlencode
 from chapps._version import __version__
 from chapps.policy import TIME_FORMAT
-from chapps.rest.models import SDAStatus
+from chapps.models import SDAStatus
 import logging
 
 logger = logging.getLogger(__name__)

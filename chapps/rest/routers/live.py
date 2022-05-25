@@ -10,10 +10,10 @@ the API is launched.
 from typing import List, Optional
 from fastapi import status, APIRouter, Body, HTTPException
 from sqlalchemy.orm import sessionmaker
-from .users import user_quota_assoc, user_domains_assoc
-from .common import load_model_with_assoc
-from ..dbsession import sql_engine
-from ..models import (
+from chapps.rest.routers.users import user_quota_assoc
+from chapps.rest.routers.common import load_model_with_assoc
+from chapps.dbsession import sql_engine
+from chapps.models import (
     User,
     Domain,
     Email,
@@ -21,8 +21,8 @@ from ..models import (
     TextResp,
     SourceUserMapResp,
 )
-from ...policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
-from ...config import config
+from chapps.policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
+from chapps.config import config
 import hashlib
 import logging
 

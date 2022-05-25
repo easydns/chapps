@@ -25,15 +25,15 @@ from fastapi import status, Depends, Body, HTTPException
 from functools import wraps
 import inspect
 import logging
-from chapps.rest.dbsession import sql_engine
-from chapps.rest.models import (
+from chapps.dbsession import sql_engine
+from chapps.models import (
     CHAPPSModel,
     CHAPPSResponse,
     AssocOperation,
     DeleteResp,
     TextResp,
 )
-from chapps.rest.dbmodels import JoinAssoc
+from chapps.dbmodels import JoinAssoc
 import chapps.logging
 
 logger = logging.getLogger(__name__)
@@ -63,11 +63,11 @@ def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
     return a closure which can work in any context, it does not return a
     coroutine but a standard synchronous closure.
 
-    :param ~chapps.rest.models.CHAPPSModel cls: a data model class
+    :param ~.CHAPPSModel cls: a data model class
     :param assoc: a list of associations (as
       :class:`~.JoinAssoc` objects)
     :param Optional[~sqlalchemy.engine.Engine] engine: defaults to
-      :const:`chapps.rest.dbsession.sql_engine` if not specified
+      :const:`chapps.dbsession.sql_engine` if not specified
     :rtype: callable
     :returns: a closure as follows:
 
@@ -76,7 +76,7 @@ def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
         :param int item_id: if non-zero, the ID of the main record
         :param Optional[str] name: if `item_id` is 0, the `name` of the record
           to match.
-        :rtype: Tuple[~chapps.rest.models.CHAPPSModel, Dict[str, List[~chapps.rest.models.CHAPPSModel]], List[str]]
+        :rtype: Tuple[~.CHAPPSModel, Dict[str, List[~.CHAPPSModel]], List[str]]
         :returns: a :obj:`tuple` containing:
 
           1. the object loaded by ID or name
@@ -146,11 +146,11 @@ def db_interaction(  # a decorator with parameters
 ):
     """Decorator for database interactions
 
-    :param ~chapps.rest.models.CHAPPSModel cls: the data model class
+    :param ~chapps.models.CHAPPSModel cls: the data model class
 
     :param ~sqlalchemy.engine.Engine engine: an :mod:`SQLAlchemy` engine, which
       defaults to the package-wide one declared in
-      :mod:`~chapps.rest.dbsession`
+      :mod:`~chapps.dbsession`
 
     :param str exception_message: a message to include if any untrapped
       exception occurs; defaults to ``{route_name}:{model}``.  Only those two
@@ -225,13 +225,13 @@ def get_item_by_id(
 ):
     """Build a route coroutine to get an item by ID
 
-    :param ~chapps.rest.models.CHAPPSModel cls: the main data model for the request
+    :param ~chapps.models.CHAPPSModel cls: the main data model for the request
 
-    :param ~chapps.rest.models.CHAPPSResponse response_model: the response
+    :param ~chapps.models.CHAPPSResponse response_model: the response
       model
 
     :param ~sqlalchemy.engine.Engine engine: defaults to
-      :const:`~chapps.rest.dbsession.sql_engine`
+      :const:`~chapps.dbsession.sql_engine`
 
     :param List[~chapps.rest.dbmodels.JoinAssoc] assoc: if included, these
       associations will be included as optional keys in the response
@@ -293,14 +293,14 @@ def get_item_by_id(
 def list_items(cls, *, response_model, engine=sql_engine):
     """Build a route coroutine to list items
 
-    :param ~chapps.rest.models.CHAPPSModel cls: the main data model for the
+    :param ~chapps.models.CHAPPSModel cls: the main data model for the
       request
 
-    :param ~chapps.rest.models.CHAPPSResponse response_model: the response
+    :param ~chapps.models.CHAPPSResponse response_model: the response
       model
 
     :param ~sqlalchemy.engine.Engine engine: defaults to
-      :const:`~chapps.rest.dbsession.sql_engine`
+      :const:`~chapps.dbsession.sql_engine`
 
     The returned closure expects to receive the query parameters as a dict,
     since that is what the dependency will return.  Its signature is
@@ -350,7 +350,7 @@ def list_associated(
     :param response_model: the response model
 
     :param sqlalchemy.engine.Engine engine: defaults to
-      :const:`~chapps.rest.dbsession.sql_engine`
+      :const:`~chapps.dbsession.sql_engine`
 
     The returned coroutine will paginate a list of the associated objects,
     given the ID of a main (source) object to use to select associations.  The
@@ -393,11 +393,11 @@ def list_associated(
 def delete_item(cls, *, response_model=DeleteResp, engine=sql_engine):
     """Build a route coroutine to delete an item by ID
 
-    :param ~chapps.rest.models.CHAPPSModel cls: the data model to manage
+    :param ~chapps.models.CHAPPSModel cls: the data model to manage
 
-    :param ~chapps.rest.models.CHAPPSResponse response_model: defaults to :class:`~chapps.rest.models.DeleteResp`
+    :param ~chapps.models.CHAPPSResponse response_model: defaults to :class:`~chapps.models.DeleteResp`
 
-    :param ~sqlalchemy.engine.Engine engine: defaults to :const:`~chapps.rest.dbsession.sql_engine`
+    :param ~sqlalchemy.engine.Engine engine: defaults to :const:`~chapps.dbsession.sql_engine`
 
     The returned coroutine accepts a list of record IDs for the specified
     object type and delete them.  Its signature is:
@@ -440,19 +440,19 @@ def adjust_associations(
 ):
     """Build a route to add or subtract association lists, or set unitary ones
 
-    :param ~chapps.rest.models.CHAPPSModel cls: a data model class
+    :param ~chapps.models.CHAPPSModel cls: a data model class
 
     :param List[~chapps.rest.dbmodels.JoinAssoc] assoc: list of associations to
       operate on
 
-    :param ~chapps.rest.models.AssocOperation assoc_op: operation to perform on
+    :param ~chapps.models.AssocOperation assoc_op: operation to perform on
       the association
 
-    :param ~chapps.rest.models.CHAPPSResponse response_model: the response
+    :param ~chapps.models.CHAPPSResponse response_model: the response
       model to send
 
     :param ~sqlalchemy.engine.Engine engine: defaults to
-      :const:`~chapps.rest.dbsession.sql_engine`
+      :const:`~chapps.dbsession.sql_engine`
 
     The returned coroutine provides logic for a route which adds or subtracts
     elements to or from those already associated with the main object.  Its
@@ -550,15 +550,15 @@ def update_item(
 ):
     """Build a route to update items.
 
-    :param ~chapps.rest.models.CHAPPSModel cls: the main data model
+    :param ~chapps.models.CHAPPSModel cls: the main data model
 
-    :param ~chapps.rest.models.CHAPPSResponse response_model: the response
+    :param ~chapps.models.CHAPPSResponse response_model: the response
       model
 
     :param ~chapps.rest.dbmodels.JoinAssoc assoc: the association to list
 
     :param ~sqlalchemy.engine.Engine engine: defaults to
-      :const:`~chapps.rest.dbsession.sql_engine`
+      :const:`~chapps.dbsession.sql_engine`
 
     The returned coroutine implements an API route for updating an item by ID,
     optionally including any associations included when the route coroutine is
@@ -683,9 +683,9 @@ def create_item(
 ):
     """Build a route coroutine to create new item records
 
-    :param ~chapps.rest.models.CHAPPSModel cls: the main data model
+    :param ~chapps.models.CHAPPSModel cls: the main data model
 
-    :param ~chapps.rest.models.CHAPPSResponse response_model: the response
+    :param ~chapps.models.CHAPPSResponse response_model: the response
       model
 
     :param dict params: defaults to ``dict(name=str)``; specify to provide
@@ -693,11 +693,11 @@ def create_item(
       models currently are expected to have a `name` column, which is not
       allowed to be null.
 
-    :param ~chapps.rest.dbmodels.JoinAssoc assoc: the associations to attach,
+    :param ~.JoinAssoc assoc: the associations to attach,
       if any
 
     :param ~sqlalchemy.engine.Engine engine: defaults to
-      :const:`~chapps.rest.dbsession.sql_engine`
+      :const:`~chapps.dbsession.sql_engine`
 
     The returned coroutine implements an API route for creating an item,
     setting all its elements (other than ID) to whatever values are provided.

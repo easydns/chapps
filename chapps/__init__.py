@@ -11,6 +11,7 @@ from ._version import __version__
 import chapps.logging
 
 __all__ = [
+    "_version",
     "util",
     "config",
     "signals",
@@ -21,4 +22,7 @@ __all__ = [
     "spf_policy",
     "outbound",
     "switchboard",
+    "dbmodels",
+    "models",
+    "dbsession",
 ]

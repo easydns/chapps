@@ -24,7 +24,7 @@ from chapps.tests.test_config.conftest import (
     chapps_sentinel_config_file,
 )
 from chapps.tests.test_policy.conftest import _auto_ppr_param_list, idfn
-from chapps.rest.models import Quota
+from chapps.models import Quota
 from inspect import isclass
 
 seconds_per_day = 3600 * 24

@@ -10,7 +10,7 @@ As such, this is the only router where the factories are used to create or updat
 
 from typing import List
 from fastapi import status, APIRouter
-from ..models import (
+from chapps.models import (
     User,
     Quota,
     Domain,
@@ -24,7 +24,7 @@ from ..models import (
     TextResp,
     AssocOperation,
 )
-from .common import (
+from chapps.rest.routers.common import (
     get_item_by_id,
     list_items,
     create_item,

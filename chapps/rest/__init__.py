@@ -17,4 +17,4 @@ final :class:`~fastapi.FastAPI` object.
   do.
 
 """
-__all__ = ["dbmodels", "dbsession", "models", "api", "routers"]
+__all__ = ["api", "routers"]

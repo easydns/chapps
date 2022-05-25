@@ -82,7 +82,7 @@ so there are some response models to use in such cases.
 """
 
 from chapps.config import config
-from chapps.rest import dbmodels
+from chapps import dbmodels
 from typing import Optional, List, Dict
 from pydantic import BaseModel, constr, Field, validator
 from pydantic.main import ModelMetaclass
@@ -97,7 +97,7 @@ class AssocOperation(str, Enum):
     """'add', 'subtract', or 'replace'
 
     use 'replace' only with unitary associations; logic in
-    :class:`~chapps.rest.dbmodels.JoinAssoc` which responds
+    :class:`~.JoinAssoc` which responds
     to the `replace` operation is designed to work only with
     scalar values.
 
@@ -161,7 +161,7 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
 
     All models should define a class called `Meta` and define within it a
     variable called `orm_model` as a reference to the ORM model class
-    (generally defined in :mod:`chapps.rest.dbmodels`) corresponding to the
+    (generally defined in :mod:`.dbmodels`) corresponding to the
     data model.  In this abstract superclass, the ORM model reference is to the
     parallel abstract ORM model superclass.
 
@@ -210,7 +210,7 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
 
     @classmethod
     def join_assoc(cls, **kwargs) -> dbmodels.JoinAssoc:
-        """Create a :class:`~chapps.rest.dbmodels.JoinAssoc` with this class as the source
+        """Create a :class:`~.JoinAssoc` with this class as the source
 
         :param str assoc_name: attribute name of the association
 
@@ -227,7 +227,7 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
           schema; it will be a constant in this module, generally
 
         This convenience routine for generating a
-        :class:`~chapps.rest.dbmodels.JoinAssoc` provides the source model and
+        :class:`~.JoinAssoc` provides the source model and
         ID-column info as it passes on the other arguments.
 
         """

@@ -8,20 +8,18 @@ in order to access the database according to the configured credentials.
 """
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
-from chapps.config import config
+from chapps.config import config, CHAPPSConfig
 
 DIALECT_MAP = dict(mariadb="mysql", mysql="mysql")
 """Map dialects to drivers, for DBI URL construction"""
 
 
-def create_db_url(cfg=None) -> URL:
+def create_db_url(cfg: CHAPPSConfig = None) -> URL:
     """Create a DBI URL for initializing :mod:`SQLAlchemy`
 
-    :param ~chapps.config.CHAPPSConfig cfg: optional config override
+    :param cfg: optional config override
 
     :returns: `URL <https://docs.sqlalchemy.org/en/14/core/engines.html#sqlalchemy.engine.URL>`_ instance for use in accessing the database
-
-    :rtype: sqlalchemy.engine.URL
 
     """
     cfg = cfg or config

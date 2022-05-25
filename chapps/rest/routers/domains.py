@@ -18,7 +18,7 @@ below, as part of the `.api` docstring.
 from typing import List
 from starlette import status
 from fastapi import APIRouter  # , Body, Path, HTTPException
-from chapps.rest.models import (
+from chapps.models import (
     User,
     Domain,
     DomainResp,
@@ -28,7 +28,7 @@ from chapps.rest.models import (
     TextResp,
     AssocOperation,
 )
-from .common import (
+from chapps.rest.routers.common import (
     get_item_by_id,
     list_items,
     create_item,

@@ -139,7 +139,7 @@ class DB_Customizations(DeclarativeMeta):
     def update_by_id(cls, item):
         """Return an Update statement for the specified item
 
-        :param type cls: an ORM model class (subclass of :const:`~chapps.rest.dbmodels.DB_Base`)
+        :param type cls: an ORM model class (subclass of :const:`~.DB_Base`)
         :param cls item: an instance of an ORM model of the type stored in `cls`
 
         :returns: an :class:`~sqlalchemy.sql.expression.Update` statement object representing the new values of `item`

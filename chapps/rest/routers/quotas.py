@@ -15,8 +15,8 @@ object.
 """
 
 from fastapi import APIRouter, status
-from chapps.rest.models import Quota, QuotaResp, QuotasResp, DeleteResp
-from .common import (
+from chapps.models import Quota, QuotaResp, QuotasResp, DeleteResp
+from chapps.rest.routers.common import (
     get_item_by_id,
     list_items,
     create_item,
