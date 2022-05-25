@@ -8,6 +8,7 @@ in order to access the database according to the configured credentials.
 """
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
+from sqlalchemy.orm import sessionmaker
 from chapps.config import config, CHAPPSConfig
 
 DIALECT_MAP = dict(mariadb="mysql", mysql="mysql")

@@ -11,6 +11,8 @@ A change is planned to convert all of this to use SQLAlchemy.
 import mariadb
 import logging
 from chapps.config import config
+from chapps.dbsession import sql_engine, sessionmaker
+from chapps.models import User, Domain, Email, Quota
 from contextlib import contextmanager
 from typing import List, Dict, Union, Any
 
