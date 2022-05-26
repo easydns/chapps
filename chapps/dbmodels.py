@@ -248,7 +248,7 @@ class Domain(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer primary key"""
-    name = Column(String(64))
+    name = Column(String(64), unique=True)
     """unique string of 64 chars or less"""
 
     def __repr__(self):
@@ -266,7 +266,7 @@ class Email(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer primary key"""
-    name = Column(String(128))
+    name = Column(String(128), unique=True)
     """unique string of 128 chars or less"""
 
     def __repr__(self):
@@ -451,12 +451,8 @@ class JoinAssoc:
             ins = [{self.source_id: item_id, self.assoc_id: assoc}]
         return ins
 
-    def where_tuples(self, item_id: int, assoc):
-        """Get tuples suitable for use in an SQLAlchemy WHERE clause
-
-        :param int item_id:
-
-        """
+    def where_tuples(self, item_id: int, assoc: Union[int, List[int]]):
+        """Get tuples suitable for use in an SQLAlchemy WHERE clause"""
         try:
             i = iter(assoc)
             res = [(item_id, val) for val in i]

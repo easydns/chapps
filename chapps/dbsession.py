@@ -6,7 +6,7 @@ This module's purpose is to present a simple and unencumbered module to include
 in order to access the database according to the configured credentials.
 
 """
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
 from chapps.config import config, CHAPPSConfig
