@@ -26,26 +26,7 @@ logger = logging.getLogger(__name__)  # pragma: no cover
 
 
 class SQLAPolicyConfigAdapter:
-    """Base class for policy config access
-
-    Right now, all of the adapters use MariaDB, but this will change
-    (as noted below).
-    Non-database adapters could also be created, which might use a
-    flat file, or a blockchain, or some sort of other API interaction,
-    to be the source of policy data.
-
-    Ideally there should be a second-level base class called something like
-    `MariaDBPolicyConfigAdapter` which would hold all the SQL-specific stuff,
-    but that would make a lot more sense if
-
-      a) there were going to be a lot of weird, different adapters.  We may yet get there!
-      b) there were anything else to put in the base class
-
-    For now, however, this
-    class serves to store instructions about how to create the **User** table,
-    since they are used for everything, just about.
-
-    """
+    """Base class for policy config access using SQLAlchemy_"""
 
     def __init__(
         self,
@@ -70,27 +51,20 @@ class SQLAPolicyConfigAdapter:
         """
         self.config = cfg or config
         self.params = self.config.adapter
-        self.host = db_host or self.params.db_host or "127.0.0.1"
-        self.port = db_port or self.params.db_port or 3306
-        self.user = db_user or self.params.db_user
-        self.pswd = db_pass or self.params.db_pass
-        self.db = db_name or self.params.db_name
-        self.autocommit = autocommit
-        kwargs = dict(
-            user=self.user,
-            password=self.pswd,
-            host=self.host,
-            port=int(self.port),
-            database=self.db,
-            autocommit=self.autocommit,
-        )
         # specifically: use the global engine unless we were passed a config
+        # logger.debug("Using config file: " + config.chapps.config_file)
+        if cfg:
+            logger.debug(
+                "Passed override config based on " + cfg.chapps.config_file
+            )
+        # logger.debug("Global sql_engine is " + str(sql_engine))
         self.sql_engine = (
             create_engine(create_db_url(cfg)) if cfg else sql_engine
         )
+        # logger.debug("Using sql_engine " + str(self.sql_engine))
 
     def finalize(self):
-        """Session-based access closes at the end of the context, so no-op"""
+        """Do nothing.  A no-op to maintain backward compatibility."""
         pass
 
     def _initialize_tables(self):
@@ -103,10 +77,10 @@ class SQLAPolicyConfigAdapter:
         .. _metadata: https://docs.sqlalchemy.org/en/14/tutorial/metadata.html#id1
 
         """
-        DB_Base.metadata.create_all()
+        dbmodels.DB_Base.metadata.create_all(self.sql_engine)
 
 
-class SQLAQuotaAdapter(PolicyConfigAdapter):
+class SQLAQuotaAdapter(SQLAPolicyConfigAdapter):
     """An adapter for obtaining quota policy data from MariaDB
        using SQLAlchemy_
 
@@ -120,11 +94,14 @@ class SQLAQuotaAdapter(PolicyConfigAdapter):
         """
         Session = sessionmaker(self.sql_engine)
         with Session() as sess:
-            u = sess.execute(User.select_by_name(user)).scalar()
-            return u.quota.quota
+            try:
+                u = sess.execute(User.select_by_name(user)).scalar()
+                return u.quota.quota
+            except AttributeError:
+                return None
 
 
-class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
+class SQLASenderDomainAuthAdapter(SQLAPolicyConfigAdapter):
     """An adapter to obtain sender domain authorization data from MariaDB"""
 
     def check_domain_for_user(self, user: str, domain: str) -> bool:

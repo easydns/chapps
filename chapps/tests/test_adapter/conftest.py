@@ -8,6 +8,12 @@ from chapps.adapter import (
     MariaDBQuotaAdapter,
     MariaDBSenderDomainAuthAdapter,
 )
+from chapps.sqla_adapter import (
+    SQLAPolicyConfigAdapter,
+    SQLAQuotaAdapter,
+    SQLASenderDomainAuthAdapter,
+)
+from chapps.config import CHAPPSConfig
 
 
 # @fixture
@@ -36,6 +42,27 @@ def _adapter_fixture(fixtype):
     return adapter
 
 
+def mock_chapps_config():
+    cffg = Mock(
+        adapter=Mock(
+            adapter="mariadb",
+            db_host="localhost",
+            db_name="chapps_test",
+            db_user="chapps_test",
+            db_pass="screwy%pass${word}",
+            db_port="3306",
+        ),
+        chapps=Mock(config_file="actually a mock"),
+    )
+    return cffg
+
+
+# meant to be provided output from a configuration-mocker
+def _sqla_adapter_fixture(fixtype, cfg: CHAPPSConfig = None):
+    adapter = fixtype(cfg=cfg or mock_chapps_config())
+    return adapter
+
+
 def _database_fixture(finalizing_adapter):
     cur = finalizing_adapter.conn.cursor()
     cur.execute("DROP DATABASE IF EXISTS chapps_test")
@@ -48,6 +75,21 @@ def _database_fixture(finalizing_adapter):
 @fixture
 def base_adapter_fixture():
     return _adapter_fixture(PolicyConfigAdapter)
+
+
+@fixture
+def sqla_pc_adapter_fixture():
+    return _sqla_adapter_fixture(SQLAPolicyConfigAdapter)
+
+
+@fixture
+def sqla_oqp_adapter_fixture():
+    return _sqla_adapter_fixture(SQLAQuotaAdapter)
+
+
+@fixture
+def sqla_sda_adapter_fixture():
+    return _sqla_adapter_fixture(SQLASenderDomainAuthAdapter)
 
 
 @fixture
