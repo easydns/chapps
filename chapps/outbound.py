@@ -149,7 +149,7 @@ class OutboundPPR(PostfixPolicyRequest):
         get_user = self.__class__._memoized_routines.get("get_user", None)
         cfg = self._params
         # if there is no procedure, we build one
-        logger.debug("Using config file: " + cfg.config_file)
+        # logger.debug("Using config file: " + cfg.config_file)
         if not get_user:
             if cfg.require_user_key:
                 if not cfg.user_key:
@@ -160,9 +160,9 @@ class OutboundPPR(PostfixPolicyRequest):
                         )
                     )
                 qk_list = [cfg.user_key]
-                logger.debug(
-                    f"User key required; {cfg.user_key} must appear in PPRs."
-                )
+                # logger.debug(
+                #     f"User key required; {cfg.user_key} must appear in PPRs."
+                # )
             else:
                 qk_list = [
                     "sasl_username",
@@ -173,18 +173,18 @@ class OutboundPPR(PostfixPolicyRequest):
                 qk = cfg.user_key
                 if qk and qk != qk_list[0]:
                     qk_list = [qk, *qk_list]
-                logger.debug(
-                    "User key not required.  Using search path: "
-                    + (":".join(qk_list))
-                )
+                # logger.debug(
+                #     "User key not required.  Using search path: "
+                #     + (":".join(qk_list))
+                # )
 
             def get_user(ppr):
                 for k in qk_list:
                     user = getattr(ppr, k, None)
                     if user and user != "None":
-                        logger.debug(
-                            f"Selecting user-identifier {user} from key {k}"
-                        )
+                        # logger.debug(
+                        #     f"Selecting user-identifier {user} from key {k}"
+                        # )
                         return user
                 raise ValueError(
                     (
