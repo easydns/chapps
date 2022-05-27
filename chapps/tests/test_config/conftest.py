@@ -2,7 +2,6 @@
 
 from pathlib import Path
 import configparser
-import mariadb
 import pytest
 
 DEFAULT_CHAPPS_TEST_CONFIG = "etc/chapps/chapps_test.ini"
