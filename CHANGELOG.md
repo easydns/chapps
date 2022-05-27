@@ -17,10 +17,12 @@
       reason to build it dynamically.
 	- There is now content validation for Domain and Email records.
 	- The data models and database-session related modules created for
-      the API have been relocated into the core of the project, as a
-      prelude to using the models and generalized SQLAlchemy-powered
-      database routines throughout the codebase, for consistency and
-      to reduce dependency count.
+      the API have been relocated into the core of the project.
+	- The adapter has been modified to use mysqlclient instead of
+      mariadb (Python packages).
+    - A new, SQLAlchemy-powered adapter layer has been included but as
+	  yet tests are not complete, and so there is no way to actually
+	  use it currently.
 
 ###v0.4.6:
 	- Correcting dependency misalignments in setup.cfg which were preventing
