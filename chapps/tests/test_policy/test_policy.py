@@ -518,7 +518,7 @@ class Test_OutboundQuotaPolicy:
         Verify that underquota users' emails are approved.
         """
         caplog.set_level(logging.DEBUG)
-        populate_redis(allowable_ppr.sender, 100, well_spaced_attempts(80))
+        populate_redis(allowable_ppr.user, 100, well_spaced_attempts(80))
         policy = OutboundQuotaPolicy()
         assert policy.approve_policy_request(allowable_ppr)
 
@@ -529,7 +529,7 @@ class Test_OutboundQuotaPolicy:
         Verify that the last bit of a quota can be used.
         """
         caplog.set_level(logging.DEBUG)
-        populate_redis(allowable_ppr.sender, 100, well_spaced_attempts(99))
+        populate_redis(allowable_ppr.user, 100, well_spaced_attempts(99))
         policy = OutboundQuotaPolicy()
         assert policy.approve_policy_request(allowable_ppr)
 
@@ -542,7 +542,7 @@ class Test_OutboundQuotaPolicy:
         caplog.set_level(logging.DEBUG)
         recipient_count = len(groupsend_ppr.recipient.split(","))
         populate_redis(
-            groupsend_ppr.sender,
+            groupsend_ppr.user,
             100,
             well_spaced_attempts(100 - recipient_count),
         )
@@ -564,7 +564,7 @@ class Test_OutboundQuotaPolicy:
         # create a PPR reflecting 8 recipients
         groupsend_ppr = multisend_ppr_factory("underquota@chapps.io", 8)
         # for the sender, set a limit of 100, a margin of 10, and 95 well-spaced send attempts
-        populate_redis(groupsend_ppr.sender, 100, well_spaced_attempts(95), 10)
+        populate_redis(groupsend_ppr.user, 100, well_spaced_attempts(95), 10)
         policy = OutboundQuotaPolicy()
         # even though this would be 3 emails overquota, it should be allowed anyway, by the margin
         assert policy.approve_policy_request(groupsend_ppr)
@@ -576,7 +576,7 @@ class Test_OutboundQuotaPolicy:
         """
         Verify that overquota users are rejected.
         """
-        populate_redis(overquota_ppr.sender, 100, well_spaced_attempts(150))
+        populate_redis(overquota_ppr.user, 100, well_spaced_attempts(150))
         policy = OutboundQuotaPolicy()
         assert not policy.approve_policy_request(overquota_ppr)
 
@@ -593,7 +593,7 @@ class Test_OutboundQuotaPolicy:
 
         """
         groupsend_ppr = multisend_ppr_factory("overquota@chapps.io", 20)
-        populate_redis(groupsend_ppr.sender, 100, well_spaced_attempts(95), 10)
+        populate_redis(groupsend_ppr.user, 100, well_spaced_attempts(95), 10)
         policy = OutboundQuotaPolicy()
         assert not policy.approve_policy_request(groupsend_ppr)
 
@@ -606,9 +606,7 @@ class Test_OutboundQuotaPolicy:
         the margin.
         """
         caplog.set_level(logging.DEBUG)
-        populate_redis(
-            groupsend_ppr.sender, 100, well_spaced_attempts(101), 10
-        )
+        populate_redis(groupsend_ppr.user, 100, well_spaced_attempts(101), 10)
         policy = OutboundQuotaPolicy()
         assert not policy.approve_policy_request(groupsend_ppr)
         assert any(
@@ -622,7 +620,7 @@ class Test_OutboundQuotaPolicy:
         """
         Verify that attempts which come too fast will be rejected.
         """
-        populate_redis(allowable_ppr.sender, 200, rapid_attempts(20))
+        populate_redis(allowable_ppr.user, 200, rapid_attempts(20))
         policy = OutboundQuotaPolicy()
         assert not policy.approve_policy_request(allowable_ppr)
 
@@ -639,7 +637,7 @@ class Test_OutboundQuotaPolicy:
         THEN  we will return the cached value of the instance (which really only matters on approval)
         """
         populate_redis(
-            allowable_ppr.sender, 200, well_spaced_double_attempts(100)
+            allowable_ppr.user, 200, well_spaced_double_attempts(100)
         )
         policy = OutboundQuotaPolicy()
         policy.instance_cache[allowable_ppr.instance] = False
