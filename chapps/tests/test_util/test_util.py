@@ -48,10 +48,11 @@ class Test_PostfixPolicyRequest:
         :WHEN:  an attribute is requested
         :THEN:  its value (from the payload) should be returned
         """
-        pprp = postfix_policy_request_message()
+        pprp = postfix_policy_request_message(sender="srs=ccullen@easydns.com")
         new_ppr = PostfixPolicyRequest(pprp)
 
-        for k, v in [l.split("=") for l in pprp[0:-2]]:
+        for k, *vs in [l.split("=") for l in pprp[0:-2]]:
+            v = "=".join(vs)
             assert getattr(new_ppr, k, None) == v
 
     def test_dereference(self, postfix_policy_request_message):
@@ -63,7 +64,8 @@ class Test_PostfixPolicyRequest:
         pprp = postfix_policy_request_message()
         new_ppr = PostfixPolicyRequest(pprp)
 
-        for k, v in [l.split("=") for l in pprp[0:-2]]:
+        for k, *vs in [l.split("=") for l in pprp[0:-2]]:
+            v = "=".join(vs)
             assert new_ppr[k] == v
 
     def test_iterable(self, postfix_policy_request_message):
