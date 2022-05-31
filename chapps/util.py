@@ -414,8 +414,9 @@ class PostfixPolicyRequest(Mapping):
             (l for l in self._payload if attr == l.split("=")[0]), None
         )
         if line:
-            key, *value = line.split("=")
-            setattr(self, key, "=".join(value))
+            key, *values = line.split("=")
+            value = "=".join(values)
+            setattr(self, key, value)
             return value
         else:
             logger.debug(f"No lines in {self} matched {attr}.")
