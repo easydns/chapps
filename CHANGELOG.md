@@ -2,6 +2,13 @@
 
 ## Alpha Releases
 
+###v0.4.8:
+    - Urgent fixes release: some PPR field values may contain `=`
+	  which will cause parsing to fail spectacularly.  A fix is
+	  included in this version.
+	- A missing software dependency which impeded operation of the
+      previous version has also been added (`email-validator`).
+
 ###v0.4.7:
 	- Fixed uncaught error on nonexistent user-identifier when the
       user-key is required.  The application now sends the expected
