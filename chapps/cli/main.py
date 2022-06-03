@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from pathlib import Path
 import typer
 
-app = typer.Typer()
+app = typer.Typer(help="CHAPPS Configuration Management CLI")
 Session = sessionmaker(sql_engine)
 association = {
     "Email": user_emails_assoc,
@@ -23,7 +23,7 @@ association = {
 }
 
 MIN_IMPORT_LINE_LENGTH = 6 + 5 + 4  # assuming tiniest emails and domains
-"""There is always an operation and there are 2 colons, for a minimum of 6"""
+"""There is always an operation and there are 2 colons, username, and a resource"""
 
 
 class CHAPPS_CLI_Exception(Exception):
@@ -58,7 +58,6 @@ def assocType(resource):
     .. todo::
 
       Add validation to resource-type ID in CLI
-
     """
     return Email if "@" in resource else Domain
 
@@ -68,7 +67,41 @@ def handle_cli_exceptions():
     try:
         yield
     except UnrecoverableException as e:
-        raise SystemExit(str(e))
+        raise typer.Exit(code=1)
+
+
+def _print(msg):
+    typer.echo(msg)
+
+
+def _b(msg):
+    return typer.style(msg, fg=typer.colors.WHITE, bold=True)
+
+
+def _red(msg):
+    return typer.style(msg, fg=typer.colors.RED, bold=True)
+
+
+def _yellow(msg):
+    return typer.style(msg, fg=typer.colors.YELLOW, bold=True, underline=True)
+
+
+def _alert(msg):
+    b = _red(">>>")
+    e = _red("<<<")
+    m = _yellow(msg)
+    return " ".join([b, m, e])
+
+
+def user_or_die(sess: Session, username: str) -> Optional[str]:
+    user = sess.execute(User.select_by_name(username)).scalar()
+    if user is None:
+        _print(
+            f"Cannot find user {_b(username)}\nPerhaps they "
+            "are identified some other way?"
+        )
+        raise NoSuchUserException(f"No such user '{username}'.")
+    return user
 
 
 def showUser(username: str, *, quota: bool = False):
@@ -79,7 +112,7 @@ def showUser(username: str, *, quota: bool = False):
         emails = Email.wrap(user.emails)
         domains = Domain.wrap(user.domains)
         user = User.wrap(user)
-        print(
+        _print(
             f"User: {user}\n  Quota: {u_quota}\n  E: {emails}\n  D: {domains}"
         )
     if quota and q:
@@ -87,33 +120,32 @@ def showUser(username: str, *, quota: bool = False):
         avail, remarks = oqp.current_quota(username, q)
         limit = oqp.redis.get(oqp._fmtkey(username, "limit"))
         limit = limit.decode("utf-8") if limit else "none"
-        print(f"Outbound email quota remaining: {avail}/{limit} (cached)")
-        print("\n".join(remarks))
+        _print(f"Outbound email quota remaining: {_b(avail)}/{limit} (cached)")
+        if remarks:
+            _print("\n".join(remarks))
     if q is None:
-        print(
-            ">>> This user has no quota policy assigned and so "
-            "cannot send mail <<<"
+        _print(
+            _alert(
+                "This user has no quota policy assigned and so "
+                "cannot send mail"
+            )
         )
     if len(domains) + len(emails) < 1:
-        print(
-            ">>> This user has no domains or emails assigned"
-            "and so cannot send mail <<<"
+        _print(
+            _alert(
+                "This user has no domains or emails assigned "
+                "and so cannot send mail"
+            )
         )
-
-
-def user_or_die(sess: Session, username: str) -> Optional[str]:
-    user = sess.execute(User.select_by_name(username)).scalar()
-    if user is None:
-        print(
-            f"Cannot find user {username}; perhaps they "
-            "are identified some other way?"
-        )
-        raise NoSuchUserException(f"No such user '{username}'.")
-    return user
 
 
 @app.command()
 def allow(username: str, email_or_domain: str, create: bool = False):
+    """Permit a user to send email from a domain or as a whole email address
+
+    Pass the --create flag to this command in order to allow creation of
+    nonexistent Email or Domain entries.
+    """
     with handle_cli_exceptions():
         return _allow(username, email_or_domain, create)
 
@@ -127,14 +159,14 @@ def _allow(username: str, email_or_domain: str, create: bool = False):
                 assoc_type.select_by_name(email_or_domain)
             ).scalar()
             if create and (assoc is None):
-                print(
+                _print(
                     f"Creating {assoc_type.__name__.lower()} "
                     f"'{email_or_domain}'."
                 )
                 try:
                     sess.add(assoc_type.Meta.orm_model(name=email_or_domain))
                 except IntegrityError as e:
-                    print(
+                    _print(
                         f"  Encountered integrity error: {e}; "
                         "attempting to look up resource afresh."
                     )
@@ -143,9 +175,9 @@ def _allow(username: str, email_or_domain: str, create: bool = False):
                     assoc_type.select_by_name(email_or_domain)
                 ).scalar()
             if assoc is None:
-                print(
+                _print(
                     "Unable to find or create "
-                    f"{assoc_type.__name__.lower()} '{email_or_domain}'."
+                    f"{assoc_type.__name__.lower()} '{_b(email_or_domain)}'."
                 )
                 raise NoSuchAssocException(
                     f"No such {assoc_type.__name__.lower()} '{email_or_domain}'."
@@ -155,7 +187,7 @@ def _allow(username: str, email_or_domain: str, create: bool = False):
                     user.id, assoc.id
                 )
             )
-            print(
+            _print(
                 f"Allowing user '{username}' to send from "
                 f"{assoc_type.__name__.lower()} '{assoc.name}'"
             )
@@ -167,6 +199,11 @@ def _allow(username: str, email_or_domain: str, create: bool = False):
 
 @app.command()
 def deny(username: str, email_or_domain: str):
+    """Prevent a user sending email appearing to come from a domain or email
+
+    Both entities must already exist; not having any record for a domain
+    or email means no one has permission.
+    """
     with handle_cli_exceptions():
         return _deny(username, email_or_domain)
 
@@ -179,8 +216,8 @@ def _deny(username: str, email_or_domain: str, *args):
             assoc_type.select_by_name(email_or_domain)
         ).scalar()
         if assoc is None:
-            print(
-                f"No {assoc_type.__name__.lower()} named '{email_or_domain}'"
+            _print(
+                f"No {assoc_type.__name__.lower()} named '{_b(email_or_domain)}'"
                 f" could be found.  Please check the spelling and try again."
             )
             raise NoSuchAssocException(
@@ -189,7 +226,7 @@ def _deny(username: str, email_or_domain: str, *args):
         sess.execute(
             association[assoc_type.__name__].delete_assoc(user.id, assoc.id)
         )
-        print(
+        _print(
             f"Denying user '{username}' ability to send from "
             f"{assoc_type.__name__.lower()} '{assoc.name}'"
         )
@@ -198,7 +235,19 @@ def _deny(username: str, email_or_domain: str, *args):
 
 
 @app.command()
-def reset(username: str):
+def reset(username: str, refresh: bool = True):
+    """Reset a user's quota, making it seem they've sent no email
+
+    CHAPPS keeps a day-long log of all attempts to send email.  This routine
+    drops those records for the named user.  It reports the length of the list
+    before and after, for clarity and verification.
+
+    If this routine discovers that the cached sending limit in Redis does not
+    match the current contents of the policy configuration database, it will
+    cause Redis to be updated with the correct data from the policy database.
+    Provide the --no-refresh flag to suppress this behavior.
+
+    """
     with handle_cli_exceptions():
         with Session() as sess:
             user = user_or_die(sess, username)
@@ -207,17 +256,20 @@ def reset(username: str):
         attkey = oqp._fmtkey(username, "attempts")
         limitkey = oqp._fmtkey(username, "limit")
         old_att = oqp.redis.zrange(attkey, 0, -1)
-        old_limit = oqp.redis.get(limitkey).decode("utf-8")
+        old_limit = oqp.redis.get(limitkey)
+        old_limit = int(old_limit.decode("utf-8")) if old_limit else None
         oqp.redis.delete(attkey)
         new_att = oqp.redis.zrange(attkey, 0, -1)
-        print(
+        _print(
             f"Dropped {len(old_att)} xmits from log; new log has "
             f"{len(new_att) if new_att else 0}"
         )
-        if old_limit != quota.quota:
-            print(
-                f"Cached quota {old_limit} does not match quota policy limit "
-                f"{quota.quota}; adjusting."
+        if quota and refresh and (old_limit != quota.quota):
+            _print(
+                _b(
+                    f"Cached quota {old_limit} does not match quota policy "
+                    f"limit {quota.quota}; adjusting."
+                )
             )
             oqp.refresh_policy_cache(username, quota)
         showUser(username, quota=True)
@@ -225,19 +277,30 @@ def reset(username: str):
 
 @app.command()
 def refresh(username: str):
+    """Refresh quota policy cache for a user
+
+    This syncs up CHAPPS's operational idea of a user's limit with their
+    configured limit in the policy database.
+    """
     with handle_cli_exceptions():
         with Session() as sess:
             user = user_or_die(sess, username)
             quota = user.quota
-        print(f"Refreshing quota policy cache for user '{username}'")
+        _print(f"Refreshing quota policy cache for user '{username}'")
         OutboundQuotaPolicy().refresh_policy_cache(username, quota)
         showUser(username, quota=True)
 
 
 @app.command()
 def show(username: str, quota: bool = False):
+    """Show data about a user's configuration
+
+    Supply the --quota flag to see real-time data about available quota and
+    cached quota limit.
+
+    """
     with handle_cli_exceptions():
-        showUser(username, quota=True)
+        showUser(username, quota=quota)
 
 
 operation_map = dict(allow=_allow, deny=_deny)
@@ -245,9 +308,34 @@ operation_map = dict(allow=_allow, deny=_deny)
 
 @app.command()
 def import_file(filename: str, create: bool = False):
+    """Import a permissions assigment file
+
+    Provided for simplifying entry of large amounts of data at once.  This
+    routine is not currently optimized for 1000s of entries, but should be okay
+    for 100s.
+
+    This feature runs successive `allow` or `deny` commands, as specified by
+    the first token in the line, using the next two tokens as the user and the
+    resource in that order, just like on the commandline.  In the file, the
+    tokens are separated by colons (:) without spaces.  Leading and trailing
+    whitespace is ignored.  Lines starting with a hash mark (#) are ignored, as
+    are lines under 15 characters in length.
+
+    As an example, to allow user `caleb@chapps.io` to send email which appears to
+    originate from `chapps.com`, create an entry in the import file like so:
+
+      allow:caleb@chapps.io:chapps.com
+
+    Pass the filename as an argument to the import_file command.
+
+    Optionally, supply the --create flag to be passed through to allow, in
+    order to allow nonexistent resources to be created.
+
+    """
     import_path = Path(filename)
     if not import_path.exists():
-        raise SystemExit(f"No such file as {filename} can be found.")
+        _print("Cannot find " + _b(filename))
+        raise typer.Exit(code=1)
     exceptions = []
     with import_path.open("r") as fh:
         lineno = 0
@@ -256,13 +344,13 @@ def import_file(filename: str, create: bool = False):
             line = line.strip()
             if (len(line) < MIN_IMPORT_LINE_LENGTH) or (line[0] == "#"):
                 continue
-            print(f"\nLine {lineno}:")
+            _print(f"\nLine {lineno}:")
             try:
                 operation, user, resource = line.split(":")
                 op = operation_map[operation]
                 op(user, resource, create)
             except ValueError as e:
-                print(
+                _print(
                     "Lines are expected to be three tokens separated by ':' "
                     "(colon); the tokens themselves may not contain colons."
                 )
@@ -270,18 +358,21 @@ def import_file(filename: str, create: bool = False):
                 continue
             except KeyError:
                 msg = f"Nonexistent operation {operation}"
-                print(msg)
+                _print(msg)
                 exceptions.append(f"Line {lineno}: {msg}")
                 continue
             except UnrecoverableException as e:
+                # no print here as the other routines generally do that
                 exceptions.append(f"Line {lineno}: {e}")
                 continue
     if exceptions:
-        print(
-            "\nThe following lines of the input file caused exceptions and"
-            " were not executed:"
+        _print(
+            _b(
+                "\nThe following lines of the input file caused exceptions and"
+                " were not executed:"
+            )
         )
-        print("\n".join(exceptions))
+        _print("\n".join(exceptions))
 
 
 if __name__ == "__main__":
