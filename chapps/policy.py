@@ -548,7 +548,7 @@ class OutboundQuotaPolicy(EmailPolicy):
         return m
 
     def current_quota(
-        self, user: str, quota: Optional[Quota]
+        self, user: str, quota: Optional[Quota] = None
     ) -> Tuple[int, List[str]]:
         """Provide real-time remaining quota for a user
 
