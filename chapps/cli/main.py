@@ -44,6 +44,10 @@ class NoSuchAssocException(UnrecoverableException):
     """No matching associated resource could be found"""
 
 
+class NoSuchQuotaException(UnrecoverableException):
+    """No matching quota record cold be found"""
+
+
 class ImportParseError(UnrecoverableException):
     """A line in the imported file could not be parsed"""
 
@@ -303,7 +307,33 @@ def show(username: str, quota: bool = False):
         showUser(username, quota=quota)
 
 
-operation_map = dict(allow=_allow, deny=_deny)
+@app.command()
+def set_quota(username: str, quota: str):
+    """Assign a user an existing quota
+
+    The user and quota are both referred to by their names.
+
+    This command cannot create Quota records.
+    """
+    with handle_cli_exceptions():
+        return _set_quota(username, quota)
+
+
+def _set_quota(username: str, quota: str, *args):
+    with Session() as sess:
+        user = user_or_die(sess, username)
+        quota_orm = sess.execute(Quota.select_by_name(quota)).scalar()
+        if quota_orm:
+            _print(f"Assigning quota '{quota}' to user '{username}'")
+            user.quota = quota_orm
+            sess.commit()
+        else:
+            _print(f"Unable to find a quota named '{_b(quota)}'")
+            raise NoSuchQuotaException("No such quota " + quota)
+    showUser(username)
+
+
+operation_map = dict(allow=_allow, deny=_deny, quota=_set_quota)
 
 
 @app.command()
@@ -314,17 +344,24 @@ def import_file(filename: str, create: bool = False):
     routine is not currently optimized for 1000s of entries, but should be okay
     for 100s.
 
-    This feature runs successive `allow` or `deny` commands, as specified by
-    the first token in the line, using the next two tokens as the user and the
-    resource in that order, just like on the commandline.  In the file, the
-    tokens are separated by colons (:) without spaces.  Leading and trailing
-    whitespace is ignored.  Lines starting with a hash mark (#) are ignored, as
-    are lines under 15 characters in length.
+    This feature runs successive `allow`, `deny` or `set-quota` commands, as
+    specified by the first token in the line:
+
+      ['allow', 'deny', 'quota']:<user>:<email,domain, or quota>
+
+    using the next two tokens as the user and the resource in that order, just
+    like on the commandline.  In the file, the tokens are separated by colons
+    (:) without spaces.  Leading and trailing whitespace is ignored.  Lines
+    starting with a hash mark (#) are ignored, as are lines under 15 characters
+    in length.
 
     As an example, to allow user `caleb@chapps.io` to send email which appears to
     originate from `chapps.com`, create an entry in the import file like so:
 
       allow:caleb@chapps.io:chapps.com
+      quota:caleb@chapps.io:Q1000
+
+    The second line assigns the quota named `Q1000` to the user `caleb@chapps.io`.
 
     Pass the filename as an argument to the import_file command.
 
