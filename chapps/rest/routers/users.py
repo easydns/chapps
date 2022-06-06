@@ -182,7 +182,7 @@ async def map_usernames_to_quota_ids(
     ]
     if not nulls:
         uqm = [e for e in uqm if e]
-    return BulkQuotaResp.send(user_quota_map, remarks=remarks)
+    return BulkQuotaResp.send(uqm)
 
 
 api.get("/{item_id}", response_model=UserResp)(

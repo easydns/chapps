@@ -90,7 +90,7 @@ async def get_bulk_quota_remaining(user_ids: List[int]) -> BulkQuotaResp:
     uqm = load_users_with_quota(user_ids)
     for user in uqm:
         avail, rmks = oqp.current_quota(user.name, user.quota)
-        response.push(dict(user_name=user.name, quota_avail=avail))
+        response.append(dict(user_name=user.name, quota_avail=avail))
         remarks.extend(rmks)
     return BulkQuotaResp.send(response, remarks=remarks)
 

@@ -171,7 +171,7 @@ def load_models_with_assoc(
                     item_ids, getattr(cls.Meta.orm_model, assoc.assoc_name)
                 )
             )
-        return list(eager_loaded_models)
+            return list(eager_loaded_models)
 
     map_model_names_to_assoc.__name__ = fname
     return map_model_names_to_assoc
