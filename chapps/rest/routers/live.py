@@ -11,7 +11,10 @@ from typing import List, Optional
 from fastapi import status, APIRouter, Body, HTTPException
 from sqlalchemy.orm import sessionmaker
 from chapps.rest.routers.users import user_quota_assoc
-from chapps.rest.routers.common import load_model_with_assoc
+from chapps.rest.routers.common import (
+    load_model_with_assoc,
+    load_models_with_assoc,
+)
 from chapps.dbsession import sql_engine
 from chapps.models import (
     User,
@@ -20,6 +23,7 @@ from chapps.models import (
     LiveQuotaResp,
     TextResp,
     SourceUserMapResp,
+    BulkQuotaResp,
 )
 from chapps.policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
 from chapps.config import config
@@ -60,6 +64,35 @@ in this module, in order to produce the live API documentation.  As a result,
 they have been kept simpler than in some other modules.
 
 """
+
+load_users_with_quota = load_models_with_assoc(User, assoc=user_quota_assoc)
+"""Create a username to quota id mapping function
+
+:param item_ids: list of **User** ids to associate to quotas
+
+:returns: a list of user ORM objects with associated quotas
+
+"""
+
+
+@api.get("/quota/", response_model=BulkQuotaResp)
+async def get_bulk_quota_remaining(user_ids: List[int]) -> BulkQuotaResp:
+    """Accepts a list of user ids.
+
+    Returns a list of JSON objects with attributes named `user_name` and
+    `quota_avail`, representing the remaining number of email transmissions
+    available to that user at the moment the query was executed.
+
+    """
+    remarks = []
+    response = []
+    oqp = OutboundQuotaPolicy()
+    uqm = load_users_with_quota(user_ids)
+    for user in uqm:
+        avail, rmks = oqp.current_quota(user.name, user.quota)
+        response.append(dict(user_name=user.name, quota_avail=avail))
+        remarks.extend(rmks)
+    return BulkQuotaResp.send(response, remarks=remarks)
 
 
 @api.get("/quota/{user_id}", response_model=LiveQuotaResp)

@@ -441,7 +441,8 @@ class PostfixPolicyRequest(Mapping):
         """
         if not getattr(self, "_mapping", None):
             self._mapping = {
-                k: v for k, v in [l.split("=") for l in self._payload]
+                k: "=".join(vs)
+                for k, *vs in [l.split("=") for l in self._payload]
             }
             # Since we end up parsing the entire payload
             # optimize it for future random access

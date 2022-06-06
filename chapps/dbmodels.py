@@ -24,7 +24,7 @@ required for the database side:
 .. _orm models: https://docs.sqlalchemy.org/en/14/orm/quickstart.html
 
 """
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Any
 from sqlalchemy import (
     Column,
     Integer,
@@ -41,6 +41,7 @@ from sqlalchemy.orm import (
     relationship,
     backref,
     DeclarativeMeta,
+    selectinload,
 )
 import logging
 import chapps.logging
@@ -108,6 +109,16 @@ class DB_Customizations(DeclarativeMeta):
             .limit(limit)
             .order_by(cls.id)
         )
+        return stmt
+
+    def select_by_ids(cls, ids: List[int], assoc: Optional[Any] = None):
+        """Return a select statement for a list of objects,
+           optionally with eager-loaded associations
+        """
+        stmt = select(cls).where(tuple_(cls.id).in_([(i,) for i in ids]))
+        if assoc:
+            stmt = stmt.options(selectinload(assoc))
+        stmt = stmt.order_by(cls.id)
         return stmt
 
     def select_names_by_id(cls, ids: List[int]):

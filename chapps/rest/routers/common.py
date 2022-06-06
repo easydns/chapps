@@ -137,6 +137,46 @@ def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
     return get_model_and_assoc
 
 
+def load_models_with_assoc(
+    cls: CHAPPSModel, *, assoc: JoinAssoc, engine=sql_engine
+) -> callable:
+    """Build a map of source name => associated object id
+
+    :param cls: source model
+
+    :param assoc: a join association representing the associated model
+
+    :param engine: override the SQLA engine if desired
+
+    :returns: a mapper function which accepts a list of IDs of the source model
+      and returns a list of dicts with `<source_model>_name` and
+      `<assoc_model>_id` fields, mapping the source objects onto the IDs of
+      their associated objects of the configured type.
+
+    .. todo::
+
+      Employ eager loading on the target association.
+
+    """
+    mname = model_name(cls)
+    fname = f"eager_load_{mname}_with_{assoc.assoc_name}"
+    Session = sessionmaker(engine)
+
+    def map_model_names_to_assoc(
+        item_ids: List[int],  # name_tail: Optional[str] = None
+    ):
+        with Session() as sess:
+            eager_loaded_models = sess.scalars(
+                cls.select_by_ids(
+                    item_ids, getattr(cls.Meta.orm_model, assoc.assoc_name)
+                )
+            )
+            return list(eager_loaded_models)
+
+    map_model_names_to_assoc.__name__ = fname
+    return map_model_names_to_assoc
+
+
 def db_interaction(  # a decorator with parameters
     *,
     cls,

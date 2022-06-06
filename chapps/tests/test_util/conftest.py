@@ -35,7 +35,7 @@ def _postfix_policy_request_payload():
         email="ccullen@easydns.com", recipients=None, instance=None, **kwargs
     ):
         namespace = dict(
-            sender=email,
+            sender=f"{email}",
             sasl_username=email,
             ccert_subject=email,
             helo_name="mail.chapps.io",

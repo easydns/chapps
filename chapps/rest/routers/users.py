@@ -8,7 +8,7 @@ As such, this is the only router where the factories are used to create or updat
 
 """
 
-from typing import List
+from typing import List, Optional
 from fastapi import status, APIRouter
 from chapps.models import (
     User,
@@ -23,6 +23,7 @@ from chapps.models import (
     IntResp,
     TextResp,
     AssocOperation,
+    BulkQuotaResp,
 )
 from chapps.rest.routers.common import (
     get_item_by_id,
@@ -32,6 +33,7 @@ from chapps.rest.routers.common import (
     update_item,
     adjust_associations,
     list_associated,
+    load_models_with_assoc,
 )
 import logging
 import chapps.logging
@@ -136,6 +138,8 @@ user_emails_assoc = User.join_assoc(
 
 user_join_assoc = [user_quota_assoc, user_domains_assoc, user_emails_assoc]
 
+load_users_with_quota = load_models_with_assoc(User, assoc=user_quota_assoc)
+
 api.post(
     "/",
     status_code=201,
@@ -150,6 +154,35 @@ api.delete("/", response_model=DeleteResp)(delete_item(User))
 api.get("/", response_model=UsersResp)(
     list_items(User, response_model=UsersResp)
 )
+
+
+@api.get("/quotas/", response_model=BulkQuotaResp)
+async def map_usernames_to_quota_ids(
+    user_ids: List[int], nulls: Optional[int] = 1
+):
+    """Map **User** identfiers onto **Quota** ids
+
+    If a display requires a large matrix of users with their quota settings,
+    this routine may be helpful.  The **Quota** records may be fetched before
+    or after, just once for each kind of quota, and then cross-referenced much
+    more efficiently than requesting each separately.
+
+    The `response` contains a list of JSON objects (hashes or dictionaries),
+    with the keys `user_name` and `quota_id`.  Only existing users are
+    returned, possibly with `quota_id` set to `None` if the user has no quota
+    policy assigned.  They are sorted by the user's ID value.
+
+    """
+    users_with_quotas = load_users_with_quota(user_ids)
+    uqm = [
+        {"user_name": u.name, "quota_id": u.quota.id if u.quota else None}
+        if u
+        else None
+        for u in users_with_quotas
+    ]
+    if not nulls:
+        uqm = [e for e in uqm if e]
+    return BulkQuotaResp.send(uqm)
 
 
 api.get("/{item_id}", response_model=UserResp)(

@@ -402,6 +402,26 @@ class Test_Users_API:
             "version": verstr,
         }
 
+    @pytest.mark.timeout(2)
+    def test_user_quota_mapping(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.get("/users/quotas/", json=[1, 2, 3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                {"user_name": "ccullen@easydns.com", "quota_id": "1"},
+                {"user_name": "somebody@chapps.io", "quota_id": "2"},
+                {"user_name": "bigsender@chapps.io", "quota_id": "3"},
+            ],
+            "remarks": [],
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
 
 class Test_Domains_API:
     """Tests of the Domain CRUD API"""
@@ -898,6 +918,35 @@ class Test_Live_API:
         assert response.json() == {
             "response": 140,
             "remarks": [f"Last send attempt was at {last_try}"],
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    def test_bulk_avail_quota(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture,
+        populate_redis,
+        well_spaced_attempts,
+    ):
+        attempts = well_spaced_attempts(100)
+        users = [
+            ["ccullen@easydns.com", 240],
+            ["somebody@chapps.io", 1200],
+            ["bigsender@chapps.io", 4800],
+        ]
+        for u in users:
+            populate_redis(u[0], u[1], attempts)
+        last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
+        response = testing_api_client.get("/live/quota/", json=[1, 2, 3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                dict(user_name=u[0], quota_avail=str(u[1] - 100))
+                for u in users
+            ],
+            "remarks": [f"Last send attempt was at {last_try}"] * 3,
             "timestamp": fixed_time,
             "version": verstr,
         }

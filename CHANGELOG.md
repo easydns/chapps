@@ -2,6 +2,23 @@
 
 ## Alpha Releases
 
+###v0.4.9:
+	- The beginnings of a CLI, in order to allow direct, command-line
+	  level control of permissions, creating **Email** and **Domain**
+	  records, quota assignment, file-based permissions and quota
+	  import, real-time quota checking, reset and refresh, and
+	  descriptive help messages.
+	- Adding new dependency on `typer` for the CLI, with extended
+      dependencies for `typer`: `colorama` and `shellingham`
+	- Adding bulk query operations for **Quota** records and status.
+	  As separate routes, **User** ids may be supplied to:
+		  - receive a list mapping **User** name to **Quota** id
+		    (policy setting -- from the User section)
+	      - available quota (real-time availability based
+		    on cached policy, from the Live section)
+	  The live route also generates some human-oriented remarks about unusual
+	  situations encountered while running.
+
 ###v0.4.8:
     - Urgent fixes release: some PPR field values may contain `=`
 	  which will cause parsing to fail spectacularly.  A fix is
