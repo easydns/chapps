@@ -2,6 +2,15 @@
 
 ## Alpha Releases
 
+###v0.4.9:
+	- The beginnings of a CLI, in order to allow direct, command-line
+	  level control of permissions, creating **Email** and **Domain**
+	  records, quota assignment, file-based permissions and quota
+	  import, real-time quota checking, reset and refresh, and
+	  descriptive help messages.
+	- Adding new dependency on `typer` for the CLI, with extended
+      dependencies for `typer`: `colorama` and `shellingham`
+
 ###v0.4.8:
     - Urgent fixes release: some PPR field values may contain `=`
 	  which will cause parsing to fail spectacularly.  A fix is
