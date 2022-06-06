@@ -137,6 +137,63 @@ def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
     return get_model_and_assoc
 
 
+def model_name_assoc_id_mapper(
+    cls: CHAPPSModel, *, assoc: JoinAssoc, engine=sql_engine
+) -> callable:
+    """Build a map of source name => associated object id
+
+    :param cls: source model
+
+    :param assoc: a join association representing the associated model
+
+    :param engine: override the SQLA engine if desired
+
+    :returns: a mapper function which accepts a list of IDs of the source model
+      and returns a list of dicts with `<source_model>_name` and
+      `<assoc_model>_id` fields, mapping the source objects onto the IDs of
+      their associated objects of the configured type.
+
+    .. todo::
+
+      Employ eager loading on the target association.
+
+    """
+    mname = model_name(cls)
+    fname = f"load_{mname}_name_mapped_to_{assoc.assoc_model.id_name()}"
+    Session = sessionmaker(engine)
+
+    def map_model_names_to_assoc_ids(
+        item_ids: List[int],  # name_tail: Optional[str] = None
+    ):
+        remarks = []
+        response = []
+        name_key = f"{mname}_name"
+        id_key = assoc.assoc_model.id_name()
+        with Session() as sess:
+            for item_id in item_ids:
+                item = sess.scalar(cls.select_by_id(item_id))
+                if not item:
+                    remarks.push(
+                        f"No {mname} id: {item_id} could be loaded."
+                        " Skipping."
+                    )
+                    response.push(None)
+                    continue
+                assoc_orm = getattr(item, assoc.assoc_name)
+                if not assoc_orm:
+                    remarks.push(
+                        f"No {assoc.assoc_name} is associated with {mname} "
+                        f"id: {item_id}"
+                    )
+                    response.push({name_key: item.name, id_key: None})
+                    continue
+                response.push({name_key: item.name, id_key: assoc_orm.id})
+        return response, remarks
+
+    map_model_names_to_assoc_ids.__name__ = fname
+    return map_model_names_to_assoc_ids
+
+
 def db_interaction(  # a decorator with parameters
     *,
     cls,

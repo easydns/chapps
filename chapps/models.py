@@ -83,7 +83,7 @@ so there are some response models to use in such cases.
 
 from chapps.config import config
 from chapps import dbmodels
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 from pydantic import BaseModel, constr, Field, validator
 from pydantic.main import ModelMetaclass
 from enum import Enum
@@ -460,6 +460,17 @@ class SourceUserMapResp(CHAPPSResponse):
 
     response: Dict[str, Dict[str, SDAStatus]]
     """A map of auth-subject to dicts of username mapping to status"""
+
+
+class BulkQuotaResp(CHAPPSResponse):
+    """
+    Maps **User** `name` onto **Quota** `id`
+
+    With descriptive labels and optional remarks (about exceptions)
+    """
+
+    response: List[Dict[str, Union[str, int]]]
+    remarks: List[str] = []
 
 
 class DeleteResp(TextResp):
