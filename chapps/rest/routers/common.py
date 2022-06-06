@@ -137,7 +137,7 @@ def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
     return get_model_and_assoc
 
 
-def model_name_assoc_id_mapper(
+def load_models_with_assoc(
     cls: CHAPPSModel, *, assoc: JoinAssoc, engine=sql_engine
 ) -> callable:
     """Build a map of source name => associated object id
@@ -159,39 +159,22 @@ def model_name_assoc_id_mapper(
 
     """
     mname = model_name(cls)
-    fname = f"load_{mname}_name_mapped_to_{assoc.assoc_model.id_name()}"
+    fname = f"eager_load_{mname}_with_{assoc.assoc_name}"
     Session = sessionmaker(engine)
 
-    def map_model_names_to_assoc_ids(
+    def map_model_names_to_assoc(
         item_ids: List[int],  # name_tail: Optional[str] = None
     ):
-        remarks = []
-        response = []
-        name_key = f"{mname}_name"
-        id_key = assoc.assoc_model.id_name()
         with Session() as sess:
-            for item_id in item_ids:
-                item = sess.scalar(cls.select_by_id(item_id))
-                if not item:
-                    remarks.push(
-                        f"No {mname} id: {item_id} could be loaded."
-                        " Skipping."
-                    )
-                    response.push(None)
-                    continue
-                assoc_orm = getattr(item, assoc.assoc_name)
-                if not assoc_orm:
-                    remarks.push(
-                        f"No {assoc.assoc_name} is associated with {mname} "
-                        f"id: {item_id}"
-                    )
-                    response.push({name_key: item.name, id_key: None})
-                    continue
-                response.push({name_key: item.name, id_key: assoc_orm.id})
-        return response, remarks
+            eager_loaded_models = sess.scalars(
+                cls.select_by_ids(
+                    item_ids, getattr(cls.Meta.orm_model, assoc.assoc_name)
+                )
+            )
+        return list(eager_loaded_models)
 
-    map_model_names_to_assoc_ids.__name__ = fname
-    return map_model_names_to_assoc_ids
+    map_model_names_to_assoc.__name__ = fname
+    return map_model_names_to_assoc
 
 
 def db_interaction(  # a decorator with parameters
