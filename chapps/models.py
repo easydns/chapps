@@ -469,7 +469,7 @@ class BulkQuotaResp(CHAPPSResponse):
     With descriptive labels and optional remarks (about exceptions)
     """
 
-    response: List[Dict[str, Union[str, int]]]
+    response: List[Dict[str, Union[str, int, None]]]
     remarks: List[str] = []
 
 
