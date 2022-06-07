@@ -2,6 +2,9 @@
 
 ## Alpha Releases
 
+###v0.4.12:
+    - Hopefully merging in SQLAlchemy database adapter layer
+
 ###v0.4.11:
 	- Adding bulk policy access for user-domains and user-emails along
       the same lines as the bulk quota policy query.  Lists of
