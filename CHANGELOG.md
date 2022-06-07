@@ -3,7 +3,8 @@
 ## Alpha Releases
 
 ###v0.4.12:
-    - Hopefully merging in SQLAlchemy database adapter layer
+    - Adding missing documentation to new bulk user-domain and
+      user-email auth policy routes.
 
 ###v0.4.11:
 	- Adding bulk policy access for user-domains and user-emails along

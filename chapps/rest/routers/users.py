@@ -190,6 +190,19 @@ async def map_usernames_to_quota_ids(user_ids: List[int]):
 
 @api.get("/domains/", response_model=BulkDomainsResp)
 async def map_usernames_to_domain_ids(user_ids: List[int]):
+    """Map **User** identfiers onto **Domain** id lists
+
+    If a display requires a large matrix of users with their domain authorizations,
+    this routine may be helpful.  The **Domain** records may be fetched before
+    or after, just once for each domain, and then cross-referenced much
+    more efficiently than requesting each separately.
+
+    The `response` contains a list of JSON objects (hashes or dictionaries),
+    with the keys `user_name` and `domain_ids`.  Only existing users are
+    returned, possibly with `domain_ids` set to `None` if the user has no
+    domain authorizations.  They are sorted by the user's ID value.
+
+    """
     users_with_domains = load_users_with_domains(user_ids)
     if not users_with_domains:
         return BulkDomainsResp.send([], ["No listed user IDs existed."])
@@ -203,6 +216,19 @@ async def map_usernames_to_domain_ids(user_ids: List[int]):
 
 @api.get("/emails/", response_model=BulkEmailsResp)
 async def map_usernames_to_email_ids(user_ids: List[int]):
+    """Map **User** identfiers onto **Email** id lists
+
+    If a display requires a large matrix of users with their email authorizations,
+    this routine may be helpful.  The **Email** records may be fetched before
+    or after, just once for each email, and then cross-referenced much
+    more efficiently than requesting each separately.
+
+    The `response` contains a list of JSON objects (hashes or dictionaries),
+    with the keys `user_name` and `email_ids`.  Only existing users are
+    returned, possibly with `email_ids` set to `None` if the user has no
+    email authorizations.  They are sorted by the user's ID value.
+
+    """
     users_with_emails = load_users_with_emails(user_ids)
     if not users_with_emails:
         return BulkEmailsResp.send([], ["No listed user IDs existed."])
