@@ -2,6 +2,21 @@
 
 ## Alpha Releases
 
+###v0.4.11:
+	- Adding bulk policy access for user-domains and user-emails along
+      the same lines as the bulk quota policy query.  Lists of
+      **Domain** or **Email** ids are returned, tagged with the name
+      of the user.  Keys: `user_name`, `domain_ids` or `email_ids`
+	- Edge condition testing is performed only once because all three
+      of these routines are based on the same factory which is already
+      being tested.
+	- CLI file location changed w/i the repo, called `chapps-cli`,
+      made executable, added `version` command to detect current
+      CHAPPS version.
+	- HTTPExceptions were accidentally being trapped by the DB
+      interaction wrappers; this has been resolved so that 409s are
+      returned properly in such cases.
+
 ###v0.4.10:
 	- Correcting some internal server errors raised under certain
       circumstances by the new API routines for bulk Quota queries.
