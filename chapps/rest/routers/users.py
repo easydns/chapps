@@ -157,9 +157,7 @@ api.get("/", response_model=UsersResp)(
 
 
 @api.get("/quotas/", response_model=BulkQuotaResp)
-async def map_usernames_to_quota_ids(
-    user_ids: List[int], nulls: Optional[int] = 1
-):
+async def map_usernames_to_quota_ids(user_ids: List[int]):
     """Map **User** identfiers onto **Quota** ids
 
     If a display requires a large matrix of users with their quota settings,
@@ -174,14 +172,13 @@ async def map_usernames_to_quota_ids(
 
     """
     users_with_quotas = load_users_with_quota(user_ids)
+    if not users_with_quotas:
+        return BulkQuotaResp.send([], ["No listed user IDs existed."])
     uqm = [
         {"user_name": u.name, "quota_id": u.quota.id if u.quota else None}
-        if u
-        else None
         for u in users_with_quotas
+        if u
     ]
-    if not nulls:
-        uqm = [e for e in uqm if e]
     return BulkQuotaResp.send(uqm)
 
 

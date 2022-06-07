@@ -422,6 +422,36 @@ class Test_Users_API:
             "version": verstr,
         }
 
+    @pytest.mark.timeout(2)
+    def test_user_quota_mapping_with_breakage(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_breakage,
+    ):
+        response = testing_api_client.get("/users/quotas/", json=[1, 2, 3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                {"user_name": "ccullen@easydns.com", "quota_id": None},
+                {"user_name": "bigsender@chapps.io", "quota_id": "3"},
+            ],
+            "remarks": [],
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_user_quota_mapping_with_empty_return(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_breakage,
+    ):
+        response = testing_api_client.get("/users/quotas/", json=[2])
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Unable to find a matching user"}
+
 
 class Test_Domains_API:
     """Tests of the Domain CRUD API"""
@@ -947,6 +977,39 @@ class Test_Live_API:
                 for u in users
             ],
             "remarks": [f"Last send attempt was at {last_try}"] * 3,
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    def test_bulk_avail_quota_with_breakage(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_breakage,
+        populate_redis,
+        well_spaced_attempts,
+    ):
+        attempts = well_spaced_attempts(100)
+        users = [
+            ["ccullen@easydns.com", 240],
+            ["somebody@chapps.io", 1200],
+            ["bigsender@chapps.io", 4800],
+        ]
+        for u in users:
+            populate_redis(u[0], u[1], attempts)
+        last_try = time.strftime(TIME_FORMAT, time.gmtime(attempts[-1]))
+        response = testing_api_client.get("/live/quota/", json=[1, 2, 3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                dict(user_name=u[0], quota_avail=str(u[1] - 100))
+                for u in [users[0], users[2]]
+            ],
+            "remarks": [
+                f"Last send attempt was at {last_try}",
+                f"There is no quota configured for user {users[0][0]}.",
+                f"Last send attempt was at {last_try}",
+            ],
             "timestamp": fixed_time,
             "version": verstr,
         }

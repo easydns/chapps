@@ -13,6 +13,7 @@ from chapps.tests.test_adapter.conftest import (
     database_fixture,
     populated_database_fixture,
     populated_database_fixture_with_extras,
+    populated_database_fixture_with_breakage,
 )
 from chapps.tests.test_util.conftest import (
     postfix_policy_request_message,

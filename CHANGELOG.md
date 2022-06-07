@@ -2,6 +2,19 @@
 
 ## Alpha Releases
 
+###v0.4.10:
+	- Correcting some internal server errors raised under certain
+      circumstances by the new API routines for bulk Quota queries.
+      This fix may also address some other situations which were less
+      pressing.
+	- Added a synchronous (regular callable) DB interaction decorator
+	  in order to standardize the handling of DB exceptions and of
+	  HTTPException raising when the result set is empty.  This was part
+	  of fixing the problems with the bulk routines.
+	- Added a factory for creating object listers which accept ID
+      lists and ensure that arbitrary associations are loaded on the
+      returned models.
+
 ###v0.4.9:
 	- The beginnings of a CLI, in order to allow direct, command-line
 	  level control of permissions, creating **Email** and **Domain**
