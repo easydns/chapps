@@ -10,6 +10,7 @@ from chapps.rest.routers.users import (
     user_domains_assoc,
 )
 from chapps.dbsession import sql_engine, sessionmaker
+from chapps._version import __version__
 from sqlalchemy.exc import IntegrityError
 from pathlib import Path
 import typer
@@ -141,6 +142,12 @@ def showUser(username: str, *, quota: bool = False):
                 "and so cannot send mail"
             )
         )
+
+
+@app.command()
+def version():
+    """Report the current CHAPPS version"""
+    _print(f"This is CHAPPS version {__version__}")
 
 
 @app.command()

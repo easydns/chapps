@@ -423,6 +423,49 @@ class Test_Users_API:
         }
 
     @pytest.mark.timeout(2)
+    def test_user_domains_mapping(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.get("/users/domains/", json=[1, 2, 3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                {"user_name": "ccullen@easydns.com", "domain_ids": [1]},
+                {"user_name": "somebody@chapps.io", "domain_ids": [1]},
+                {"user_name": "bigsender@chapps.io", "domain_ids": [1, 2]},
+            ],
+            "remarks": [],
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_user_emails_mapping(
+        self,
+        fixed_time,
+        testing_api_client,
+        populated_database_fixture_with_extras,
+    ):
+        response = testing_api_client.get("/users/emails/", json=[1, 2, 3])
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": [
+                {"user_name": "ccullen@easydns.com", "email_ids": [1]},
+                {"user_name": "somebody@chapps.io", "email_ids": [2]},
+                {
+                    "user_name": "bigsender@chapps.io",
+                    "email_ids": [2, 3, 4, 5],
+                },
+            ],
+            "remarks": [],
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
     def test_user_quota_mapping_with_breakage(
         self,
         fixed_time,
@@ -439,6 +482,18 @@ class Test_Users_API:
             "remarks": [],
             "timestamp": fixed_time,
             "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_user_create_duplicate(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.post(
+            "/users/", json=dict(name="ccullen@easydns.com")
+        )
+        assert response.status_code == 409
+        assert response.json() == {
+            "detail": "Unique key conflict creating user."
         }
 
     @pytest.mark.timeout(2)

@@ -226,6 +226,7 @@ setup(
         *SERVICES,
         "services/null_filter.py",
         "install/chapps_database_init.py",
+        "services/chapps-cli",
     ],
     version=verstr,
     license="MIT",

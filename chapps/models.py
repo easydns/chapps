@@ -466,11 +466,30 @@ class BulkQuotaResp(CHAPPSResponse):
     """
     Maps **User** `name` onto **Quota** `id`
 
-    With descriptive labels and optional remarks (about exceptions)
+    With descriptive labels and optional remarks (from the live API)
     """
 
     response: List[Dict[str, Union[str, int, None]]]
     remarks: List[str] = []
+
+
+class BulkDomainsResp(CHAPPSResponse):
+    """
+    Maps **User** `name` onto lists of **Domain** `id`
+
+    With descriptive labels and optional remarks (from the live API)
+    """
+
+    response: List[Dict[str, Union[str, List[int], None]]]
+    remarks: List[str] = []
+
+
+class BulkEmailsResp(BulkDomainsResp):
+    """
+    Maps **User** `name` onto lists of **Email** `id`
+
+    With descriptive labels and optional remarks (from the live API)
+    """
 
 
 class DeleteResp(TextResp):

@@ -242,6 +242,8 @@ def db_wrapper(  # a decorator with parameters
                     result = db_func(*args, **kwargs)
                     if result:
                         return result
+                except HTTPException as e:
+                    raise e
                 except Exception:
                     logger.exception(exc + f"({args!r},{kwargs!r})")
             raise HTTPException(status_code=404, detail=empty)
@@ -321,6 +323,8 @@ def db_interaction(  # a decorator with parameters
                     result = await rt_coro(*args, **kwargs)
                     if result:
                         return result
+                except HTTPException as e:
+                    raise e
                 except Exception:
                     logger.exception(exc + f"({args!r},{kwargs!r})")
             raise HTTPException(status_code=404, detail=empty)
