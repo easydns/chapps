@@ -9,21 +9,13 @@ from chapps.adapter import (
     MariaDBSenderDomainAuthAdapter,
 )
 
-# from chapps.sqla_adapter import (
-#     SQLAPolicyConfigAdapter,
-#     SQLAQuotaAdapter,
-#     SQLASenderDomainAuthAdapter,
-# )
+from chapps.sqla_adapter import (
+    SQLAPolicyConfigAdapter,
+    SQLAQuotaAdapter,
+    SQLASenderDomainAuthAdapter,
+)
 
-# from chapps.config import CHAPPSConfig
-
-
-# @fixture
-# def mock_mariadb(monkeypatch):
-#     """Patch the mariadb module's connect function with a mock"""
-#     monkeypatch.setattr(
-#         mariadb, "connect", Mock(return_value="mock connection")
-#     )
+from chapps.config import CHAPPSConfig
 
 
 @fixture
@@ -44,25 +36,25 @@ def _adapter_fixture(fixtype):
     return adapter
 
 
-# def mock_chapps_config():
-#     cffg = Mock(
-#         adapter=Mock(
-#             adapter="mariadb",
-#             db_host="localhost",
-#             db_name="chapps_test",
-#             db_user="chapps_test",
-#             db_pass="screwy%pass${word}",
-#             db_port="3306",
-#         ),
-#         chapps=Mock(config_file="actually a mock"),
-#     )
-#     return cffg
+def mock_chapps_config():
+    cffg = Mock(
+        adapter=Mock(
+            adapter="mariadb",
+            db_host="localhost",
+            db_name="chapps_test",
+            db_user="chapps_test",
+            db_pass="screwy%pass${word}",
+            db_port="3306",
+        ),
+        chapps=Mock(config_file="actually a mock"),
+    )
+    return cffg
 
 
-# meant to be provided output from a configuration-mocker
-# def _sqla_adapter_fixture(fixtype, cfg=None):
-#     adapter = fixtype(cfg=cfg or mock_chapps_config())
-#     return adapter
+# # meant to be provided output from a configuration-mocker
+def _sqla_adapter_fixture(fixtype, cfg=None):
+    adapter = fixtype(cfg=cfg or mock_chapps_config())
+    return adapter
 
 
 def _database_fixture(finalizing_adapter):
@@ -79,19 +71,19 @@ def base_adapter_fixture():
     return _adapter_fixture(PolicyConfigAdapter)
 
 
-# @fixture
-# def sqla_pc_adapter_fixture():
-#     return _sqla_adapter_fixture(SQLAPolicyConfigAdapter)
+@fixture
+def sqla_pc_adapter_fixture():
+    return _sqla_adapter_fixture(SQLAPolicyConfigAdapter)
 
 
-# @fixture
-# def sqla_oqp_adapter_fixture():
-#     return _sqla_adapter_fixture(SQLAQuotaAdapter)
+@fixture
+def sqla_oqp_adapter_fixture():
+    return _sqla_adapter_fixture(SQLAQuotaAdapter)
 
 
-# @fixture
-# def sqla_sda_adapter_fixture():
-#     return _sqla_adapter_fixture(SQLASenderDomainAuthAdapter)
+@fixture
+def sqla_sda_adapter_fixture():
+    return _sqla_adapter_fixture(SQLASenderDomainAuthAdapter)
 
 
 @fixture
@@ -103,32 +95,6 @@ def finalizing_pcadapter(base_adapter_fixture):
 @fixture
 def database_fixture(finalizing_pcadapter):
     yield from _database_fixture(finalizing_pcadapter)
-
-
-@fixture
-def mdbqadapter_fixture():
-    return _mdbqadapter_fixture()
-
-
-def _mdbqadapter_fixture():
-    return _adapter_fixture(MariaDBQuotaAdapter)
-
-
-@fixture
-def finalizing_mdbqadapter(mdbqadapter_fixture):
-    yield mdbqadapter_fixture
-    mdbqadapter_fixture.finalize()
-
-
-@fixture
-def mdbsdaadapter_fixture():
-    return _adapter_fixture(MariaDBSenderDomainAuthAdapter)
-
-
-@fixture
-def finalizing_mdbsdaadapter(mdbsdaadapter_fixture):
-    yield mdbsdaadapter_fixture
-    mdbsdaadapter_fixture.finalize()
 
 
 @fixture
