@@ -90,47 +90,48 @@ def load_model_with_assoc(cls, assoc: List[JoinAssoc], engine=sql_engine):
     mname = model_name(cls)
     assoc_s = "_".join([a.assoc_name for a in assoc])
     fname = f"load_{mname}_with_{assoc_s}"
-    Session = sessionmaker(engine)
+    # Session = sessionmaker(engine)
 
+    @db_wrapper(cls=cls, engine=engine)
     def get_model_and_assoc(item_id: int, name: Optional[str]):
         remarks = []
         items = {k: None for k in [mname, *[a.assoc_name for a in assoc]]}
-        with Session() as sess:
+        # session is a global provided by the decorator
+        if item_id:
+            items[mname] = session.scalar(cls.select_by_id(item_id))
+        if name and not items[mname]:
+            items[mname] = session.scalar(cls.select_by_name(name))
+            if items[mname] and item_id:
+                remarks.append(
+                    f"Selecting {mname} {items[mname].name} with "
+                    f"id {items[mname].id} by name because "
+                    "provided id does not exist."
+                )
+        if not items[mname] and not (item_id or name):
+            logger.debug(  # log this, as it is weird
+                f"{fname}({item_id!r}, {name!r}): unable to load {mname}"
+            )
+            raise HTTPException(  # describe error to the caller
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"One of {cls.id_name()} or name must be provided. "
+                    "If both are provided, {cls.id_name()} is preferred."
+                ),
+            )
+        if items[mname]:
+            for a in assoc:
+                items[a.assoc_name] = getattr(items[mname], a.assoc_name)
+        else:
+            detail = "No {mname} could be found with "
             if item_id:
-                items[mname] = sess.scalar(cls.select_by_id(item_id))
-            if name and not items[mname]:
-                items[mname] = sess.scalar(cls.select_by_name(name))
-                if items[mname] and item_id:
-                    remarks.append(
-                        f"Selecting {mname} {items[mname].name} with "
-                        f"id {items[mname].id} by name because "
-                        "provided id does not exist."
-                    )
-            if not items[mname] and not (item_id or name):
-                logger.debug(  # log this, as it is weird
-                    f"{fname}({item_id!r}, {name!r}): unable to load {mname}"
-                )
-                raise HTTPException(  # describe error to the caller
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=(
-                        f"One of {cls.id_name()} or name must be provided. "
-                        "If both are provided, {cls.id_name()} is preferred."
-                    ),
-                )
-            if items[mname]:
-                for a in assoc:
-                    items[a.assoc_name] = getattr(items[mname], a.assoc_name)
-            else:
-                detail = "No {mname} could be found with "
-                if item_id:
-                    detail += "id {item_id}"
-                    if name:
-                        detail += f" or with "
+                detail += "id {item_id}"
                 if name:
-                    detail += "name {name}"
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail=detail
-                )
+                    detail += f" or with "
+            if name:
+                detail += "name {name}"
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=detail
+            )
         return (items.pop(mname), items, remarks)
 
     get_model_and_assoc.__name__ = fname
@@ -160,21 +161,95 @@ def load_models_with_assoc(
     """
     mname = model_name(cls)
     fname = f"eager_load_{mname}_with_{assoc.assoc_name}"
-    Session = sessionmaker(engine)
+    # Session = sessionmaker(engine)
 
+    @db_wrapper(cls=cls, engine=engine)
     def map_model_names_to_assoc(
         item_ids: List[int],  # name_tail: Optional[str] = None
     ):
-        with Session() as sess:
-            eager_loaded_models = sess.scalars(
-                cls.select_by_ids(
-                    item_ids, getattr(cls.Meta.orm_model, assoc.assoc_name)
-                )
+        eager_loaded_models = session.scalars(
+            cls.select_by_ids(
+                item_ids, getattr(cls.Meta.orm_model, assoc.assoc_name)
             )
-            return list(eager_loaded_models)
+        )
+        return list(eager_loaded_models)
 
     map_model_names_to_assoc.__name__ = fname
     return map_model_names_to_assoc
+
+
+def db_wrapper(  # a decorator with parameters
+    *,
+    cls,
+    engine=sql_engine,
+    exception_message: str = ("{route_name}:{model}"),
+    empty_set_message: str = ("Unable to find a matching {model}"),
+):
+    """Decorator for database interactions
+
+    :param ~chapps.models.CHAPPSModel cls: the data model class
+
+    :param ~sqlalchemy.engine.Engine engine: an :mod:`SQLAlchemy` engine, which
+      defaults to the package-wide one declared in
+      :mod:`~chapps.dbsession`
+
+    :param str exception_message: a message to include if any untrapped
+      exception occurs; defaults to ``{route_name}:{model}``.  Only those two
+      symbols are available for expansion.  All arguments are appended.
+
+    :param str empty_set_message: included if a SELECT results in an empty set;
+      defaults to ``Unable to find a matching {model}`` and supports both
+      substitutions that `exception_message` does
+
+    :returns: a `decorator`_ closure, which will be called with the function to
+      be `decorated`_ as its argument.  This is a regular callable decorator.
+
+    :rtype: callable which wraps and returns a function
+
+    The decorator sets up some global symbols for use inside the DB access function:
+
+      :session: a :class:`~sqlalchemy.orm.Session` instance created in a
+        context containing the execution of the wrapped coroutine, suitable for
+        performing database interactions, and which will be automatically
+        closed after the coroutine completes
+
+      :model_name: a string containing the lowercase name of the model
+
+    .. _decorator: https://docs.python.org/3/glossary.html#term-decorator
+    .. _decorated: https://peps.python.org/pep-0318/
+    .. _coroutine: https://docs.python.org/3/library/asyncio-task.html#coroutines
+
+    """
+
+    mname = model_name(cls)
+    Session = sessionmaker(engine)
+
+    def db_func_wrapper(db_func):
+        exc = exception_message.format(
+            route_name=db_func.__name__, model=mname
+        )
+        empty = empty_set_message.format(
+            route_name=db_func.__name__, model=mname
+        )
+
+        @wraps(db_func)
+        def wrapped_interaction(*args, **kwargs):
+            with Session() as session:
+                db_func.__globals__["session"] = session
+                db_func.__globals__["model_name"] = mname
+
+                try:
+                    result = db_func(*args, **kwargs)
+                    if result:
+                        return result
+                except Exception:
+                    logger.exception(exc + f"({args!r},{kwargs!r})")
+            raise HTTPException(status_code=404, detail=empty)
+
+        wrapped_interaction.__doc__ = db_func.__doc__
+        return wrapped_interaction  # a regular function
+
+    return db_func_wrapper  # a regular function
 
 
 def db_interaction(  # a decorator with parameters
