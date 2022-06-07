@@ -271,6 +271,16 @@ def _populated_database_fixture_with_extras(database_fixture):
     return cur
 
 
+def _populated_database_fixture_with_breakage(database_fixture):
+    cur = _populated_database_fixture_with_extras(database_fixture)
+    breakage = (
+        "DELETE FROM quota_user WHERE user_id = 1;"
+        "DELETE FROM users WHERE id = 2;"
+    )
+    cur.execute(breakage)
+    return cur
+
+
 @fixture
 def populated_database_fixture(database_fixture):
     return _populated_database_fixture(database_fixture)
@@ -279,6 +289,11 @@ def populated_database_fixture(database_fixture):
 @fixture
 def populated_database_fixture_with_extras(database_fixture):
     return _populated_database_fixture_with_extras(database_fixture)
+
+
+@fixture
+def populated_database_fixture_with_breakage(database_fixture):
+    return _populated_database_fixture_with_breakage(database_fixture)
 
 
 @fixture
