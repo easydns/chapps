@@ -52,6 +52,14 @@ class OutboundPPR(PostfixPolicyRequest):
         super().__init__(payload)
         self._config = cfg or config
         self._params = self._config.chapps
+        if cfg:
+            logger.debug(
+                "Got override config from file: " + cfg.chapps.config_file
+            )
+        else:
+            logger.debug(
+                "Using global config based on: " + self._params.config_file
+            )
 
     @classmethod
     def clear_memoized_routines(cls) -> None:

@@ -10,6 +10,9 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
 from chapps.config import config, CHAPPSConfig
+import logging
+
+logger = logging.getLogger(__name__)
 
 DIALECT_MAP = dict(mariadb="mysql", mysql="mysql")
 """Map dialects to drivers, for DBI URL construction"""
@@ -24,6 +27,7 @@ def create_db_url(cfg: CHAPPSConfig = None) -> URL:
 
     """
     cfg = cfg or config
+    logger.debug("Using config file: " + cfg.chapps.config_file)
     adapter = cfg.adapter
     if adapter.adapter not in DIALECT_MAP:
         raise ValueError(
