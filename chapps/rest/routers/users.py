@@ -24,6 +24,8 @@ from chapps.models import (
     TextResp,
     AssocOperation,
     BulkQuotaResp,
+    BulkDomainsResp,
+    BulkEmailsResp,
 )
 from chapps.rest.routers.common import (
     get_item_by_id,
@@ -139,6 +141,10 @@ user_emails_assoc = User.join_assoc(
 user_join_assoc = [user_quota_assoc, user_domains_assoc, user_emails_assoc]
 
 load_users_with_quota = load_models_with_assoc(User, assoc=user_quota_assoc)
+load_users_with_domains = load_models_with_assoc(
+    User, assoc=user_domains_assoc
+)
+load_users_with_emails = load_models_with_assoc(User, assoc=user_emails_assoc)
 
 api.post(
     "/",
@@ -180,6 +186,32 @@ async def map_usernames_to_quota_ids(user_ids: List[int]):
         if u
     ]
     return BulkQuotaResp.send(uqm)
+
+
+@api.get("/domains/", response_model=BulkDomainsResp)
+async def map_usernames_to_domain_ids(user_ids: List[int]):
+    users_with_domains = load_users_with_domains(user_ids)
+    if not users_with_domains:
+        return BulkDomainsResp.send([], ["No listed user IDs existed."])
+    udm = [
+        {"user_name": u.name, "domain_ids": [d.id for d in u.domains]}
+        for u in users_with_domains
+        if u
+    ]
+    return BulkDomainsResp.send(udm)
+
+
+@api.get("/emails/", response_model=BulkEmailsResp)
+async def map_usernames_to_email_ids(user_ids: List[int]):
+    users_with_emails = load_users_with_emails(user_ids)
+    if not users_with_emails:
+        return BulkEmailsResp.send([], ["No listed user IDs existed."])
+    uem = [
+        {"user_name": u.name, "email_ids": [d.id for d in u.emails]}
+        for u in users_with_emails
+        if u
+    ]
+    return BulkEmailsResp.send(uem)
 
 
 api.get("/{item_id}", response_model=UserResp)(
