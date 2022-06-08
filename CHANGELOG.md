@@ -10,7 +10,10 @@
 	  low-level driver.  This is not currently used but it passes
 	  tests.  Some comparative performance analysis seems indicated
 	  before adoption.
-	- relocating join-assoc instance definitions to dbmodels
+	- relocating join-assoc instance definitions to models.py: the API
+      extras are no longer required in order for the CLI to run
+	- refactored instance-caching code (based on Postfix instance ID)
+	  into the policy parent class in order to reduce code duplication.
 
 ###v0.4.11:
 	- Adding bulk policy access for user-domains and user-emails along
