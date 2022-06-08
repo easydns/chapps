@@ -162,15 +162,27 @@ class EmailPolicy:
     def approve_policy_request(
         self, ppr: PostfixPolicyRequest
     ) -> Union[str, bool]:
+        """Determine a policy outcome based on the PPR provided
+
+        This routine may return a boolean PASS/FAIL response, or it may for
+        some policy classes return a string, which represents the policy
+        outcome.
+
+        The result of the policy approval is cached based on the instance value
+        provided by Postfix.  The memoization is done here in the superclass in
+        order to avoid duplication of memoization code.
+
+        """
+        response = self.instance_cache.get(ppr.instance, None)
+        if response is None:
+            response = self._approve_policy_request(ppr)
+            self.instance_cache[ppr.instance] = response
+        return response
+
+    def _approve_policy_request(
+        self, ppr: PostfixPolicyRequest
+    ) -> Union[str, bool]:
         """Placeholder method which must be implemented by subclasses.
-
-        .. todo::
-
-          memoization can be factored into this superclass if
-          pre-evaluation hook and evaluation can be generalized or
-          implemented per-subclass in a predictable way.
-
-
         """
         raise NotImplementedError(
             "Subclasses of EmailPolicy must implement this function."
@@ -261,23 +273,7 @@ class GreylistingPolicy(EmailPolicy):
         """
         return self._fmtkey(ppr.client_address)
 
-    def approve_policy_request(self, ppr: PostfixPolicyRequest):
-        """Return True if the email should be accepted
-
-        :param chapps.util.PostfixPolicyRequest ppr: the Postfix payload
-
-        """
-        # TODO: memoization can be factored into the superclass if
-        #       pre-evaluation hook and evaluation can be generalized
-        instance = ppr.instance
-        cached_response = self.instance_cache.get(instance, None)
-        if cached_response is not None:
-            return cached_response
-        response = self._evaluate_policy_request(ppr)
-        self.instance_cache[instance] = response
-        return response
-
-    def _evaluate_policy_request(self, ppr: PostfixPolicyRequest):
+    def _approve_policy_request(self, ppr: PostfixPolicyRequest):
         """Do the dirty work of policy evaluation"""
         try:
             # logger.debug(f"Getting control data for {self.tuple_key( ppr )}")
@@ -696,7 +692,7 @@ class OutboundQuotaPolicy(EmailPolicy):
         if quota:
             self._store_control_data(user, quota, self.params.margin)
 
-    def approve_policy_request(self, ppr: OutboundPPR):
+    def _approve_policy_request(self, ppr: OutboundPPR):
         """Determine whether this email falls within the quota
 
         :param chapps.outbound.OutboundPPR ppr: the Postfix payload
@@ -708,18 +704,12 @@ class OutboundQuotaPolicy(EmailPolicy):
         sends a request about a given email twice, but this is easy to spot
         because they will have the same value for `ppr.instance`.
 
+        :meta public:
         """
         user = ppr.user
-        instance = ppr.instance
-        cached_response = self.instance_cache.get(instance, None)
-        if cached_response is not None:
-            # logger.debug(f"apr: returning instance cache {cached_response}")
-            return cached_response
         if not self._detect_control_data(user):
             self.acquire_policy_for(user)
-        response = self._evaluate_policy_request(ppr)
-        self.instance_cache[instance] = response
-        return response
+        return self._evaluate_policy_request(ppr)
 
     def _get_delta(self, ppr, attempts):
         """Obtain the number of seconds between successive attempts
@@ -1060,7 +1050,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
         return allowed
 
     # This is the main purpose of the class, to answer this question
-    def approve_policy_request(self, ppr: OutboundPPR) -> bool:
+    def _approve_policy_request(self, ppr: OutboundPPR) -> bool:
         """Returns true if `ppr` represents an authorized email
 
         :param chapps.outbound.OutboundPPR ppr: a Postfix payload
@@ -1075,22 +1065,12 @@ class SenderDomainAuthPolicy(EmailPolicy):
         instance cache.
 
         """
-        result = self.instance_cache.get(
-            ppr.instance, None
-        )  # instances sometimes repeat
-        if not result:
-            result = self._get_control_data(ppr)
-            if result is None:
-                result = self.acquire_policy_for(ppr)
-                # logger.debug(f"Obtained {result!r} from RDBMS.")
-            else:
-                # logger.debug(f"Returning {result!r} from Redis.")
-                pass
-            self.instance_cache[ppr.instance] = result
+        result = self._get_control_data(ppr)
+        if result is None:
+            result = self.acquire_policy_for(ppr)
+            # logger.debug(f"Obtained {result!r} from RDBMS.")
         else:
-            # logger.debug(
-            #     f"Returning {result!r} from instance {ppr.instance} cache."
-            # )
+            # logger.debug(f"Returning {result!r} from Redis.")
             pass
         return bool(int(result))
 

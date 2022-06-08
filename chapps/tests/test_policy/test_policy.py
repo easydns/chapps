@@ -56,7 +56,7 @@ class Test_EmailPolicy:
         redis_key = EmailPolicy._fmtkey(*args)
         assert redis_key == "chapps:foo:bar"
 
-    def test_approval_not_implemented(self):
+    def test_approval_not_implemented(self, allowable_ppr):
         """
         GIVEN an instance of EmailPolicy or a subclass
         WHEN  the superclass/abstract version of approve_policy_request is called
@@ -64,7 +64,7 @@ class Test_EmailPolicy:
         """
         policy = EmailPolicy()
         with pytest.raises(NotImplementedError):
-            assert policy.approve_policy_request(None)
+            assert policy.approve_policy_request(allowable_ppr)
 
     def test_connect_to_redis(self):
         """
@@ -159,7 +159,7 @@ class Test_GreylistingPolicy_Base:
         policy = GreylistingPolicy()
         ppr = allowable_ppr
         instance = ppr.instance
-        monkeypatch.setattr(policy, "_evaluate_policy_request", lambda x: True)
+        monkeypatch.setattr(policy, "_approve_policy_request", lambda x: True)
         assert policy.approve_policy_request(ppr) == True
 
     def test_policy_request_instance_cache(
@@ -174,7 +174,7 @@ class Test_GreylistingPolicy_Base:
         policy = GreylistingPolicy()
         ppr = allowable_ppr
         instance = ppr.instance
-        monkeypatch.setattr(policy, "_evaluate_policy_request", lambda x: True)
+        monkeypatch.setattr(policy, "_approve_policy_request", lambda x: True)
         _ = policy.approve_policy_request(ppr)
         assert policy.instance_cache[ppr.instance] == True
 
@@ -192,7 +192,7 @@ class Test_GreylistingPolicyEvaluation:
         monkeypatch.setattr(
             policy, "_get_control_data", lambda x: (None, None)
         )
-        response = policy._evaluate_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_ppr)
         assert response == False
 
     def test_first_encounter_updates_tuple(
@@ -211,7 +211,7 @@ class Test_GreylistingPolicyEvaluation:
         )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_tuple", mock_update)
-        response = policy._evaluate_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_ppr)
         assert mock_update.called
 
     def test_recognized_tuple_passes(self, caplog, monkeypatch, allowable_ppr):
@@ -228,7 +228,7 @@ class Test_GreylistingPolicyEvaluation:
             "_get_control_data",
             lambda x: (time.time() - (60 * 15), None),
         )
-        response = policy._evaluate_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_ppr)
         assert response == True
 
     def test_recognized_tuple_updates_client_tally(
@@ -249,7 +249,7 @@ class Test_GreylistingPolicyEvaluation:
         )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_client_tally", mock_update)
-        response = policy._evaluate_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_ppr)
         assert mock_update.called
 
     def test_sufficient_client_tally_permits_sending_for_unrecognized_tuple(
@@ -278,7 +278,7 @@ class Test_GreylistingPolicyEvaluation:
                     )
                 },
             )
-        response = policy._evaluate_policy_request(ppr)
+        response = policy._approve_policy_request(ppr)
         assert response == True
 
     def test_client_tally_updated_when_unrecognized_tuple_passes(
@@ -309,7 +309,7 @@ class Test_GreylistingPolicyEvaluation:
             )
         tally = policy.redis.zrange(policy.client_key(ppr), 0, -1)
         assert len(tally) == policy.allow_after
-        _ = policy._evaluate_policy_request(ppr)
+        _ = policy._approve_policy_request(ppr)
         tally = policy.redis.zrange(policy.client_key(ppr), 0, -1)
         assert tally[-1].decode("utf-8") == ppr.instance
         assert len(tally) == policy.allow_after + 1
@@ -326,7 +326,7 @@ class Test_GreylistingPolicyEvaluation:
         monkeypatch.setattr(
             policy, "_get_control_data", lambda x: (time.time(), None)
         )
-        response = policy._evaluate_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_ppr)
         assert response == False
 
     def test_retry_too_soon_updates_tuple(
@@ -345,7 +345,7 @@ class Test_GreylistingPolicyEvaluation:
         )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_tuple", mock_update)
-        response = policy._evaluate_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_ppr)
         assert mock_update.called
 
 
