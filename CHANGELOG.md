@@ -5,6 +5,12 @@
 ###v0.4.12:
     - Adding missing documentation to new bulk user-domain and
       user-email auth policy routes.
+	- Completed overhaul of database adapter layer.  There is now an
+	  adapter layer based entirely on SQLAlchemy rather than the
+	  low-level driver.  This is not currently used but it passes
+	  tests.  Some comparative performance analysis seems indicated
+	  before adoption.
+	- relocating join-assoc instance definitions to dbmodels
 
 ###v0.4.11:
 	- Adding bulk policy access for user-domains and user-emails along

@@ -10,7 +10,6 @@ the API is launched.
 from typing import List, Optional
 from fastapi import status, APIRouter, Body, HTTPException
 from sqlalchemy.orm import sessionmaker
-from chapps.rest.routers.users import user_quota_assoc
 from chapps.rest.routers.common import (
     load_model_with_assoc,
     load_models_with_assoc,
@@ -24,6 +23,7 @@ from chapps.models import (
     TextResp,
     SourceUserMapResp,
     BulkQuotaResp,
+    user_quota_assoc,
 )
 from chapps.policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
 from chapps.config import config
