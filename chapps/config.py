@@ -70,6 +70,7 @@ class CHAPPSConfig:
 
         """
         config_file = Path(env.get("CHAPPS_CONFIG", default_pathname))
+        logger.debug("Configurator choosing file " + str(config_file))
         return config_file
 
     @staticmethod
@@ -207,8 +208,10 @@ class CHAPPSConfig:
 
         ### Initialize a config file if none
         if not config_file.exists() and not self.venvdetector.sb:
+            logger.debug("Writing new config file " + str(config_file))
             CHAPPSConfig.write_config(self.configparser, config_file)
         else:
+            logger.debug("Reading from config file " + str(config_file))
             self.configparser.read(str(config_file))
         self.configparser["CHAPPS"]["config_file"] = str(config_file)
         self.configparser["CHAPPS"]["version"] = f"CHAPPS v{__version__}"
@@ -222,6 +225,7 @@ class CHAPPSConfig:
         self.policy_sda = AttrDict(self.configparser["SenderDomainAuthPolicy"])
         self.policy_grl = AttrDict(self.configparser["GreylistingPolicy"])
         self.policy_spf = AttrDict(self.configparser["SPFEnforcementPolicy"])
+        logger.debug("Returning config built from " + str(config_file))
 
     def get_block(self, blockname) -> AttrDict:
         """Attempt to get a top-level block of the config as an AttrDict.

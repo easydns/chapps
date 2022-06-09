@@ -68,8 +68,7 @@ def chapps_sentinel_env(monkeypatch, chapps_sentinel_cfg_path):
     return chapps_sentinel_cfg_path
 
 
-@pytest.fixture(scope="session")
-def chapps_mock_config():
+def _chapps_mock_config():
     """Some settings are intentionally left out; their defaults shall prevail"""
     cp = configparser.ConfigParser(interpolation=None)
     cp["CHAPPS"] = {"payload_encoding": "UTF-8", "require_user_key": False}
@@ -99,6 +98,11 @@ def chapps_mock_config():
         "db": "1",
     }
     return cp
+
+
+@pytest.fixture(scope="session")
+def chapps_mock_config():
+    return _chapps_mock_config()
 
 
 @pytest.fixture(scope="session")

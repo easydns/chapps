@@ -20,6 +20,7 @@ from chapps.models import (
     DeleteResp,
     TextResp,
     AssocOperation,
+    email_users_assoc,
 )
 from chapps.rest.routers.common import (
     get_item_by_id,
@@ -43,15 +44,7 @@ api = APIRouter(
 )
 """The **Email** object API router"""
 
-email_join_assoc = [
-    Email.join_assoc(
-        assoc_name="users",
-        assoc_type=List[int],
-        assoc_model=User,
-        assoc_id="user_id",
-        table=Email.Meta.orm_model.metadata.tables["email_user"],
-    )
-]
+email_join_assoc = [email_users_assoc]
 """List of join associations for **Email** objects"""
 
 api.get("/", response_model=EmailsResp)(
@@ -63,7 +56,7 @@ api.get("/{item_id}", response_model=EmailResp)(
 )
 
 api.get("/{item_id}/users/", response_model=UsersResp)(
-    list_associated(Email, assoc=email_join_assoc[0], response_model=UsersResp)
+    list_associated(Email, assoc=email_users_assoc, response_model=UsersResp)
 )
 
 api.post(

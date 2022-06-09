@@ -27,6 +27,7 @@ from chapps.models import (
     DeleteResp,
     TextResp,
     AssocOperation,
+    domain_users_assoc,
 )
 from chapps.rest.routers.common import (
     get_item_by_id,
@@ -124,15 +125,7 @@ In order to specify the associations to support in the route, a list of
 
 """
 
-domain_join_assoc = [
-    Domain.join_assoc(
-        assoc_name="users",
-        assoc_type=List[int],
-        assoc_model=User,
-        assoc_id="user_id",
-        table=Domain.Meta.orm_model.metadata.tables["domain_user"],
-    )
-]
+domain_join_assoc = [domain_users_assoc]
 """Join association list for **Domain** objects"""
 
 api.get("/", response_model=DomainsResp)(
@@ -144,9 +137,7 @@ api.get("/{item_id}", response_model=DomainResp)(
 )
 
 api.get("/{item_id}/users/", response_model=UsersResp)(
-    list_associated(
-        Domain, assoc=domain_join_assoc[0], response_model=UsersResp
-    )
+    list_associated(Domain, assoc=domain_users_assoc, response_model=UsersResp)
 )
 
 api.post(

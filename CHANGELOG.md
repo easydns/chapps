@@ -2,6 +2,19 @@
 
 ## Alpha Releases
 
+###v0.4.12:
+    - Adding missing documentation to new bulk user-domain and
+      user-email auth policy routes.
+	- Completed overhaul of database adapter layer.  There is now an
+	  adapter layer based entirely on SQLAlchemy rather than the
+	  low-level driver.  This is not currently used but it passes
+	  tests.  Some comparative performance analysis seems indicated
+	  before adoption.  Also its tests break the API tests for some reason.
+	- Relocating join-assoc instance definitions to models.py: the API
+      extras are no longer required in order for the CLI to run.
+	- Refactored instance-caching code (based on Postfix instance ID)
+	  into the policy parent class in order to reduce code duplication.
+
 ###v0.4.11:
 	- Adding bulk policy access for user-domains and user-emails along
       the same lines as the bulk quota policy query.  Lists of

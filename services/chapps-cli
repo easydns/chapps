@@ -2,13 +2,16 @@
 """Main CLI module"""
 from typing import Optional, Union, List
 from contextlib import contextmanager
-from chapps.models import User, Email, Domain, Quota
-from chapps.policy import OutboundQuotaPolicy
-from chapps.rest.routers.users import (
+from chapps.models import (
+    User,
+    Email,
+    Domain,
+    Quota,
     user_quota_assoc,
     user_emails_assoc,
     user_domains_assoc,
 )
+from chapps.policy import OutboundQuotaPolicy
 from chapps.dbsession import sql_engine, sessionmaker
 from chapps._version import __version__
 from sqlalchemy.exc import IntegrityError

@@ -26,6 +26,9 @@ from chapps.models import (
     BulkQuotaResp,
     BulkDomainsResp,
     BulkEmailsResp,
+    user_quota_assoc,
+    user_domains_assoc,
+    user_emails_assoc,
 )
 from chapps.rest.routers.common import (
     get_item_by_id,
@@ -114,30 +117,6 @@ by ID will be associated to the **User**, and other associations to that
 
 """
 
-user_quota_assoc = User.join_assoc(
-    assoc_name="quota",
-    assoc_type=int,
-    assoc_model=Quota,
-    assoc_id=Quota.id_name(),
-    table=User.Meta.orm_model.metadata.tables["quota_user"],
-)
-
-user_domains_assoc = User.join_assoc(
-    assoc_name="domains",
-    assoc_type=List[int],
-    assoc_model=Domain,
-    assoc_id=Domain.id_name(),
-    table=User.Meta.orm_model.metadata.tables["domain_user"],
-)
-
-user_emails_assoc = User.join_assoc(
-    assoc_name="emails",
-    assoc_type=List[int],
-    assoc_model=Email,
-    assoc_id=Email.id_name(),
-    table=User.Meta.orm_model.metadata.tables["email_user"],
-)
-
 user_join_assoc = [user_quota_assoc, user_domains_assoc, user_emails_assoc]
 
 load_users_with_quota = load_models_with_assoc(User, assoc=user_quota_assoc)
@@ -190,6 +169,19 @@ async def map_usernames_to_quota_ids(user_ids: List[int]):
 
 @api.get("/domains/", response_model=BulkDomainsResp)
 async def map_usernames_to_domain_ids(user_ids: List[int]):
+    """Map **User** identfiers onto **Domain** id lists
+
+    If a display requires a large matrix of users with their domain authorizations,
+    this routine may be helpful.  The **Domain** records may be fetched before
+    or after, just once for each domain, and then cross-referenced much
+    more efficiently than requesting each separately.
+
+    The `response` contains a list of JSON objects (hashes or dictionaries),
+    with the keys `user_name` and `domain_ids`.  Only existing users are
+    returned, possibly with `domain_ids` set to `None` if the user has no
+    domain authorizations.  They are sorted by the user's ID value.
+
+    """
     users_with_domains = load_users_with_domains(user_ids)
     if not users_with_domains:
         return BulkDomainsResp.send([], ["No listed user IDs existed."])
@@ -203,6 +195,19 @@ async def map_usernames_to_domain_ids(user_ids: List[int]):
 
 @api.get("/emails/", response_model=BulkEmailsResp)
 async def map_usernames_to_email_ids(user_ids: List[int]):
+    """Map **User** identfiers onto **Email** id lists
+
+    If a display requires a large matrix of users with their email authorizations,
+    this routine may be helpful.  The **Email** records may be fetched before
+    or after, just once for each email, and then cross-referenced much
+    more efficiently than requesting each separately.
+
+    The `response` contains a list of JSON objects (hashes or dictionaries),
+    with the keys `user_name` and `email_ids`.  Only existing users are
+    returned, possibly with `email_ids` set to `None` if the user has no
+    email authorizations.  They are sorted by the user's ID value.
+
+    """
     users_with_emails = load_users_with_emails(user_ids)
     if not users_with_emails:
         return BulkEmailsResp.send([], ["No listed user IDs existed."])
