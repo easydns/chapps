@@ -38,7 +38,7 @@ class SPFEnforcementPolicy(EmailPolicy):
         super().__init__(cfg)
         self.actions = PostfixSPFActions()
 
-    def approve_policy_request(self, ppr: PostfixPolicyRequest) -> str:
+    def _approve_policy_request(self, ppr: PostfixPolicyRequest) -> str:
         """Perform SPF enforcement decision-making
 
         :param ppr: a Postfix payload
