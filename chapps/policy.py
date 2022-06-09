@@ -166,7 +166,7 @@ class EmailPolicy:
 
         This routine may return a boolean PASS/FAIL response, or it may for
         some policy classes return a string, which represents the policy
-        outcome.
+        outcome and is suitable for sending to Postfix.
 
         The result of the policy approval is cached based on the instance value
         provided by Postfix.  The memoization is done here in the superclass in
