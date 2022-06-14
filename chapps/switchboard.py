@@ -44,135 +44,9 @@ except:
     pass
 else:
     HAVE_SPF = True
+    # from chapps.spf_enforcement_handler import SPFEnforcementHandler
 
 logger = logging.getLogger(__name__)  # pragma: no cover
-
-
-class RequestHandler:
-    """Deprecated base class for wrapping policy managers in an event loop
-
-    This workhorse base class generalizes creating an event loop around an
-    email policy.  It has been superseded by :class:`.CascadingPolicyHandler`,
-    which expands on the logic of this (original) class by allowing any number
-    of policies to be applied in order.
-
-    Instance attributes:
-
-      :policy: the :class:`~chapps.policy.EmailPolicy` manager instance
-
-      :config: a reference to the :class:`~chapps.config.CHAPPSConfig` stored
-        on the policy instance.
-
-      :pprclass: a reference to the particular kind of
-        :class:`~chapps.util.PostfixPolicyRequest` to instantiate
-
-    """
-
-    def __init__(
-        self,
-        policy,
-        *,
-        pprclass: Type[PostfixPolicyRequest] = PostfixPolicyRequest,
-    ):
-        """Setup a Postfix policy request handler
-
-        :param chapps.policy.EmailPolicy policy: an instance of a policy
-          manager (a subclass of :class:`~chapps.policy.EmailPolicy`)
-
-        :param Type[PostfixPolicyRequest] pprclass: the subclass of :class:`~chapps.util.PostfixPolicyRequest` to instantiate from the Postfix payloads; defaults to :class:`~chapps.util.PostfixPolicyRequest`
-
-        .. note::
-
-          Unlike other class families within CHAPPS, the handlers in this
-          module do not accept config-override arguments.  They obtain their
-          references to the config from their attached policy managers.
-
-        """
-        self.policy = policy
-        self.config = self.policy.config  # in case a custom config is in use
-        self.pprclass = pprclass
-
-    @cached_property
-    def listen_address(self):
-        return self.policy.params.listen_address
-
-    @cached_property
-    def listen_port(self):
-        return self.policy.params.listen_port
-
-    def async_policy_handler(self):
-        """Coroutine factory
-
-        :returns: a coroutine which handles requests by Postfix to the policy
-
-        The policy handler closure is meant to do all the weird grunt work
-        associated with talking to some other application over a socket.  It
-        listens, and it minimally processes the payload it receives in order to
-        pass something sane to the rest of the library.
-
-        Part of this is accomplished through use of the utility class
-        :class:`~chapps.util.PostfixPolicyRequest` and its subclass(es).  The
-        utility class turns the payload into something that the rest of the
-        code can work with easily.
-
-        """
-        pprclass = self.pprclass
-        policy = self.policy
-        accept = policy.params.acceptance_message
-        reject = policy.params.rejection_message
-        encoding = config.chapps.payload_encoding
-        logger.debug(
-            f"Policy handler requested for {type(policy).__name__}"
-            f" using PPR class {pprclass.__name__}."
-        )
-
-        async def handle_policy_request(reader, writer) -> None:
-            """Handles reading and writing the streams around policy messages"""
-            while True:
-                try:
-                    policy_payload = await reader.readuntil(b"\n\n")
-                except ConnectionResetError:
-                    logger.debug(
-                        "Postfix said goodbye. Terminating this thread."
-                    )
-                    return
-                except asyncio.IncompleteReadError as e:
-                    logger.debug(
-                        "Postfix hung up before a read could be completed. Terminating this thread."
-                    )
-                    return
-                except CallableExhausted as e:
-                    raise e
-                except Exception:
-                    logger.exception("UNEXPECTED ")
-                    if reader.at_eof():
-                        logger.debug(
-                            "Postfix said goodbye oddly. Terminating this thread."
-                        )
-                        return
-                    continue
-                logger.debug(
-                    f"Payload received: {policy_payload.decode('utf-8')}"
-                )
-                policy_data = pprclass(
-                    policy_payload.decode(encoding).split("\n"),
-                    cfg=self.config,
-                )
-                if policy.approve_policy_request(policy_data):
-                    resp = ("action=" + accept + "\n\n").encode()
-                    logger.debug(f"  .. Accepted.  Sending {resp}")
-                else:
-                    resp = ("action=" + reject + "\n\n").encode()
-                    logger.debug(f"  .. Rejected with {resp}")
-                try:
-                    writer.write(resp)
-                except asyncio.CancelledError:  # pragma: no cover
-                    pass
-                except Exception:
-                    logger.exception(f"Exception raised trying to send {resp}")
-                    return
-
-        return handle_policy_request
 
 
 class CascadingPolicyHandler:
@@ -349,6 +223,60 @@ class CascadingPolicyHandler:
         return handle_policy_request
 
 
+class RequestHandler(CascadingPolicyHandler):
+    """Refactored intermediate base class for wrapping policy managers in an event loop
+
+    This class has been reimplemented as a subclass of
+    :class:`.CascadingPolicyHandler`, as a special case which has only one
+    policy to handle.
+
+    Instance attributes:
+
+      :policy: the :class:`~chapps.policy.EmailPolicy` manager instance
+
+      :config: a reference to the :class:`~chapps.config.CHAPPSConfig` stored
+        on the policy instance.
+
+      :pprclass: a reference to the particular kind of
+        :class:`~chapps.util.PostfixPolicyRequest` to instantiate
+
+    """
+
+    def __init__(
+        self,
+        policy,
+        *,
+        pprclass: Type[PostfixPolicyRequest] = PostfixPolicyRequest,
+    ):
+        """Setup a Postfix policy request handler
+
+        :param chapps.policy.EmailPolicy policy: an instance of a policy
+          manager (a subclass of :class:`~chapps.policy.EmailPolicy`)
+
+        :param Type[PostfixPolicyRequest] pprclass: the subclass of :class:`~chapps.util.PostfixPolicyRequest` to instantiate from the Postfix payloads; defaults to :class:`~chapps.util.PostfixPolicyRequest`
+
+        .. note::
+
+          Unlike other class families within CHAPPS, the handlers in this
+          module do not accept config-override arguments.  They obtain their
+          references to the config from their attached policy managers.
+
+        """
+        super().__init__([policy], pprclass=pprclass)
+
+    @cached_property
+    def listen_address(self):
+        return self.policy.params.listen_address
+
+    @cached_property
+    def listen_port(self):
+        return self.policy.params.listen_port
+
+    @cached_property
+    def policy(self):
+        return self.policies[0]
+
+
 class OutboundMultipolicyHandler(CascadingPolicyHandler):
     """Convenience subclass for combining outbound P/F policies
 
@@ -420,7 +348,3 @@ class SenderDomainAuthHandler(RequestHandler):
         """
         p = policy or SenderDomainAuthPolicy()
         super().__init__(p, pprclass=OutboundPPR)
-
-
-if HAVE_SPF:
-    from chapps.spf_enforcement_handler import SPFEnforcementHandler
