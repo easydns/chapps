@@ -372,6 +372,8 @@ class Domain(CHAPPSModel):
         strip_whitespace=True, to_lower=True, min_length=5, max_length=63
     ) = Field(title="domain name")
     """domain names may be up to 63 chars long"""
+    greylist: bool = Field(title="perform greylisting")
+    check_spf: bool = Field(title="enforce SPF")
 
     class Config:
         orm_mode = True

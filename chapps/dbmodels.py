@@ -29,6 +29,7 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
+    Boolean,
     ForeignKey,
     Table,
     select,
@@ -261,6 +262,8 @@ class Domain(DB_Base):
     """integer primary key"""
     name = Column(String(64), unique=True)
     """unique string of 64 chars or less"""
+    greylist = Column(Boolean)
+    check_spf = Column(Boolean)
 
     def __repr__(self):
         return f"Domain[ORM](id={self.id!r}, name={self.name!r})"
