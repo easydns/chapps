@@ -18,13 +18,14 @@ This is to avoid maintaining two nearly-identical code-paths.  Running only one
 policy is obviously a special case of running many.
 
 """
-from chapps.config import config  # the global instance of the config object
+# from chapps.config import config  # the global instance of the config object
 from chapps.policy import (
+    EmailPolicy,
     OutboundQuotaPolicy,
     GreylistingPolicy,
     SenderDomainAuthPolicy,
 )
-from chapps.util import AttrDict, PostfixPolicyRequest
+from chapps.util import PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
 from chapps.signals import (
     CHAPPSException,
@@ -33,13 +34,13 @@ from chapps.signals import (
     AuthenticationFailureException,
 )
 from functools import cached_property
-from typing import Type, Optional
+from typing import Type, Optional, List
 import logging
 import asyncio
 
 try:
     from chapps.spf_policy import SPFEnforcementPolicy
-except:
+except Exception:
     HAVE_SPF = False
     pass
 else:
@@ -77,7 +78,12 @@ class CascadingPolicyHandler:
 
     """
 
-    def __init__(self, policies=[], *, pprclass=PostfixPolicyRequest):
+    def __init__(
+        self,
+        policies: Optional[List[EmailPolicy]] = [],
+        *,
+        pprclass: PostfixPolicyRequest = PostfixPolicyRequest,
+    ):
         self.policies = policies
         self.pprclass = pprclass
         if not self.policies:
@@ -243,7 +249,7 @@ class RequestHandler(CascadingPolicyHandler):
 
     def __init__(
         self,
-        policy,
+        policy: EmailPolicy,
         *,
         pprclass: Type[PostfixPolicyRequest] = PostfixPolicyRequest,
     ):
@@ -469,9 +475,21 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
         return handle_policy_request
 
 
+class MultiresultPolicyHandler(CascadingMultiresultPolicyHandler):
+    """A subclass for handling just one policy"""
+
+    def __init__(
+        self,
+        policy: EmailPolicy,
+        *,
+        pprclass: Optional[PostfixPolicyRequest] = PostfixPolicyRequest,
+    ):
+        super().__init__([policy], pprclass=pprclass)
+
+
 if HAVE_SPF:
 
-    class SPFEnforcementHandler(CascadingMultiresultPolicyHandler):
+    class SPFEnforcementHandler(MultiresultPolicyHandler):
         """Special handler class for :class:`~chapps.spf_policy.SPFEnforcementPolicy`
 
         This one came along last and forced a reconsideration of how all this
@@ -500,7 +518,7 @@ if HAVE_SPF:
 
             """
             p = policy or SPFEnforcementPolicy()
-            super().__init__([p])
+            super().__init__(p, pprclass=pprclass)
 
         @cached_property
         def policy(self):
