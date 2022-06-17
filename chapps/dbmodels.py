@@ -44,12 +44,21 @@ from sqlalchemy.orm import (
     DeclarativeMeta,
     selectinload,
 )
+from sqlalchemy.schema import MetaData
 import logging
 import chapps.logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
+convention = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",  # or column_0_name
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+"""SQLA's recommended naming convention for constraints"""
 
 # declare subclass of the SQLAlchemy DeclarativeMeta class
 # in order to attach custom routines to the ORM objects
@@ -168,7 +177,10 @@ class DB_Customizations(DeclarativeMeta):
 
 
 # declare DB model base class
-DB_Base = declarative_base(metaclass=DB_Customizations)
+DB_Base = declarative_base(
+    metaclass=DB_Customizations,
+    metadata=MetaData(naming_convention=convention),
+)
 """DB_Base serves as the base of all `ORM models`_
 
 This class itself contains literally no code apart from documentation.
@@ -262,8 +274,10 @@ class Domain(DB_Base):
     """integer primary key"""
     name = Column(String(64), unique=True)
     """unique string of 64 chars or less"""
-    greylist = Column(Boolean)
-    check_spf = Column(Boolean)
+    # greylist = Column(Boolean(name="greylist"))
+    # """if True perform greylisting"""
+    # check_spf = Column(Boolean(name="check_spf"))
+    # """if True perform SPF enforcement"""
 
     def __repr__(self):
         return f"Domain[ORM](id={self.id!r}, name={self.name!r})"
