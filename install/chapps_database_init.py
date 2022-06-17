@@ -4,12 +4,12 @@
 ###   to initialize the database.  It should be idempotent, and safe to run against an existing
 ###   config database.
 
-from chapps.adapter import MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter
+from chapps.dbsession import sql_engine
+from chapps.dbmodels import DB_Base
 
 
 def setup_chapps_database():
-    for adapter in [MariaDBQuotaAdapter(), MariaDBSenderDomainAuthAdapter()]:
-        adapter._initialize_tables()
+    DB_Base.metadata.create_all(sql_engine)
 
 
 if __name__ == "__main__":

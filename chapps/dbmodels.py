@@ -252,9 +252,9 @@ class Quota(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer primary key"""
-    name = Column(String(32), unique=True)
+    name = Column(String(32), unique=True, nullable=False, index=True)
     """unique string of 32 chars or less"""
-    quota = Column(Integer, unique=True)
+    quota = Column(Integer, unique=True, nullable=False, index=True)
     """unique integer transmission attempt limit"""
 
     def __repr__(self):
@@ -272,7 +272,7 @@ class Domain(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer primary key"""
-    name = Column(String(64), unique=True)
+    name = Column(String(64), unique=True, nullable=False, index=True)
     """unique string of 64 chars or less"""
     # greylist = Column(Boolean(name="greylist"))
     # """if True perform greylisting"""
@@ -294,7 +294,7 @@ class Email(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer primary key"""
-    name = Column(String(128), unique=True)
+    name = Column(String(128), unique=True, nullable=False, index=True)
     """unique string of 128 chars or less"""
 
     def __repr__(self):
@@ -312,7 +312,7 @@ class User(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer auto-incremented primary key"""
-    name = Column(String(128), unique=True)
+    name = Column(String(128), unique=True, nullable=False, index=True)
     """unique string of up to 128 chars"""
     quota = relationship(
         Quota,
