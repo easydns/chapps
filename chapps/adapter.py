@@ -308,8 +308,8 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
         "CREATE TABLE IF NOT EXISTS domains ("  # pragma: no cover
         "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
         "name VARCHAR(63) UNIQUE NOT NULL,"
-        "greylist TINYINT(1) NOT NULL,"
-        "check_spf TINYINT(1) NOT NULL"
+        "greylist TINYINT(1) NOT NULL DEFAULT 0,"
+        "check_spf TINYINT(1) NOT NULL DEFAULT 0"
         ")"
     )
     domain_join_table = (
