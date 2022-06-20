@@ -274,10 +274,10 @@ class Domain(DB_Base):
     """integer primary key"""
     name = Column(String(64), unique=True, nullable=False, index=True)
     """unique string of 64 chars or less"""
-    # greylist = Column(Boolean(name="greylist"))
-    # """if True perform greylisting"""
-    # check_spf = Column(Boolean(name="check_spf"))
-    # """if True perform SPF enforcement"""
+    greylist = Column(Boolean(name="greylist"))
+    """if True perform greylisting"""
+    check_spf = Column(Boolean(name="check_spf"))
+    """if True perform SPF enforcement"""
 
     def __repr__(self):
         return f"Domain[ORM](id={self.id!r}, name={self.name!r})"
