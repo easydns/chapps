@@ -373,7 +373,9 @@ class Domain(CHAPPSModel):
     ) = Field(title="domain name")
     """domain names may be up to 63 chars long"""
     greylist: bool = Field(title="perform greylisting")
+    """flag indicating whether to greylist all domain's inbound email"""
     check_spf: bool = Field(title="enforce SPF")
+    """flag indicating whether to check SPF for domain's inbound email"""
 
     class Config:
         orm_mode = True
