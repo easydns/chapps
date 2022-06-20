@@ -149,7 +149,7 @@ api.post(
     create_item(
         Domain,
         response_model=DomainResp,
-        params=dict(name=str),
+        params=dict(name=str, greylist=bool, check_spf=bool),
         assoc=domain_join_assoc,
     )
 )
