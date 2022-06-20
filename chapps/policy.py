@@ -92,6 +92,29 @@ class EmailPolicy:
         """
         return f"{ prefix }:{ ':'.join( args ) }"
 
+    @staticmethod
+    def domain_from(email_address: str, ppr: PostfixPolicyRequest) -> str:
+        """Given an email address, return the domain part
+
+        Raises meaningful errors if nonconforming conditions are encountered.
+        """
+        parts = email_address.split("@")
+        if len(parts) > 2:
+            logger.info(
+                "Found sender email with more than one at-sign: "
+                f"sender={email_address} instance={ppr.instance} "
+                f"parts={parts!r}"
+            )
+            raise TooManyAtsException(f"{email_address}=>{parts!r}")
+        elif len(parts) == 1:
+            logger.info(
+                "Found sender string without at-sign: "
+                f"sender={email_address} instance={ppr.instance} "
+                f"parts={parts!r}"
+            )
+            raise NotAnEmailAddressException
+        return parts[-1]
+
     @classmethod
     def _fmtkey(cls, *args):
         """Convenience classmethod for Redis key construction
@@ -272,6 +295,10 @@ class GreylistingPolicy(EmailPolicy):
 
         """
         return self._fmtkey(ppr.client_address)
+
+    def domain_option_key(self, ppr):
+        """Return the Redis key for the domain's Greylisting option"""
+        return self._fmtkey()
 
     def _approve_policy_request(self, ppr: PostfixPolicyRequest):
         """Do the dirty work of policy evaluation"""
@@ -924,22 +951,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
         """
         if ppr.sender:
-            parts = ppr.sender.split("@")
-            if len(parts) > 2:
-                logger.info(
-                    "Found sender email with more than one at-sign: "
-                    f"sender={ppr.sender} instance={ppr.instance} "
-                    f"parts={parts!r}"
-                )
-                raise TooManyAtsException(f"{ppr.sender}=>{parts!r}")
-            elif len(parts) == 1:
-                logger.info(
-                    "Found sender string without at-sign: "
-                    f"sender={ppr.sender} instance={ppr.instance} "
-                    f"parts={parts!r}"
-                )
-                raise NotAnEmailAddressException
-            return parts[-1]
+            return EmailPolicy.domain_from(ppr.sender, ppr)
         raise NullSenderException
 
     # We will need to be able to access policy data in the RDBMS
