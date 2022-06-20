@@ -274,9 +274,9 @@ class Domain(DB_Base):
     """integer primary key"""
     name = Column(String(64), unique=True, nullable=False, index=True)
     """unique string of 64 chars or less"""
-    greylist = Column(Boolean(name="greylist"))
+    greylist = Column(Boolean(name="greylist"), nullable=False, default=0)
     """if True perform greylisting"""
-    check_spf = Column(Boolean(name="check_spf"))
+    check_spf = Column(Boolean(name="check_spf"), nullable=False, default=0)
     """if True perform SPF enforcement"""
 
     def __repr__(self):
