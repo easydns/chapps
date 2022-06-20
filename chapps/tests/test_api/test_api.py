@@ -41,7 +41,14 @@ class Test_Users_API:
         assert response.status_code == 200
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
-            "domains": [{"id": 1, "name": "chapps.io"}],
+            "domains": [
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "emails": [{"id": 1, "name": "caleb@chapps.com"}],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
@@ -93,7 +100,14 @@ class Test_Users_API:
         assert response.status_code == 201
         assert response.json() == {
             "response": {"id": 4, "name": "schmo1@chapps.io"},
-            "domains": [{"id": 1, "name": "chapps.io"}],
+            "domains": [
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "emails": None,
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
@@ -163,7 +177,14 @@ class Test_Users_API:
         assert response.status_code == 200
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
-            "domains": [{"id": 1, "name": "chapps.io"}],
+            "domains": [
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "emails": None,
             "quota": None,
             "timestamp": fixed_time,
@@ -221,7 +242,14 @@ class Test_Users_API:
         assert response.status_code == 200
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
-            "domains": [{"id": 1, "name": "chapps.io"}],
+            "domains": [
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "emails": None,
             "quota": {"id": 2, "name": "50eph", "quota": 1200},
             "timestamp": fixed_time,
@@ -246,8 +274,18 @@ class Test_Users_API:
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "domains": [
-                {"id": 1, "name": "chapps.io"},
-                {"id": 2, "name": "easydns.com"},
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                },
+                {
+                    "id": 2,
+                    "name": "easydns.com",
+                    "greylist": False,
+                    "check_spf": False,
+                },
             ],
             "emails": [{"id": 1, "name": "caleb@chapps.com"}],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
@@ -272,7 +310,14 @@ class Test_Users_API:
         response = testing_api_client.get("/users/3")
         assert response.json() == {
             "response": {"id": 3, "name": "bigsender@chapps.io"},
-            "domains": [{"id": 2, "name": "easydns.com"}],
+            "domains": [
+                {
+                    "id": 2,
+                    "name": "easydns.com",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "quota": {"id": 3, "name": "200eph", "quota": 4800},
             "emails": [
                 {"id": 2, "name": "roleaccount@chapps.com"},
@@ -301,7 +346,14 @@ class Test_Users_API:
         response = testing_api_client.get("/users/1")
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
-            "domains": [{"id": 1, "name": "chapps.io"}],
+            "domains": [
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "emails": [{"id": 1, "name": "caleb@chapps.com"}],
             "quota": {"id": 2, "name": "50eph", "quota": 1200},
             "timestamp": fixed_time,
@@ -319,8 +371,18 @@ class Test_Users_API:
         assert response.status_code == 200
         assert response.json() == {
             "response": [
-                {"id": 3, "name": "easydns.net"},
-                {"id": 4, "name": "easydns.org"},
+                {
+                    "id": 3,
+                    "name": "easydns.net",
+                    "greylist": False,
+                    "check_spf": False,
+                },
+                {
+                    "id": 4,
+                    "name": "easydns.org",
+                    "greylist": False,
+                    "check_spf": False,
+                },
             ],
             "timestamp": fixed_time,
             "version": verstr,
@@ -361,7 +423,14 @@ class Test_Users_API:
         response = testing_api_client.get("/users/1")
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
-            "domains": [{"id": 1, "name": "chapps.io"}],
+            "domains": [
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "emails": [
                 {"id": 1, "name": "caleb@chapps.com"},
                 {"id": 2, "name": "roleaccount@chapps.com"},
@@ -389,8 +458,18 @@ class Test_Users_API:
         assert response.json() == {
             "response": {"id": 3, "name": "bigsender@chapps.io"},
             "domains": [
-                {"id": 1, "name": "chapps.io"},
-                {"id": 2, "name": "easydns.com"},
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                },
+                {
+                    "id": 2,
+                    "name": "easydns.com",
+                    "greylist": False,
+                    "check_spf": False,
+                },
             ],
             "quota": {"id": 3, "name": "200eph", "quota": 4800},
             "emails": [
@@ -518,7 +597,12 @@ class Test_Domains_API:
         response = testing_api_client.get("/domains/1")
         assert response.status_code == 200
         assert response.json() == {
-            "response": {"id": 1, "name": "chapps.io"},
+            "response": {
+                "id": 1,
+                "name": "chapps.io",
+                "greylist": False,
+                "check_spf": False,
+            },
             "timestamp": fixed_time,
             "users": [
                 {"id": 1, "name": "ccullen@easydns.com"},
@@ -533,7 +617,14 @@ class Test_Domains_API:
         response = testing_api_client.get("/domains/")
         assert response.status_code == 200
         assert response.json() == {
-            "response": [{"id": 1, "name": "chapps.io"}],
+            "response": [
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "timestamp": fixed_time,
             "version": verstr,
         }
@@ -544,11 +635,22 @@ class Test_Domains_API:
     ):
         # pudb.set_trace()
         response = testing_api_client.post(
-            "/domains/", json={"name": "easydns.com", "users": []}
+            "/domains/",
+            json={
+                "name": "easydns.com",
+                "users": [],
+                "greylist": True,
+                "check_spf": True,
+            },
         )
         assert response.status_code == 201
         assert response.json() == {
-            "response": {"id": 2, "name": "easydns.com"},
+            "response": {
+                "id": 2,
+                "name": "easydns.com",
+                "greylist": True,
+                "check_spf": True,
+            },
             "users": None,
             "timestamp": fixed_time,
             "version": verstr,
@@ -559,11 +661,22 @@ class Test_Domains_API:
         self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.post(
-            "/domains/", json={"name": "easydns.com", "users": [1]}
+            "/domains/",
+            json={
+                "name": "easydns.com",
+                "greylist": True,
+                "check_spf": True,
+                "users": [1],
+            },
         )
         assert response.status_code == 201
         assert response.json() == {
-            "response": {"id": 2, "name": "easydns.com"},
+            "response": {
+                "id": 2,
+                "name": "easydns.com",
+                "greylist": True,
+                "check_spf": True,
+            },
             "timestamp": fixed_time,
             "users": [{"id": 1, "name": "ccullen@easydns.com"}],
             "version": verstr,
@@ -598,11 +711,21 @@ class Test_Domains_API:
         self, fixed_time, testing_api_client, populated_database_fixture
     ):
         response = testing_api_client.put(
-            "/domains/", json=dict(domain=dict(id=1, name="crapps.io"))
+            "/domains/",
+            json=dict(
+                domain=dict(
+                    id=1, name="crapps.io", greylist=False, check_spf=True
+                )
+            ),
         )
         assert response.status_code == 200
         assert response.json() == {
-            "response": {"id": 1, "name": "crapps.io"},
+            "response": {
+                "id": 1,
+                "name": "crapps.io",
+                "greylist": False,
+                "check_spf": True,
+            },
             "timestamp": fixed_time,
             "users": None,
             "version": verstr,
@@ -614,11 +737,21 @@ class Test_Domains_API:
     ):
         response = testing_api_client.put(
             "/domains/",
-            json=dict(domain=dict(id=1, name="chapps.io"), users=[2, 3]),
+            json=dict(
+                domain=dict(
+                    id=1, name="chapps.io", greylist=True, check_spf=False
+                ),
+                users=[2, 3],
+            ),
         )
         assert response.status_code == 200
         assert response.json() == {
-            "response": {"id": 1, "name": "chapps.io"},
+            "response": {
+                "id": 1,
+                "name": "chapps.io",
+                "greylist": True,
+                "check_spf": False,
+            },
             "timestamp": fixed_time,
             "users": [
                 {"id": 2, "name": "somebody@chapps.io"},
@@ -644,7 +777,14 @@ class Test_Domains_API:
         response = testing_api_client.get("/users/4")
         assert response.json() == {
             "response": {"id": 4, "name": "schmo1@chapps.io"},
-            "domains": [{"id": 2, "name": "easydns.com"}],
+            "domains": [
+                {
+                    "id": 2,
+                    "name": "easydns.com",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "emails": [{"id": 2, "name": "roleaccount@chapps.com"}],
             "quota": None,
             "timestamp": fixed_time,
@@ -668,7 +808,14 @@ class Test_Domains_API:
         response = testing_api_client.get("/users/3")
         assert response.json() == {
             "response": {"id": 3, "name": "bigsender@chapps.io"},
-            "domains": [{"id": 2, "name": "easydns.com"}],
+            "domains": [
+                {
+                    "id": 2,
+                    "name": "easydns.com",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "emails": [
                 {"id": 2, "name": "roleaccount@chapps.com"},
                 {"id": 3, "name": "admin@chapps.com"},
@@ -846,7 +993,14 @@ class Test_Emails_API:
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "emails": [],
-            "domains": [{"id": 1, "name": "chapps.io"}],
+            "domains": [
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
             "version": verstr,
@@ -931,7 +1085,14 @@ class Test_Emails_API:
         assert response.json() == {
             "response": {"id": 1, "name": "ccullen@easydns.com"},
             "emails": [],
-            "domains": [{"id": 1, "name": "chapps.io"}],
+            "domains": [
+                {
+                    "id": 1,
+                    "name": "chapps.io",
+                    "greylist": False,
+                    "check_spf": False,
+                }
+            ],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
             "timestamp": fixed_time,
             "version": verstr,
