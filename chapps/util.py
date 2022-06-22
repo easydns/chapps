@@ -26,6 +26,7 @@ import logging
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+from chapps.signals import TooManyAtsException, NotAnEmailAddressException
 
 logger = logging.getLogger(__name__)
 
@@ -495,3 +496,25 @@ class PostfixPolicyRequest(Mapping):
                 else []
             )
         return self._recipients
+
+    def domain_from(self, email_address: str) -> str:
+        """Given an email address, return the domain part
+
+        Raises meaningful errors if nonconforming conditions are encountered.
+        """
+        parts = email_address.split("@")
+        if len(parts) > 2:
+            logger.info(
+                "Found sender email with more than one at-sign: "
+                f"sender={email_address} instance={self.instance} "
+                f"parts={parts!r}"
+            )
+            raise TooManyAtsException(f"{email_address}=>{parts!r}")
+        elif len(parts) == 1:
+            logger.info(
+                "Found sender string without at-sign: "
+                f"sender={email_address} instance={self.instance} "
+                f"parts={parts!r}"
+            )
+            raise NotAnEmailAddressException
+        return parts[-1]
