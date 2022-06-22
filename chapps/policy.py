@@ -18,7 +18,11 @@ import redis
 import logging
 from expiring_dict import ExpiringDict
 from chapps.config import config, CHAPPSConfig
-from chapps.adapter import MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter
+from chapps.adapter import (
+    MariaDBQuotaAdapter,
+    MariaDBSenderDomainAuthAdapter,
+    MariaDBInboundFlagsAdapter,
+)
 from chapps.signals import (
     TooManyAtsException,
     NullSenderException,
@@ -125,6 +129,90 @@ class EmailPolicy:
         self.redis = self._redis()  # pass True to get read-only
         self.instance_cache = ExpiringDict(3)  # entries expire after 3 seconds
 
+    @contextmanager
+    def _adapter_handle(self):
+        """Context manager for obtaining a database handle
+
+        In order to acquire policy configuration data, the policy manager must
+        be able to reach the RDBMS or other policy-config data store.  One of
+        the policy manager's priciple jobs is to obtain this data from the
+        database and stuff it into Redis for future reference.
+
+        Adapter configuration, in terms of how to access the database, is
+        obtained from the config object.
+
+        .. todo::
+
+          It is clear now that the adapter classes should also accept an
+          optional config argument, and then use it for default values, so that
+          this routine need not enumerate all the options.
+
+        :meta public:
+        """
+        adapter = self.adapter_class(cfg=self.config)
+        try:
+            yield adapter
+        finally:
+            adapter.conn.close()
+
+    @contextmanager
+    def _control_data_storage_context(self):
+        """Context manager for storing control data in Redis
+
+        This is the most basic of routines, provided for policies which store
+        only one item in Redis, perhaps an option flag for instance.
+
+        The context manager yields a callable which expects up to three
+        arguments:
+
+        .. code::
+
+            dsc(token, setting, expire=seconds_per_day)
+
+        :token: is a token unique to the resource along with the setting.  The
+                `redis_key_prefix` is automatically prepended to the token.  If
+                the token is otherwise compound, it should be compounded
+                beforehand and presented as a string.
+
+        :setting: is the value to be stored in Redis
+
+        :expire: the Redis entry's TTL in seconds; defaults to 24hr
+
+        This pattern is used throughout the policy managers to handle making
+        Redis settings in pipelines.  Some policy managers declare overrides
+        for this method, in order to automate creation of compound keys or to
+        store more than one piece of data at once.  Where a policy has a
+        per-domain enforcement flag, that flag is generally being stored on a
+        Redis key formed by tacking the `redis_key_prefix` onto the front of
+        the domain name.
+
+        In practice, to use this context manager, capture its yielded output
+        and call it in order to store data:
+
+        .. code::
+
+            resource_settings_map = {d: True for d in domains}
+            with policy._control_data_storage_context() as dsc:
+                for domain, option in resource_settings_map.items():
+                    dsc(domain, option)
+
+        If there are a number of settings to create, make sure to place the
+        loop within the context so that all the settings will be submitted as
+        part of the same pipeline.
+
+        """
+        pipe = self.redis.pipeline()
+        fmtkey = self._fmtkey
+
+        def _dsc(token, setting, expire=seconds_per_day):
+            pipe.set(fmtkey(token), setting, ex=expire)
+
+        try:
+            yield _dsc
+        finally:
+            pipe.execute()
+            pipe.reset()
+
     def _redis(self, read_only: bool = False):
         """Get a Redis handle, possibly from Sentinel
 
@@ -191,7 +279,23 @@ class EmailPolicy:
         )
 
 
-class GreylistingPolicy(EmailPolicy):
+class InboundPolicy(EmailPolicy):
+    adapter_class = MariaDBInboundFlagsAdapter
+
+    def domain_option_key(self, ppr: InboundPPR):
+        """Return the Redis key for the domain's Greylisting option
+
+        Uses the first of the list of tokenized recipients.  Generally,
+        inbound mail is expected to contain only one recipient per email.
+        """
+        return self._fmtkey(ppr.recipient_domain)
+
+    def _store_control_data(self, domain: str, flag: bool):
+        with self._control_data_storage_context() as dsc:
+            dsc(domain, 1 if flag else 0)
+
+
+class GreylistingPolicy(InboundPolicy):
     """Policy manager which implements greylisting
 
     `Greylisting <https://en.wikipedia.org/wiki/Greylisting_(email)>`_ is a
@@ -275,51 +379,11 @@ class GreylistingPolicy(EmailPolicy):
         """
         return self._fmtkey(ppr.client_address)
 
-    def domain_option_key(self, ppr: InboundPPR):
-        """Return the Redis key for the domain's Greylisting option
-
-        Uses the first of the list of tokenized recipients.  Generally,
-        inbound mail is expected to contain only one recipient per email.
-        """
-        return self._fmtkey(ppr.recipient_domain)
-
-    @contextmanager
-    def _control_data_storage_context(self):
-        pipe = self.redis.pipeline()
-        fmtkey = self._fmtkey
-
-        def _dsc(domain, setting):
-            pipe.set(fmtkey(domain), setting, ex=seconds_per_day)
-
-        try:
-            yield _dsc
-        finally:
-            pipe.execute()
-            pipe.reset()
-
-    @contextmanager
-    def _adapter_handle(self):
-        adapter = MariaDBInboundFlagsAdapter(
-            db_host=self.config.adapter.db_host,
-            db_port=self.config.adapter.db_port,
-            db_name=self.config.adapter.db_name,
-            db_user=self.config.adapter.db_user,
-            db_pass=self.config.adapter.db_pass,
-        )
-        try:
-            yield adapter
-        finally:
-            adapter.conn.close()
-
     def acquire_policy_for(ppr: InboundPPR):
         with self._adapter_handle as adapter:
             result = adapter.do_greylisting_on(ppr.recipient_domain)
         self._store_control_data(ppr.recipient_domain, result)
         return result
-
-    def _store_control_data(domain: str, flag: bool):
-        with self._control_data_storage_context() as dsc:
-            dsc(domain, 1 if flag else 0)
 
     def _approve_policy_request(self, ppr: InboundPPR):
         """Do the dirty work of policy evaluation"""
@@ -429,6 +493,7 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     """
 
+    adapter_class = MariaDBQuotaAdapter
     redis_key_prefix = "oqp"
     """OutboundQuotaPolicy Redis prefix"""
 
@@ -494,37 +559,6 @@ class OutboundQuotaPolicy(EmailPolicy):
         finally:
             pipe.execute()
             pipe.reset()
-
-    @contextmanager
-    def _adapter_handle(self):
-        """Context manager for obtaining a database handle
-
-        In order to acquire policy configuration data, the policy manager must
-        be able to reach the RDBMS or other policy-config data store.  One of
-        the policy manager's priciple jobs is to obtain this data from the
-        database and stuff it into Redis for future reference.
-
-        Adapter configuration, in terms of how to access the database, is
-        obtained from the config object.
-
-        .. todo::
-
-          It is clear now that the adapter classes should also accept an
-          optional config argument, and then use it for default values, so that
-          this routine need not enumerate all the options.
-
-        """
-        adapter = MariaDBQuotaAdapter(
-            db_host=self.config.adapter.db_host,
-            db_port=self.config.adapter.db_port,
-            db_name=self.config.adapter.db_name,
-            db_user=self.config.adapter.db_user,
-            db_pass=self.config.adapter.db_pass,
-        )
-        try:
-            yield adapter
-        finally:
-            adapter.conn.close()
 
     def _get_control_data(self, ppr):
         """Obtain essential data for policy decisionmaking
@@ -901,7 +935,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     """
 
-    # every subclass of EmailPolicy must set a key prefix
+    adapter_class = MariaDBSenderDomainAuthAdapter
     redis_key_prefix = "sda"
     """Sender domain auth Redis key prefix"""
     # initialization is when we plug in the config
@@ -1041,25 +1075,6 @@ class SenderDomainAuthPolicy(EmailPolicy):
         finally:
             pipe.execute()
             pipe.reset()
-
-    # We will need a database adapter context manager
-    @contextmanager
-    def _adapter_handle(self):
-        """Context manager for policy config access; yields a database handle"""
-        # TODO: identical to OQP -- should be factored up into a superclass
-        #       complemented by similar TODO regarding refactorization to avoid
-        #       passing these arguments
-        adapter = MariaDBSenderDomainAuthAdapter(
-            db_host=self.config.adapter.db_host,
-            db_port=self.config.adapter.db_port,
-            db_name=self.config.adapter.db_name,
-            db_user=self.config.adapter.db_user,
-            db_pass=self.config.adapter.db_pass,
-        )
-        try:
-            yield adapter
-        finally:
-            adapter.conn.close()
 
     # How to obtain control data
     def acquire_policy_for(self, ppr) -> bool:
