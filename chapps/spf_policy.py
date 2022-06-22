@@ -7,12 +7,17 @@ libraries.
 
 """
 import spf
-from chapps.policy import EmailPolicy
+from chapps.signals import NoRecipientsException
+from chapps.policy import InboundPolicy
 from chapps.actions import PostfixSPFActions
 from chapps.util import PostfixPolicyRequest
+from chapps.inbound import InboundPPR
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class SPFEnforcementPolicy(EmailPolicy):
+class SPFEnforcementPolicy(InboundPolicy):
     """Policy manager which enforces SPF policy
 
     Instance attributes (in addition to those
@@ -25,9 +30,8 @@ class SPFEnforcementPolicy(EmailPolicy):
 
     """
 
-    # we may never use Redis for SPF directly
     redis_key_prefix = "spf"
-    """For completeness.  SPF is not expected to use Redis."""
+    """For option flag in Redis"""
 
     def __init__(self, cfg=None):
         """Setup an SPF enforcement policy manager
@@ -37,6 +41,35 @@ class SPFEnforcementPolicy(EmailPolicy):
         """
         super().__init__(cfg)
         self.actions = PostfixSPFActions()
+
+    def acquire_policy_for(self, ppr: InboundPPR) -> bool:
+        with self._adapter_handle() as adapter:
+            result = adapter.check_spf_on(ppr.recipient_domain)
+        self._store_control_data(ppr.recipient_domain, result)
+        return result
+
+    def _get_control_data(self, ppr: InboundPPR) -> int:
+        option_key = self.domain_option_key(ppr)
+        option_bits = self.redis.get(option_key)
+        if option_bits is None:
+            return None
+        else:
+            return int(option_bits)
+
+    def enabled(self, ppr: InboundPPR) -> bool:
+        option_set = None
+        try:
+            option_set = self._get_control_data(ppr)
+        except NoRecipientsException:
+            logger.exception(f"No recipient in PPR {ppr.instance}")
+            return False
+        except Exception:
+            logger.exception("UNEXPECTED")
+            return False
+        if option_set is None:
+            option_set = self.acquire_policy_for(ppr)
+        option_set = int(option_set)
+        return option_set == 1
 
     def _approve_policy_request(self, ppr: PostfixPolicyRequest) -> str:
         """Perform SPF enforcement decision-making
@@ -58,6 +91,9 @@ class SPFEnforcementPolicy(EmailPolicy):
           its result used as the result.
 
         """
+        if not self.enabled(ppr):
+            return self.actions.dunno()
+
         # First, check the HELO name
         helo_sender = "postmaster@" + ppr.helo_name
         query = spf.query(ppr.client_address, helo_sender, ppr.helo_name)
