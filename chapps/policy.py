@@ -23,10 +23,12 @@ from chapps.signals import (
     TooManyAtsException,
     NullSenderException,
     NotAnEmailAddressException,
+    NoRecipientsException,
 )
 from chapps.models import Quota, SDAStatus
 from chapps.util import PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
+from chapps.inbound import InboundPPR
 
 logger = logging.getLogger(__name__)
 seconds_per_day = 3600 * 24
@@ -91,29 +93,6 @@ class EmailPolicy:
 
         """
         return f"{ prefix }:{ ':'.join( args ) }"
-
-    @staticmethod
-    def domain_from(email_address: str, ppr: PostfixPolicyRequest) -> str:
-        """Given an email address, return the domain part
-
-        Raises meaningful errors if nonconforming conditions are encountered.
-        """
-        parts = email_address.split("@")
-        if len(parts) > 2:
-            logger.info(
-                "Found sender email with more than one at-sign: "
-                f"sender={email_address} instance={ppr.instance} "
-                f"parts={parts!r}"
-            )
-            raise TooManyAtsException(f"{email_address}=>{parts!r}")
-        elif len(parts) == 1:
-            logger.info(
-                "Found sender string without at-sign: "
-                f"sender={email_address} instance={ppr.instance} "
-                f"parts={parts!r}"
-            )
-            raise NotAnEmailAddressException
-        return parts[-1]
 
     @classmethod
     def _fmtkey(cls, *args):
@@ -287,7 +266,7 @@ class GreylistingPolicy(EmailPolicy):
         """
         return self._fmtkey(ppr.client_address, ppr.sender, ppr.recipient)
 
-    def client_key(self, ppr):
+    def client_key(self, ppr: PostfixPolicyRequest):
         """Return the greylisting client key
 
         This key indicates whether the client has enough successful
@@ -296,22 +275,70 @@ class GreylistingPolicy(EmailPolicy):
         """
         return self._fmtkey(ppr.client_address)
 
-    def domain_option_key(self, ppr):
-        """Return the Redis key for the domain's Greylisting option"""
-        return self._fmtkey()
+    def domain_option_key(self, ppr: InboundPPR):
+        """Return the Redis key for the domain's Greylisting option
 
-    def _approve_policy_request(self, ppr: PostfixPolicyRequest):
-        """Do the dirty work of policy evaluation"""
+        Uses the first of the list of tokenized recipients.  Generally,
+        inbound mail is expected to contain only one recipient per email.
+        """
+        return self._fmtkey(ppr.recipient_domain)
+
+    @contextmanager
+    def _control_data_storage_context(self):
+        pipe = self.redis.pipeline()
+        fmtkey = self._fmtkey
+
+        def _dsc(domain, setting):
+            pipe.set(fmtkey(domain), setting, ex=seconds_per_day)
+
         try:
-            # logger.debug(f"Getting control data for {self.tuple_key( ppr )}")
-            tuple_seen, client_tally = self._get_control_data(ppr)
-            # logger.debug(f"Got values ({tuple_seen}, {client_tally})")
+            yield _dsc
+        finally:
+            pipe.execute()
+            pipe.reset()
+
+    @contextmanager
+    def _adapter_handle(self):
+        adapter = MariaDBInboundFlagsAdapter(
+            db_host=self.config.adapter.db_host,
+            db_port=self.config.adapter.db_port,
+            db_name=self.config.adapter.db_name,
+            db_user=self.config.adapter.db_user,
+            db_pass=self.config.adapter.db_pass,
+        )
+        try:
+            yield adapter
+        finally:
+            adapter.conn.close()
+
+    def acquire_policy_for(ppr: InboundPPR):
+        with self._adapter_handle as adapter:
+            result = adapter.do_greylisting_on(ppr.recipient_domain)
+        self._store_control_data(ppr.recipient_domain, result)
+        return result
+
+    def _store_control_data(domain: str, flag: bool):
+        with self._control_data_storage_context() as dsc:
+            dsc(domain, 1 if flag else 0)
+
+    def _approve_policy_request(self, ppr: InboundPPR):
+        """Do the dirty work of policy evaluation"""
+        option_set, tuple_seen, client_tally = None, None, None
+        try:
+            option_set, tuple_seen, client_tally = self._get_control_data(ppr)
+            if option_set is None:
+                option_set = self.acquire_policy_for(ppr)
+        except NoRecipientsException:
+            logger.exception(f"No recipient in PPR {ppr.instance}.")
+            return False
         except Exception:  # pragma: no cover
             logger.exception("UNEXPECTED")
             logger.debug(
                 f"Returning denial for {ppr.instance} (unexpected exception)."
             )
         # if not whitelisting, client_tally will be None
+        if option_set == 0:
+            return True  # not enforcing this policy
         if client_tally is not None and client_tally >= self.allow_after:
             self._update_client_tally(ppr)
             return True
@@ -327,31 +354,37 @@ class GreylistingPolicy(EmailPolicy):
         self._update_tuple(ppr)
         return False
 
-    def _get_control_data(self, ppr):
+    def _get_control_data(self, ppr: InboundPPR):
         """Extract data from Redis in order to answer the policy request"""
         now = time.time()
         tuple_key = self.tuple_key(ppr)
         client_key = self.client_key(ppr)
+        option_key = self.domain_option_key(ppr)
+        logger.debug(f"Redis keys: {tuple_key} {client_key} {option_key}")
         pipe = self.redis.pipeline()
         pipe.zremrangebyscore(client_key, 0, now - float(self.cache_ttl))
         pipe.get(tuple_key)
+        pipe.get(option_key)
         if self.allow_after > 0:
             pipe.zrange(client_key, 0, -1)
 
         result = pipe.execute()
+        logger.debug(f"Redis result: {result!r}")
         tuple_bits = result[1]
-        if len(result) == 3:
-            client_tally_bits = result[2]
+        option_bits = result[2]
+        if len(result) == 4:
+            client_tally_bits = result[3]
 
         tuple_seen = (
             float(tuple_bits) if tuple_bits else None
         )  # UNIX epoch time
+        option_set = int(option_bits) if option_bits else None
         client_tally = None
         if self.allow_after > 0 and client_tally_bits:
             client_tally = len(client_tally_bits)
-        return (tuple_seen, client_tally)
+        return (option_set, tuple_seen, client_tally)
 
-    def _update_client_tally(self, ppr):
+    def _update_client_tally(self, ppr: InboundPPR):
         """Update client reliability score in Redis
 
         When an email is allowed, increment the reliability score of the
@@ -370,7 +403,7 @@ class GreylistingPolicy(EmailPolicy):
             pipe.expire(client_key, self.cache_ttl)
             pipe.execute()
 
-    def _update_tuple(self, ppr):
+    def _update_tuple(self, ppr: InboundPPR):
         """Set or update a greylisting tuple in Redis"""
         self.redis.setex(self.tuple_key(ppr), self.cache_ttl, time.time())
 
@@ -951,7 +984,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
         """
         if ppr.sender:
-            return EmailPolicy.domain_from(ppr.sender, ppr)
+            return ppr.domain_from(ppr.sender)
         raise NullSenderException
 
     # We will need to be able to access policy data in the RDBMS
