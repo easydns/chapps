@@ -7,9 +7,8 @@ service (handler) loop starts.  Also, CHAPPS raises a few different custom
 exceptions, which are defined here.
 
 """
-import signal, asyncio
+import signal
 import logging
-from chapps.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -79,3 +78,11 @@ class NullSenderException(OutboundPolicyException):
 
 class AuthenticationFailureException(OutboundPolicyException):
     """Lack of user-identifier being treated as authentication failure"""
+
+
+class InboundPolicyException(CHAPPSException):
+    """Parent of exceptions arising during inbound email processing"""
+
+
+class NoRecipientsException(InboundPolicyException):
+    """This is raised if the recipient field is somehow empty"""
