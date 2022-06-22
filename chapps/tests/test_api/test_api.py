@@ -45,8 +45,8 @@ class Test_Users_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 }
             ],
             "emails": [{"id": 1, "name": "caleb@chapps.com"}],
@@ -104,8 +104,8 @@ class Test_Users_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 }
             ],
             "emails": None,
@@ -181,8 +181,8 @@ class Test_Users_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 }
             ],
             "emails": None,
@@ -246,8 +246,8 @@ class Test_Users_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 }
             ],
             "emails": None,
@@ -277,14 +277,14 @@ class Test_Users_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 },
                 {
                     "id": 2,
                     "name": "easydns.com",
                     "greylist": False,
-                    "check_spf": False,
+                    "check_spf": True,
                 },
             ],
             "emails": [{"id": 1, "name": "caleb@chapps.com"}],
@@ -315,7 +315,7 @@ class Test_Users_API:
                     "id": 2,
                     "name": "easydns.com",
                     "greylist": False,
-                    "check_spf": False,
+                    "check_spf": True,
                 }
             ],
             "quota": {"id": 3, "name": "200eph", "quota": 4800},
@@ -350,8 +350,8 @@ class Test_Users_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 }
             ],
             "emails": [{"id": 1, "name": "caleb@chapps.com"}],
@@ -374,7 +374,7 @@ class Test_Users_API:
                 {
                     "id": 3,
                     "name": "easydns.net",
-                    "greylist": False,
+                    "greylist": True,
                     "check_spf": False,
                 },
                 {
@@ -427,8 +427,8 @@ class Test_Users_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 }
             ],
             "emails": [
@@ -461,14 +461,14 @@ class Test_Users_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 },
                 {
                     "id": 2,
                     "name": "easydns.com",
                     "greylist": False,
-                    "check_spf": False,
+                    "check_spf": True,
                 },
             ],
             "quota": {"id": 3, "name": "200eph", "quota": 4800},
@@ -600,8 +600,8 @@ class Test_Domains_API:
             "response": {
                 "id": 1,
                 "name": "chapps.io",
-                "greylist": False,
-                "check_spf": False,
+                "greylist": True,
+                "check_spf": True,
             },
             "timestamp": fixed_time,
             "users": [
@@ -621,8 +621,8 @@ class Test_Domains_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 }
             ],
             "timestamp": fixed_time,
@@ -782,7 +782,7 @@ class Test_Domains_API:
                     "id": 2,
                     "name": "easydns.com",
                     "greylist": False,
-                    "check_spf": False,
+                    "check_spf": True,
                 }
             ],
             "emails": [{"id": 2, "name": "roleaccount@chapps.com"}],
@@ -813,7 +813,7 @@ class Test_Domains_API:
                     "id": 2,
                     "name": "easydns.com",
                     "greylist": False,
-                    "check_spf": False,
+                    "check_spf": True,
                 }
             ],
             "emails": [
@@ -997,8 +997,8 @@ class Test_Emails_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 }
             ],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
@@ -1089,8 +1089,8 @@ class Test_Emails_API:
                 {
                     "id": 1,
                     "name": "chapps.io",
-                    "greylist": False,
-                    "check_spf": False,
+                    "greylist": True,
+                    "check_spf": True,
                 }
             ],
             "quota": {"id": 1, "name": "10eph", "quota": 240},
