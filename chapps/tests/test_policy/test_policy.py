@@ -103,7 +103,7 @@ class Test_GreylistingPolicy_Base:
         redis_key = GreylistingPolicy._fmtkey(*args)
         assert redis_key == "grl:foo:bar"
 
-    def test_tuple_key(self, caplog, allowable_ppr):
+    def test_tuple_key(self, caplog, allowable_inbound_ppr):
         """
         GIVEN a PostfixPolicyRequest object populated with valid data
         WHEN  we as for a tuple key
@@ -111,14 +111,14 @@ class Test_GreylistingPolicy_Base:
         """
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         tuple_key_result = policy.tuple_key(ppr)
         assert (
             tuple_key_result
             == f"{GreylistingPolicy.redis_key_prefix}:{ppr.client_address}:{ppr.sender}:{ppr.recipient}"
         )
 
-    def test_client_key(self, caplog, allowable_ppr):
+    def test_client_key(self, caplog, allowable_inbound_ppr):
         """
         GIVEN a PostfixPolicyRequest object populated with valid data
         WHEN  we ask for a client key
@@ -126,7 +126,7 @@ class Test_GreylistingPolicy_Base:
         """
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         client_key_result = policy.client_key(ppr)
         assert (
             client_key_result
@@ -149,21 +149,8 @@ class Test_GreylistingPolicy_Base:
             == testing_policy_grl.config.policy_grl.rejection_message
         )
 
-    def test_approve_policy_request(self, caplog, monkeypatch, allowable_ppr):
-        """
-        GIVEN a positive policy evaluation
-        WHEN  approve_policy_request is called
-        THEN  it should return True
-        """
-        caplog.set_level(logging.DEBUG)
-        policy = GreylistingPolicy()
-        ppr = allowable_ppr
-        instance = ppr.instance
-        monkeypatch.setattr(policy, "_approve_policy_request", lambda x: True)
-        assert policy.approve_policy_request(ppr) == True
-
-    def test_policy_request_instance_cache(
-        self, caplog, monkeypatch, allowable_ppr
+    def test_approve_policy_request(
+        self, caplog, monkeypatch, allowable_inbound_ppr
     ):
         """
         GIVEN a positive policy evaluation
@@ -172,7 +159,22 @@ class Test_GreylistingPolicy_Base:
         """
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
+        instance = ppr.instance
+        monkeypatch.setattr(policy, "_approve_policy_request", lambda x: True)
+        assert policy.approve_policy_request(ppr) == True
+
+    def test_policy_request_instance_cache(
+        self, caplog, monkeypatch, allowable_inbound_ppr
+    ):
+        """
+        GIVEN a positive policy evaluation
+        WHEN  approve_policy_request is called
+        THEN  it should return True
+        """
+        caplog.set_level(logging.DEBUG)
+        policy = GreylistingPolicy()
+        ppr = allowable_inbound_ppr
         instance = ppr.instance
         monkeypatch.setattr(policy, "_approve_policy_request", lambda x: True)
         _ = policy.approve_policy_request(ppr)
@@ -180,7 +182,9 @@ class Test_GreylistingPolicy_Base:
 
 
 class Test_GreylistingPolicyEvaluation:
-    def test_first_encounter_false(self, caplog, monkeypatch, allowable_ppr):
+    def test_first_encounter_false(
+        self, caplog, monkeypatch, allowable_inbound_ppr
+    ):
         """
         GIVEN a new tuple
         WHEN  executed
@@ -190,13 +194,29 @@ class Test_GreylistingPolicyEvaluation:
         policy = GreylistingPolicy()
         ### simulate a new encounter with a new client
         monkeypatch.setattr(
-            policy, "_get_control_data", lambda x: (None, None)
+            policy, "_get_control_data", lambda x: (None, None, None)
         )
-        response = policy._approve_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_inbound_ppr)
         assert response == False
 
+    def test_pass_if_option_false(
+        self, caplog, monkeypatch, allowable_inbound_ppr
+    ):
+        """
+        GIVEN that the option is set to False
+        WHEN  examining a policy request
+        THEN  issue a passing response since we are not enforcing this policy
+        """
+        caplog.set_level(logging.DEBUG)
+        policy = GreylistingPolicy()
+        monkeypatch.setattr(
+            policy, "_get_control_data", lambda x: (0, None, None)
+        )
+        response = policy._approve_policy_request(allowable_inbound_ppr)
+        assert response is True
+
     def test_first_encounter_updates_tuple(
-        self, caplog, monkeypatch, allowable_ppr
+        self, caplog, monkeypatch, allowable_inbound_ppr
     ):
         """
         GIVEN a new tuple
@@ -207,32 +227,15 @@ class Test_GreylistingPolicyEvaluation:
         policy = GreylistingPolicy()
         ### simulate a new encounter with a new client
         monkeypatch.setattr(
-            policy, "_get_control_data", lambda x: (None, None)
+            policy, "_get_control_data", lambda x: (None, None, None)
         )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_tuple", mock_update)
-        response = policy._approve_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_inbound_ppr)
         assert mock_update.called
 
-    def test_recognized_tuple_passes(self, caplog, monkeypatch, allowable_ppr):
-        """
-        GIVEN a recognized tuple - a timestamp
-        WHEN  the tuple was seen more than min_delay seconds ago
-        THEN  return True
-        """
-        caplog.set_level(logging.DEBUG)
-        policy = GreylistingPolicy()
-        ### simulate a timestamp we saw about 15 min ago
-        monkeypatch.setattr(
-            policy,
-            "_get_control_data",
-            lambda x: (time.time() - (60 * 15), None),
-        )
-        response = policy._approve_policy_request(allowable_ppr)
-        assert response == True
-
-    def test_recognized_tuple_updates_client_tally(
-        self, caplog, monkeypatch, allowable_ppr
+    def test_recognized_tuple_passes(
+        self, caplog, monkeypatch, allowable_inbound_ppr
     ):
         """
         GIVEN a recognized tuple - a timestamp
@@ -245,20 +248,40 @@ class Test_GreylistingPolicyEvaluation:
         monkeypatch.setattr(
             policy,
             "_get_control_data",
-            lambda x: (time.time() - (60 * 15), None),
+            lambda x: (1, time.time() - (60 * 15), None),
+        )
+        response = policy._approve_policy_request(allowable_inbound_ppr)
+        assert response == True
+
+    def test_recognized_tuple_updates_client_tally(
+        self, caplog, monkeypatch, allowable_inbound_ppr
+    ):
+        """
+        GIVEN a recognized tuple - a timestamp
+        WHEN  the tuple was seen more than min_delay seconds ago
+        THEN  return True
+        """
+        caplog.set_level(logging.DEBUG)
+        policy = GreylistingPolicy()
+        ### simulate a timestamp we saw about 15 min ago
+        monkeypatch.setattr(
+            policy,
+            "_get_control_data",
+            lambda x: (1, time.time() - (60 * 15), None),
         )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_client_tally", mock_update)
-        response = policy._approve_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_inbound_ppr)
         assert mock_update.called
 
     def test_sufficient_client_tally_permits_sending_for_unrecognized_tuple(
         self,
         caplog,
         monkeypatch,
-        allowable_ppr,
+        allowable_inbound_ppr,
         mock_client_tally,
         populate_redis_grl,
+        populated_database_fixture,
     ):
         """
         GIVEN a new tuple from a client with a large enough tally
@@ -266,10 +289,11 @@ class Test_GreylistingPolicyEvaluation:
         THEN  return True
         """
         caplog.set_level(logging.DEBUG)
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         policy = GreylistingPolicy()
         with monkeypatch.context() as m:
             m.setattr(ppr, "sender", "someschmo@chapps.io")
+            m.setattr(ppr, "recipient", "someone@chapps.io")
             populate_redis_grl(
                 policy.tuple_key(ppr),
                 {
@@ -278,14 +302,21 @@ class Test_GreylistingPolicyEvaluation:
                     )
                 },
             )
-        response = policy._approve_policy_request(ppr)
+            # # this hotwires the data-getter, which circumvents testing of
+            # # the Redis-access routines which are part of the policy
+            # m.setattr(
+            #     policy,
+            #     "_get_control_data",
+            #     lambda x: (1, None, policy.allow_after),
+            # )
+            response = policy._approve_policy_request(ppr)
         assert response == True
 
     def test_client_tally_updated_when_unrecognized_tuple_passes(
         self,
         caplog,
         monkeypatch,
-        allowable_ppr,
+        allowable_inbound_ppr,
         mock_client_tally,
         populate_redis_grl,
     ):
@@ -295,7 +326,7 @@ class Test_GreylistingPolicyEvaluation:
         THEN  update the tally
         """
         caplog.set_level(logging.DEBUG)
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         policy = GreylistingPolicy()
         with monkeypatch.context() as m:
             m.setattr(ppr, "sender", "someschmo@chapps.io")
@@ -314,7 +345,9 @@ class Test_GreylistingPolicyEvaluation:
         assert tally[-1].decode("utf-8") == ppr.instance
         assert len(tally) == policy.allow_after + 1
 
-    def test_retry_too_soon_fails(self, caplog, monkeypatch, allowable_ppr):
+    def test_retry_too_soon_fails(
+        self, caplog, monkeypatch, allowable_inbound_ppr
+    ):
         """
         GIVEN a recognized tuple
         WHEN  the tuple was seen too recently (less than min_delay seconds)
@@ -326,11 +359,11 @@ class Test_GreylistingPolicyEvaluation:
         monkeypatch.setattr(
             policy, "_get_control_data", lambda x: (time.time(), None)
         )
-        response = policy._approve_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_inbound_ppr)
         assert response == False
 
     def test_retry_too_soon_updates_tuple(
-        self, caplog, monkeypatch, allowable_ppr
+        self, caplog, monkeypatch, allowable_inbound_ppr
     ):
         """
         GIVEN a recognized tuple
@@ -345,21 +378,23 @@ class Test_GreylistingPolicyEvaluation:
         )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_tuple", mock_update)
-        response = policy._approve_policy_request(allowable_ppr)
+        response = policy._approve_policy_request(allowable_inbound_ppr)
         assert mock_update.called
 
 
 class Test_GreylistingPolicy_update_control_data:
     """Testing control update routes _update_tuple and _update_client_tally"""
 
-    def test_update_tuple(self, caplog, clear_redis_grl, allowable_ppr):
+    def test_update_tuple(
+        self, caplog, clear_redis_grl, allowable_inbound_ppr
+    ):
         """
         GIVEN a ppr
         WHEN  _update_tuple executed
         THEN  set a key with a particular structure to a current timestamp
         """
         caplog.set_level(logging.DEBUG)
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         policy = GreylistingPolicy()
         t = time.time()
         policy._update_tuple(ppr)
@@ -368,21 +403,23 @@ class Test_GreylistingPolicy_update_control_data:
         t_stored = float(t_stored)
         assert t_stored > t and t_stored < time.time()
 
-    def test_update_client_tally(self, caplog, clear_redis_grl, allowable_ppr):
+    def test_update_client_tally(
+        self, caplog, clear_redis_grl, allowable_inbound_ppr
+    ):
         """
         GIVEN a ppr
         WHEN  _update_client_tally is executed
         THEN  add the tuple (map) instance -> timestamp to the client key
         """
         caplog.set_level(logging.DEBUG)
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         policy = GreylistingPolicy()
         policy._update_client_tally(ppr)
         client_tally = policy.redis.zrange(policy.client_key(ppr), 0, -1)
         assert client_tally[0].decode("utf-8") == ppr.instance
 
     def test_skip_client_tally_update_if_allow_after_is_zero(
-        self, caplog, monkeypatch, clear_redis_grl, allowable_ppr
+        self, caplog, monkeypatch, clear_redis_grl, allowable_inbound_ppr
     ):
         """
         GIVEN that allow_after is set to zero (we are not keeping a success tally)
@@ -390,7 +427,7 @@ class Test_GreylistingPolicy_update_control_data:
         THEN  immediately return
         """
         caplog.set_level(logging.DEBUG)
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         policy = GreylistingPolicy(auto_allow_after=0)
         mock_redis_pipeline = Mock()
         with monkeypatch.context() as m:
@@ -402,7 +439,9 @@ class Test_GreylistingPolicy_update_control_data:
 class Test_GreylistingPolicy_get_control_data:
     """This method interfaces with Redis"""
 
-    def test_no_keys_yet_exist(self, caplog, clear_redis_grl, allowable_ppr):
+    def test_no_keys_yet_exist(
+        self, caplog, clear_redis_grl, allowable_inbound_ppr
+    ):
         """
         GIVEN a new tuple
         WHEN  control data is requested
@@ -410,39 +449,41 @@ class Test_GreylistingPolicy_get_control_data:
         """
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         response = policy._get_control_data(ppr)
-        assert response[0] == None
+        assert response[0] is None
 
-    def test_tuple_is_recognized(self, caplog, clear_redis_grl, allowable_ppr):
+    def test_tuple_is_recognized(
+        self, caplog, clear_redis_grl, allowable_inbound_ppr
+    ):
         """
         GIVEN a recognized tuple
         WHEN  control data is requested
-        THEN  the returned tuple should have a timestamp (float) as its first argument
+        THEN  the tuple should have a timestamp (float) as its 2nd argument
         """
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         policy._update_tuple(ppr)
         response = policy._get_control_data(ppr)
-        assert type(response[0]) == float
-        assert response[0] < time.time()
+        assert type(response[1]) == float
+        assert response[1] < time.time()
 
     def test_allow_after_is_zero(
-        self, caplog, monkeypatch, clear_redis_grl, allowable_ppr
+        self, caplog, monkeypatch, clear_redis_grl, allowable_inbound_ppr
     ):
         """
         GIVEN a recognized tuple, and allow_after set to 0
         WHEN  control data is requested
-        THEN  the second member of the tuple should always be None
+        THEN  the third member of the tuple should always be None
         """
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         policy._update_tuple(ppr)
         monkeypatch.setattr(policy, "allow_after", 0)
         response = policy._get_control_data(ppr)
-        assert response[1] == None
+        assert response[2] == None
 
     def test_new_tuple_client_tally_present(
         self,
@@ -450,17 +491,17 @@ class Test_GreylistingPolicy_get_control_data:
         monkeypatch,
         mock_client_tally,
         populate_redis_grl,
-        allowable_ppr,
+        allowable_inbound_ppr,
         unique_instance,
     ):
         """
         GIVEN an unrecognized tuple, but existing client tally
         WHEN  executed
-        THEN  the count should be returned as the second member of the tuple
+        THEN  the count should be returned as the third member of the tuple
         """
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         tally = mock_client_tally(policy.allow_after - 2)
         tuple_key = ""
         with monkeypatch.context() as m:
@@ -469,33 +510,35 @@ class Test_GreylistingPolicy_get_control_data:
         client_key = policy.client_key(ppr)
         populate_redis_grl(tuple_key, {client_key: tally})
         response = policy._get_control_data(ppr)
-        assert response[0] == None
-        assert response[1] == len(tally)
+        assert response[1] is None
+        assert response[2] == len(tally)
 
     def test_tuple_recognized_and_tally_exists(
         self,
         caplog,
         mock_client_tally,
-        allowable_ppr,
+        allowable_inbound_ppr,
         populate_redis_grl,
         unique_instance,
     ):
         """
-        GIVEN a recognized tuple, and an existing tally
-        WHEN  executed
-        THEN  return a timestamp, and the client's tally in that order
+        :GIVEN: a recognized tuple, and an existing tally
+        :WHEN:  executed
+        :THEN:  return the option flag,
+                a timestamp,
+                and the client's tally in that order
         """
         caplog.set_level(logging.DEBUG)
         policy = GreylistingPolicy()
-        ppr = allowable_ppr
+        ppr = allowable_inbound_ppr
         tally = mock_client_tally(policy.allow_after - 2)
         tuple_key = policy.tuple_key(ppr)
         client_key = policy.client_key(ppr)
         populate_redis_grl(tuple_key, {client_key: tally})
         response = policy._get_control_data(ppr)
-        assert type(response[0]) == float
-        assert response[0] < time.time()
-        assert response[1] == len(tally)
+        assert type(response[1]) == float
+        assert response[1] < time.time()
+        assert response[2] == len(tally)
 
 
 class Test_OutboundQuotaPolicy:
