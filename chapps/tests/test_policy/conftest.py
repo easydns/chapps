@@ -19,6 +19,7 @@ from chapps.tests.test_adapter.conftest import (
     finalizing_pcadapter,
     database_fixture,
     populated_database_fixture,
+    populated_database_fixture_with_extras,
 )
 from chapps.tests.conftest import (
     _unique_instance,
@@ -36,6 +37,7 @@ from chapps.policy import (
     GreylistingPolicy,
     SenderDomainAuthPolicy,
 )
+from chapps.spf_policy import SPFEnforcementPolicy
 from chapps.util import PostfixPolicyRequest
 from chapps.inbound import InboundPPR
 from chapps.outbound import OutboundPPR
@@ -72,16 +74,12 @@ def null_sender_policy_sda(
 
 @fixture
 def testing_policy_grl(chapps_mock_env, chapps_mock_config_file):
-    newconfig = CHAPPSConfig()
-    policy = GreylistingPolicy(newconfig)
-    return policy
+    return testing_policy_factory(GreylistingPolicy)
 
 
 @fixture
-def testing_policy_spf():
-    # insert logic similar to above, to have an alternate config
-    # for testing SPF there seems little reason
-    return None
+def testing_policy_spf(chapps_mock_env, chapps_mock_config_file):
+    return testing_policy_factory(SPFEnforcementPolicy)
 
 
 @fixture

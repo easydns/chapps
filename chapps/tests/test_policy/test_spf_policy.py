@@ -27,48 +27,97 @@ class Test_SPFEnforcementPolicy:
 
     ### Best to avoid actually using DNS for tests
     def test_passing_emails_get_prepend(
-        self, caplog, monkeypatch, passing_spf_query, allowable_ppr
+        self,
+        caplog,
+        monkeypatch,
+        passing_spf_query,
+        testing_policy_spf,
+        allowable_inbound_ppr,
+        populated_database_fixture,
     ):
         caplog.set_level(logging.DEBUG)
         with monkeypatch.context() as m:
             m.setattr(spf, "query", passing_spf_query)
-            result = SPFEnforcementPolicy().approve_policy_request(
-                allowable_ppr
+            result = testing_policy_spf.approve_policy_request(
+                allowable_inbound_ppr
             )
         assert result == "PREPEND X-CHAPPSTESTING: SPF prepend"
 
+    def test_domain_spf_flag_false(
+        self,
+        caplog,
+        monkeypatch,
+        passing_spf_query,
+        testing_policy_spf,
+        allowable_inbound_ppr,
+        populated_database_fixture_with_extras,
+    ):
+        """
+        :GIVEN: the domain has the SPF-checking flag set to false
+        :WHEN:  policy approval is requested
+        :THEN:  return DUNNO instead of performing policy enforcement
+        """
+        caplog.set_level(logging.DEBUG)
+        with monkeypatch.context() as m:
+            m.setattr(spf, "query", passing_spf_query)
+            m.setattr(
+                allowable_inbound_ppr, "recipient", "someone@easydns.org"
+            )
+            result = testing_policy_spf.approve_policy_request(
+                allowable_inbound_ppr
+            )
+        assert result == "DUNNO"
+
     def test_failing_emails_get_reject(
-        self, caplog, monkeypatch, failing_spf_query, allowable_ppr
+        self,
+        caplog,
+        monkeypatch,
+        failing_spf_query,
+        testing_policy_spf,
+        allowable_inbound_ppr,
+        populated_database_fixture,
     ):
         caplog.set_level(logging.DEBUG)
         with monkeypatch.context() as m:
             m.setattr(spf, "query", failing_spf_query)
-            result = SPFEnforcementPolicy().approve_policy_request(
-                allowable_ppr
+            result = testing_policy_spf.approve_policy_request(
+                allowable_inbound_ppr
             )
         assert (
             result == "550 5.7.1 SPF check failed: CHAPPS failing SPF message"
         )
 
     def test_no_helo_passing_mf_gets_prepend(
-        self, caplog, monkeypatch, no_helo_passing_mf, allowable_ppr
+        self,
+        caplog,
+        monkeypatch,
+        no_helo_passing_mf,
+        testing_policy_spf,
+        allowable_inbound_ppr,
+        populated_database_fixture,
     ):
         caplog.set_level(logging.DEBUG)
         with monkeypatch.context() as m:
             m.setattr(spf, "query", no_helo_passing_mf)
-            result = SPFEnforcementPolicy().approve_policy_request(
-                allowable_ppr
+            result = testing_policy_spf.approve_policy_request(
+                allowable_inbound_ppr
             )
         assert result == "PREPEND X-CHAPPSTESTING: SPF prepend"
 
     def test_passing_helo_failing_mf_gets_reject(
-        self, caplog, monkeypatch, passing_helo_failing_mf, allowable_ppr
+        self,
+        caplog,
+        monkeypatch,
+        passing_helo_failing_mf,
+        testing_policy_spf,
+        allowable_inbound_ppr,
+        populated_database_fixture,
     ):
         caplog.set_level(logging.DEBUG)
         with monkeypatch.context() as m:
             m.setattr(spf, "query", passing_helo_failing_mf)
-            result = SPFEnforcementPolicy().approve_policy_request(
-                allowable_ppr
+            result = testing_policy_spf.approve_policy_request(
+                allowable_inbound_ppr
             )
         assert (
             result == "550 5.7.1 SPF check failed: CHAPPS failing SPF message"
@@ -87,12 +136,14 @@ class Test_SPFEnforcementPolicy:
         clear_redis_grl,
         auto_spf_query,
         expected_result,
-        allowable_ppr,
+        testing_policy_spf,
+        allowable_inbound_ppr,
+        populated_database_fixture,
     ):
         caplog.set_level(logging.DEBUG)
         with monkeypatch.context() as m:
             m.setattr(spf, "query", auto_spf_query)
-            result = SPFEnforcementPolicy().approve_policy_request(
-                allowable_ppr
+            result = testing_policy_spf.approve_policy_request(
+                allowable_inbound_ppr
             )
         assert result == expected_result
