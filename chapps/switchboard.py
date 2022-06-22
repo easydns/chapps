@@ -26,6 +26,7 @@ from chapps.policy import (
     SenderDomainAuthPolicy,
 )
 from chapps.util import PostfixPolicyRequest
+from chapps.inbound import InboundPPR
 from chapps.outbound import OutboundPPR
 from chapps.signals import (
     CHAPPSException,
@@ -338,7 +339,7 @@ class GreylistingHandler(RequestHandler):
 
         """
         p = policy or GreylistingPolicy()
-        super().__init__(p)
+        super().__init__(p, pprclass=InboundPPR)
 
 
 class SenderDomainAuthHandler(RequestHandler):
@@ -509,7 +510,7 @@ if HAVE_SPF:
         def __init__(
             self,
             policy: Optional[SPFEnforcementPolicy] = None,
-            pprclass: Optional[PostfixPolicyRequest] = PostfixPolicyRequest,
+            pprclass: Optional[PostfixPolicyRequest] = InboundPPR,
         ):
             """Set up an SPFEnforcementHandler
 
@@ -539,7 +540,7 @@ if HAVE_SPF:
             self,
             policies: Optional[List[EmailPolicy]],
             *,
-            pprclass: Optional[PostfixPolicyRequest] = PostfixPolicyRequest,
+            pprclass: Optional[PostfixPolicyRequest] = InboundPPR,
         ):
             """Create an inbound policy handler for SPF + Greylisting"""
             policies = policies or [
