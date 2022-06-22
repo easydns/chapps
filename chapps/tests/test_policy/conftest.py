@@ -37,6 +37,7 @@ from chapps.policy import (
     SenderDomainAuthPolicy,
 )
 from chapps.util import PostfixPolicyRequest
+from chapps.inbound import InboundPPR
 from chapps.outbound import OutboundPPR
 from chapps.signals import NullSenderException
 
@@ -86,6 +87,15 @@ def testing_policy_spf():
 @fixture
 def allowable_ppr(postfix_policy_request_message):
     return OutboundPPR(postfix_policy_request_message("underquota@chapps.io"))
+
+
+@fixture
+def allowable_inbound_ppr(postfix_policy_request_message):
+    return InboundPPR(
+        postfix_policy_request_message(
+            "underquota@chapps.io", ["somebody@chapps.io"]
+        )
+    )
 
 
 @fixture
