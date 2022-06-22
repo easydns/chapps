@@ -100,8 +100,12 @@ def grl_reader_too_fast(postfix_policy_request_payload):
     mock = AsyncMock()
     mock.readuntil = AsyncMock(
         side_effect=[
-            postfix_policy_request_payload("somebody@chapps.io"),
-            postfix_policy_request_payload("somebody@chapps.io"),
+            postfix_policy_request_payload(
+                "somebody@chapps.io", ["someguy@chapps.io"]
+            ),
+            postfix_policy_request_payload(
+                "somebody@chapps.io", ["someguy@chapps.io"]
+            ),
             CallableExhausted,
         ]
     )
@@ -111,10 +115,9 @@ def grl_reader_too_fast(postfix_policy_request_payload):
 @pytest.fixture
 def grl_reader_recognized(postfix_policy_request_payload, populate_redis_grl):
     sender = "somebody@chapps.io"
-    pprp = postfix_policy_request_payload(sender)
-    populate_redis_grl(
-        GreylistingPolicy._fmtkey("10.10.10.10", sender, "bar@foo.tld")
-    )
+    recip = "someguy@chapps.io"
+    pprp = postfix_policy_request_payload(sender, [recip])
+    populate_redis_grl(GreylistingPolicy._fmtkey("10.10.10.10", sender, recip))
     mock = AsyncMock()
     mock.readuntil = AsyncMock(side_effect=[pprp, CallableExhausted])
     return mock
@@ -125,12 +128,11 @@ def grl_reader_with_tally(
     postfix_policy_request_payload, populate_redis_grl, mock_client_tally
 ):
     sender = "somebody@chapps.io"
-    pprp = postfix_policy_request_payload(sender)
+    recip = "someguy@chapps.io"
+    pprp = postfix_policy_request_payload(sender, [recip])
     tally = {GreylistingPolicy._fmtkey("10.10.10.10"): mock_client_tally(10)}
     populate_redis_grl(
-        GreylistingPolicy._fmtkey(
-            "10.10.10.10", "someschmo@chapps.io", "bar@foo.tld"
-        ),
+        GreylistingPolicy._fmtkey("10.10.10.10", "someschmo@chapps.io", recip),
         tally,
     )
     mock = AsyncMock()
