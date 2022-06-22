@@ -99,7 +99,8 @@ def _populated_database_fixture(database_fixture):
         "BEGIN;",
         "INSERT INTO users ( name ) VALUES ( 'ccullen@easydns.com' );",
         "SELECT LAST_INSERT_ID() INTO @userid;",
-        "INSERT INTO domains ( name ) VALUES ( 'chapps.io' );",
+        "INSERT INTO domains ( name, greylist, check_spf )"
+        " VALUES ( 'chapps.io', 1, 1 );",
         "SELECT LAST_INSERT_ID() INTO @chappsid;",
         "INSERT INTO emails (name) VALUES ( 'caleb@chapps.com' );",
         "SELECT LAST_INSERT_ID() INTO @emailid;",
@@ -155,10 +156,10 @@ def _populated_database_fixture(database_fixture):
 def _populated_database_fixture_with_extras(database_fixture):
     cur = _populated_database_fixture(database_fixture)
     extra_domains = (
-        "INSERT INTO domains (name) VALUES"
-        " ('easydns.com'),"
-        " ('easydns.net'),"
-        " ('easydns.org');"
+        "INSERT INTO domains (name, greylist, check_spf) VALUES"
+        " ('easydns.com', 0, 1),"
+        " ('easydns.net', 1, 0),"
+        " ('easydns.org', 0, 0);"
     )
     extra_users = (
         "INSERT INTO users (name) VALUES "
