@@ -420,3 +420,32 @@ class MariaDBSenderDomainAuthAdapter(PolicyConfigAdapter):
         result = cur.fetchone()[0]
         cur.close()
         return result
+
+
+class MariaDBInboundFlagsAdapter(PolicyConfigAdapter):
+    """Adapter class for handling option flags for inbound mail
+
+    Generally these flags are set on a per-domain basis.
+    """
+
+    greylist_on_domain_query = (
+        "SELECT greylist FROM domains WHERE name = '{domain}' LIMIT 1"
+    )
+
+    check_spf_on_domain_query = (
+        "SELECT check_spf FROM domains WHERE name = '{domain}' LIMIT 1"
+    )
+
+    def do_greylisting_on(self, domain: str) -> bool:
+        cur = self.conn.cursor()
+        cur.execute(self.greylist_on_domain_query.format(domain=domain))
+        result = cur.fetchone()[0]
+        cur.close()
+        return result == 1
+
+    def check_spf_on(self, domain: str) -> bool:
+        cur = self.conn.cursor()
+        cur.execute(self.check_spf_on_domain_query.format(domain=domain))
+        result = cur.fetchone()[0]
+        cur.close()
+        return result == 1
