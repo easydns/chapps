@@ -25,6 +25,7 @@ from chapps.tests.test_policy.conftest import (
     testing_policy,
     testing_policy_grl,
     populate_redis_grl,
+    clear_redis_grl,
     unique_instance,
     mock_client_tally,
 )
@@ -159,9 +160,11 @@ def unique_instance():
 
 @pytest.fixture
 def mock_reader_factory(unique_instance, postfix_policy_request_payload):
-    def mock_reader(sender="somebody@chapps.io", **kwargs):
+    def mock_reader(
+        sender="somebody@chapps.io", recip="foo@bar.tld", **kwargs
+    ):
         pprp = postfix_policy_request_payload(
-            sender, ["someone@chapps.io"], unique_instance(), **kwargs
+            sender, [recip], unique_instance(), **kwargs
         )
         mock = AsyncMock()
         mock.readuntil = AsyncMock(side_effect=[pprp, CallableExhausted])
