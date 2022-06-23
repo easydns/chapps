@@ -456,7 +456,7 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                         logger.info(
                             f"{type(policy).__name__} "
                             # + ("PASS" if action else "FAIL")
-                            + " {action!r} {policy_data}"
+                            + f" {action!r} {policy_data}"
                         )
                     except CHAPPSException:
                         logger.exception("During policy evaluation:")
