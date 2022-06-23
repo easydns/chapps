@@ -250,7 +250,7 @@ class EmailPolicy:
         )
 
     def approve_policy_request(
-        self, ppr: PostfixPolicyRequest
+        self, ppr: PostfixPolicyRequest, **opts
     ) -> Union[str, bool]:
         """Determine a policy outcome based on the PPR provided
 
@@ -265,12 +265,12 @@ class EmailPolicy:
         """
         response = self.instance_cache.get(ppr.instance, None)
         if response is None:
-            response = self._approve_policy_request(ppr)
+            response = self._approve_policy_request(ppr, **opts)
             self.instance_cache[ppr.instance] = response
         return response
 
     def _approve_policy_request(
-        self, ppr: PostfixPolicyRequest
+        self, ppr: PostfixPolicyRequest, **opts
     ) -> Union[str, bool]:
         """Placeholder method which must be implemented by subclasses.
         """
@@ -379,14 +379,34 @@ class GreylistingPolicy(InboundPolicy):
         """
         return self._fmtkey(ppr.client_address)
 
-    def acquire_policy_for(ppr: InboundPPR):
-        with self._adapter_handle as adapter:
+    def acquire_policy_for(self, ppr: InboundPPR):
+        with self._adapter_handle() as adapter:
             result = adapter.do_greylisting_on(ppr.recipient_domain)
-        self._store_control_data(ppr.recipient_domain, result)
+        logger.debug(
+            "Got greylisting option flag "
+            + str(result)
+            + " from RDBMS for domain "
+            + ppr.recipient_domain
+        )
+        self._store_control_data(ppr.recipient_domain, 1 if result else 0)
         return result
 
-    def _approve_policy_request(self, ppr: InboundPPR):
-        """Do the dirty work of policy evaluation"""
+    def _approve_policy_request(self, ppr: InboundPPR, **opts):
+        """Perform greylisting
+
+        .. todo::
+
+            It would be possible to allow domains to set the whitelisting
+            threshhold, since this routine has to obtain option flag data from
+            the policy config source at this point anyway.  Because we're also
+            concerned with time between attempts, we could also do some
+            time-based things here, such as starting to refuse clients who
+            retry much too quickly, implementing per-domain rules about how
+            frequently a client is allowed to send email to their addresses,
+            etc.
+
+        :meta public:
+        """
         option_set, tuple_seen, client_tally = None, None, None
         try:
             option_set, tuple_seen, client_tally = self._get_control_data(ppr)
@@ -400,9 +420,15 @@ class GreylistingPolicy(InboundPolicy):
             logger.debug(
                 f"Returning denial for {ppr.instance} (unexpected exception)."
             )
-        # if not whitelisting, client_tally will be None
-        if option_set == 0:
+        if opts.get("force", False):
+            option_set = True
+        if not option_set:
+            logger.debug(
+                "Not enforcing greylisting for domain "
+                f"{ppr.recipient_domain or 'N/A'}"
+            )
             return True  # not enforcing this policy
+        # if not whitelisting, client_tally will be None
         if client_tally is not None and client_tally >= self.allow_after:
             self._update_client_tally(ppr)
             return True
