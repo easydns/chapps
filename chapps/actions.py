@@ -311,7 +311,9 @@ class PostfixSPFActions(PostfixActions):
             raise ValueError(
                 f"PostfixSPFActions.greylist() expects a ppr= kwarg providing the PPR for greylisting."
             )
-        if PostfixSPFActions.greylisting_policy.approve_policy_request(ppr):
+        if PostfixSPFActions.greylisting_policy.approve_policy_request(
+            ppr, force=True
+        ):
             passing = PostfixSPFActions().action_for("pass")
             return passing(msg, ppr, *args, **kwargs)
         if len(msg) == 0:
