@@ -439,13 +439,21 @@ class MariaDBInboundFlagsAdapter(PolicyConfigAdapter):
     def do_greylisting_on(self, domain: str) -> bool:
         cur = self.conn.cursor()
         cur.execute(self.greylist_on_domain_query.format(domain=domain))
-        result = cur.fetchone()[0]
-        cur.close()
+        try:
+            result = cur.fetchone()[0]
+        except TypeError:
+            result = 0
+        finally:
+            cur.close()
         return result == 1
 
     def check_spf_on(self, domain: str) -> bool:
         cur = self.conn.cursor()
         cur.execute(self.check_spf_on_domain_query.format(domain=domain))
-        result = cur.fetchone()[0]
-        cur.close()
+        try:
+            result = cur.fetchone()[0]
+        except TypeError:
+            result = 0
+        finally:
+            cur.close()
         return result == 1

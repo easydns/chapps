@@ -161,7 +161,7 @@ def unique_instance():
 def mock_reader_factory(unique_instance, postfix_policy_request_payload):
     def mock_reader(sender="somebody@chapps.io", **kwargs):
         pprp = postfix_policy_request_payload(
-            sender, None, unique_instance(), **kwargs
+            sender, ["someone@chapps.io"], unique_instance(), **kwargs
         )
         mock = AsyncMock()
         mock.readuntil = AsyncMock(side_effect=[pprp, CallableExhausted])
