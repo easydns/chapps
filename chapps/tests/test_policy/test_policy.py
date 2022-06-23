@@ -183,7 +183,7 @@ class Test_GreylistingPolicy_Base:
 
 class Test_GreylistingPolicyEvaluation:
     def test_first_encounter_false(
-        self, caplog, monkeypatch, allowable_inbound_ppr
+        self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
     ):
         """
         GIVEN a new tuple
@@ -191,7 +191,7 @@ class Test_GreylistingPolicyEvaluation:
         THEN  return False
         """
         caplog.set_level(logging.DEBUG)
-        policy = GreylistingPolicy()
+        policy = testing_policy_grl
         ### simulate a new encounter with a new client
         monkeypatch.setattr(
             policy, "_get_control_data", lambda x: (None, None, None)
@@ -200,7 +200,7 @@ class Test_GreylistingPolicyEvaluation:
         assert response == False
 
     def test_pass_if_option_false(
-        self, caplog, monkeypatch, allowable_inbound_ppr
+        self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
     ):
         """
         GIVEN that the option is set to False
@@ -208,7 +208,7 @@ class Test_GreylistingPolicyEvaluation:
         THEN  issue a passing response since we are not enforcing this policy
         """
         caplog.set_level(logging.DEBUG)
-        policy = GreylistingPolicy()
+        policy = testing_policy_grl
         monkeypatch.setattr(
             policy, "_get_control_data", lambda x: (0, None, None)
         )
@@ -216,7 +216,7 @@ class Test_GreylistingPolicyEvaluation:
         assert response is True
 
     def test_first_encounter_updates_tuple(
-        self, caplog, monkeypatch, allowable_inbound_ppr
+        self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
     ):
         """
         GIVEN a new tuple
@@ -224,7 +224,7 @@ class Test_GreylistingPolicyEvaluation:
         THEN  update the tuple
         """
         caplog.set_level(logging.DEBUG)
-        policy = GreylistingPolicy()
+        policy = testing_policy_grl
         ### simulate a new encounter with a new client
         monkeypatch.setattr(
             policy, "_get_control_data", lambda x: (None, None, None)
@@ -235,7 +235,7 @@ class Test_GreylistingPolicyEvaluation:
         assert mock_update.called
 
     def test_recognized_tuple_passes(
-        self, caplog, monkeypatch, allowable_inbound_ppr
+        self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
     ):
         """
         GIVEN a recognized tuple - a timestamp
@@ -243,7 +243,7 @@ class Test_GreylistingPolicyEvaluation:
         THEN  return True
         """
         caplog.set_level(logging.DEBUG)
-        policy = GreylistingPolicy()
+        policy = testing_policy_grl
         ### simulate a timestamp we saw about 15 min ago
         monkeypatch.setattr(
             policy,
@@ -254,7 +254,7 @@ class Test_GreylistingPolicyEvaluation:
         assert response == True
 
     def test_recognized_tuple_updates_client_tally(
-        self, caplog, monkeypatch, allowable_inbound_ppr
+        self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
     ):
         """
         GIVEN a recognized tuple - a timestamp
@@ -262,7 +262,7 @@ class Test_GreylistingPolicyEvaluation:
         THEN  return True
         """
         caplog.set_level(logging.DEBUG)
-        policy = GreylistingPolicy()
+        policy = testing_policy_grl
         ### simulate a timestamp we saw about 15 min ago
         monkeypatch.setattr(
             policy,
@@ -280,6 +280,7 @@ class Test_GreylistingPolicyEvaluation:
         monkeypatch,
         allowable_inbound_ppr,
         mock_client_tally,
+        testing_policy_grl,
         populate_redis_grl,
         populated_database_fixture,
     ):
@@ -290,7 +291,7 @@ class Test_GreylistingPolicyEvaluation:
         """
         caplog.set_level(logging.DEBUG)
         ppr = allowable_inbound_ppr
-        policy = GreylistingPolicy()
+        policy = testing_policy_grl
         with monkeypatch.context() as m:
             m.setattr(ppr, "sender", "someschmo@chapps.io")
             m.setattr(ppr, "recipient", "someone@chapps.io")
@@ -318,6 +319,7 @@ class Test_GreylistingPolicyEvaluation:
         monkeypatch,
         allowable_inbound_ppr,
         mock_client_tally,
+        testing_policy_grl,
         populate_redis_grl,
     ):
         """
@@ -327,7 +329,7 @@ class Test_GreylistingPolicyEvaluation:
         """
         caplog.set_level(logging.DEBUG)
         ppr = allowable_inbound_ppr
-        policy = GreylistingPolicy()
+        policy = testing_policy_grl
         with monkeypatch.context() as m:
             m.setattr(ppr, "sender", "someschmo@chapps.io")
             populate_redis_grl(
@@ -346,7 +348,7 @@ class Test_GreylistingPolicyEvaluation:
         assert len(tally) == policy.allow_after + 1
 
     def test_retry_too_soon_fails(
-        self, caplog, monkeypatch, allowable_inbound_ppr
+        self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
     ):
         """
         GIVEN a recognized tuple
@@ -354,16 +356,16 @@ class Test_GreylistingPolicyEvaluation:
         THEN  return False
         """
         caplog.set_level(logging.DEBUG)
-        policy = GreylistingPolicy()
+        policy = testing_policy_grl
         ### simulate a timestamp we saw about 15 min ago
         monkeypatch.setattr(
-            policy, "_get_control_data", lambda x: (time.time(), None)
+            policy, "_get_control_data", lambda x: (1, time.time(), None)
         )
         response = policy._approve_policy_request(allowable_inbound_ppr)
         assert response == False
 
     def test_retry_too_soon_updates_tuple(
-        self, caplog, monkeypatch, allowable_inbound_ppr
+        self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
     ):
         """
         GIVEN a recognized tuple
@@ -371,10 +373,10 @@ class Test_GreylistingPolicyEvaluation:
         THEN  return False
         """
         caplog.set_level(logging.DEBUG)
-        policy = GreylistingPolicy()
+        policy = testing_policy_grl
         ### simulate a timestamp we saw about 15 min ago
         monkeypatch.setattr(
-            policy, "_get_control_data", lambda x: (time.time(), None)
+            policy, "_get_control_data", lambda x: (1, time.time(), None)
         )
         mock_update = Mock()
         monkeypatch.setattr(policy, "_update_tuple", mock_update)
