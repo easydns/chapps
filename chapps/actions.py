@@ -309,7 +309,8 @@ class PostfixSPFActions(PostfixActions):
         ppr = kwargs.get("ppr", None)
         if ppr is None:
             raise ValueError(
-                f"PostfixSPFActions.greylist() expects a ppr= kwarg providing the PPR for greylisting."
+                "PostfixSPFActions.greylist() expects a ppr= kwarg "
+                "providing the PPR for greylisting."
             )
         if PostfixSPFActions.greylisting_policy.approve_policy_request(
             ppr, force=True
