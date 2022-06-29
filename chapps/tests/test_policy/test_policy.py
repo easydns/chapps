@@ -90,6 +90,71 @@ class Test_EmailPolicy:
         assert policy.sentinel is not None
 
 
+class Test_PostfixActions:
+    """Tests for abstract Postfix action superclass"""
+
+    def test_okay(self, postfix_actions):
+        """Returns OK"""
+        result = postfix_actions.okay()
+        assert result == "OK"
+
+    def test_okay_accepts_useless_message(self, postfix_actions):
+        """Returns OK even if a message is supplied"""
+        arbitrary_message = "This message will be ignored."
+        result = postfix_actions.okay(arbitrary_message)
+        assert result == "OK"
+
+    def test_dunno(self, postfix_actions):
+        """Returns DUNNO"""
+        result = postfix_actions.dunno()
+        assert result == "DUNNO"
+
+    def test_dunno_accepts_useless_message(self, postfix_actions):
+        """Returns DUNNO even if a message is supplied"""
+        arbitrary_message = "This message will be ignored."
+        result = postfix_actions.dunno(arbitrary_message)
+        assert result == "DUNNO"
+
+    def test_action_for_raises_not_implemented_error(self, postfix_actions):
+        """The method action_for() is abstract and not implemented by PostfixActions"""
+        with pytest.raises(NotImplementedError):
+            assert postfix_actions.action_for("foo")
+
+
+class Test_PostfixOQPActions:
+    """Testing outbound quota actions for Postfix"""
+
+    def test_pass_yields_okay(self, oqp_actions):
+        """Pass returns OK"""
+        ### When the calling routine gets True from the policy, it will call .pass()
+        ### and when it gets false, it will call .fail()
+        ### It may be that the acceptance message, even for outbound quota, should still be DUNNO
+        result = oqp_actions.passing()
+        assert result == "OK" or result == "DUNNO"
+
+    def test_fail_yields_rejection(self, oqp_actions):
+        """Fail returns a string starting with '554 Rejected' or 'REJECT'"""
+        ### Postfix will insert enhanced status code 5.7.1 which is the code
+        ###   we want anyhow.  There seems to be no code for gateways to use
+        ###   to signal that the user's outbound quota has been reached.
+        result = oqp_actions.fail()
+        assert result[0:7] == "REJECT " or result[0:12] == "554 Rejected"
+
+
+class Test_PostfixGRLActions:
+    """Testing greylisting actions for Postfix"""
+
+    def test_pass_yields_dunno(self, grl_actions):
+        """Pass returns DUNNO"""
+        result = grl_actions.passing()
+        assert result == "DUNNO"
+
+    def test_fail_yields_rejection(self, grl_actions):
+        """Fail returns a string starting with DEFER_IF_PERMIT"""
+        result = grl_actions.fail()
+        assert result[0:16] == "DEFER_IF_PERMIT "
+
+
 class Test_GreylistingPolicy_Base:
     """Tests of the greylisting policy module"""
 

@@ -495,3 +495,31 @@ def _auto_ppr_param_list(*, senders=["ccullen@easydns.com"]):
         else:
             params.append((ppr_for(s), NotAnEmailAddressException))
     return params
+
+
+# ## Actions stuff
+
+
+@fixture
+def postfix_actions():
+    return PostfixActions()
+
+
+@fixture
+def oqp_actions():
+    return PostfixOQPActions()
+
+
+@fixture
+def grl_actions():
+    return PostfixGRLActions()
+
+
+@fixture
+def spf_actions():
+    return PostfixSPFActions()
+
+
+@fixture
+def spf_reason():
+    return "mock SPF explanation"

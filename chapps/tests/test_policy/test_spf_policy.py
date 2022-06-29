@@ -22,6 +22,59 @@ spf_actions = _spf_actions()
 auto_query_param_list = _auto_query_param_list()
 
 
+class Test_PostfixSPFActions:
+    """Tests for Postfix action strings corresponding to particular SPF results
+
+       The possible results are:
+
+         - pass*
+         - fail*
+         - softfail
+         - temperror*
+         - permerror*
+         - none/neutral (two which must be treated the same)
+
+       Starred items are ones for which RFC 7208 provides recommended SMTP
+       result codes.  For now, configuration will be able to override how the
+       non-starred results are mapped onto actions taken for other classes of
+       message.  Eventually a response which implements greylisting (say, for
+       softfails) will be provided, which could be applied also to none/neutral
+       situations as well.
+
+    """
+
+    def test_pass_produces_prepend(self, spf_actions, spf_reason):
+        result = spf_actions.action_for("pass")
+        assert result == PostfixActions.prepend
+
+    def test_fail_produces_reject(self, spf_actions, spf_reason):
+        result = spf_actions.action_for("fail")
+        message = result(spf_reason, None)
+        assert message.split(" ")[0] == "REJECT" or message[0] == "5"
+
+    def test_temperror_produces_enhanced_code(self, spf_actions, spf_reason):
+        result = spf_actions.action_for("temperror")
+        message = result(spf_reason, None)
+        assert message[0:9] == "451 4.4.3"
+
+    def test_permerror_produces_enhanced_code(self, spf_actions, spf_reason):
+        result = spf_actions.action_for("permerror")
+        message = result(spf_reason, None)
+        assert message[0:9] == "550 5.5.2"
+
+    def test_none_produces_greylist(self, spf_actions):
+        result = spf_actions.action_for("none")
+        assert result == PostfixSPFActions.greylist
+
+    def test_neutral_produces_greylist(self, spf_actions):
+        result = spf_actions.action_for("neutral")
+        assert result == PostfixSPFActions.greylist
+
+    def test_softfail_produces_greylist(self, spf_actions):
+        result = spf_actions.action_for("softfail")
+        assert result == PostfixSPFActions.greylist
+
+
 class Test_SPFEnforcementPolicy:
     """Tests of the SPF module"""
 
