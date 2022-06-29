@@ -401,7 +401,8 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
         """
         ### This override version for SPF enforcement does not assume a yes-or-no response pattern
         logger.debug(
-            f"Policy handler requested for {type(self.policy).__name__}."
+            "Policy handler requested for"
+            f" {[type(p).__name__ for p in self.policies]!r}."
         )
         pprclass = self.pprclass
         policies = self.policies
