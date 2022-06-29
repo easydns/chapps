@@ -180,7 +180,7 @@ class PolicyResponse:
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}( response='{self.response}',"
+            f"PolicyResponse(response='{self.response}',"
             f" passing={self.passing}"
             + (f", decision='{self.decision}'" if self.decision else "")
             + ")"
