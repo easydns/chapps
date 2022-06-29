@@ -8,9 +8,10 @@ libraries.
 """
 import spf
 from chapps.signals import NoRecipientsException
-from chapps.policy import InboundPolicy, PostfixActions
+from chapps.policy import InboundPolicy, PostfixActions, GreylistingPolicy
 from chapps.util import PostfixPolicyRequest
 from chapps.inbound import InboundPPR
+from chapps.config import CHAPPSConfig
 import logging
 
 logger = logging.getLogger(__name__)
@@ -26,8 +27,7 @@ class PostfixSPFActions(PostfixActions):
 
     """
 
-    @staticmethod
-    def greylist_factory():
+    def greylist_factory(self):
         greylisting_policy = GreylistingPolicy(self.config)
         greylisting_actions = greylisting_policy.actions
         spf_policy = self.spf_policy
@@ -65,12 +65,12 @@ class PostfixSPFActions(PostfixActions):
         return greylist
 
     _cached_actions = {}
-    _cachable_actions = dict(greylist=PostfixSPFActions.greylist_factory)
+    _action_factories = dict(greylist=greylist_factory)
 
     def __getattr__(self, attr):
         if attr not in self._cached_actions:
-            if attr in self._cachable_actions:
-                self._cached_actions[attr] = self._cachable_actions[attr]()
+            if attr in self._action_factories:
+                self._cached_actions[attr] = self._action_factories[attr](self)
             else:
                 return super().__getattr__(attr)
         return self._cached_actions[attr]

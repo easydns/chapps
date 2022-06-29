@@ -36,8 +36,12 @@ from chapps.policy import (
     OutboundQuotaPolicy,
     GreylistingPolicy,
     SenderDomainAuthPolicy,
+    PostfixActions,
+    PostfixGRLActions,
+    PostfixOQPActions,
+    PostfixPassfailActions,
 )
-from chapps.spf_policy import SPFEnforcementPolicy
+from chapps.spf_policy import SPFEnforcementPolicy, PostfixSPFActions
 from chapps.util import PostfixPolicyRequest
 from chapps.inbound import InboundPPR
 from chapps.outbound import OutboundPPR

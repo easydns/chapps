@@ -330,7 +330,7 @@ class PostfixActions:
         the first argument.
         """
         self.config = cfg or config
-        self.params = self.cfg  # later this is overridden, in subclasses
+        self.params = self.config  # later this is overridden, in subclasses
 
     def _get_closure_for(
         self, decision: str, wrapper: Optional[callable] = None
@@ -423,15 +423,17 @@ class PostfixPassfailActions(PostfixActions):
     def __init__(self, cfg=None):
         super().__init__(cfg)
 
-    def _get_closure_for(self, decision, msg_key=None):
+    def _get_closure_for(
+        self, decision, *, passing: bool = None, msg_key: str = None
+    ):
         """Create a closure for formatting these messages and store it on
         self.<decision>, and also return it
         """
         msg_key = msg_key or decision
-        msg = getattr(self.config, msg_key, None)
+        msg = getattr(self.params, msg_key, None)
         if not msg:
             raise ValueError(
-                f"The key {msg_key} is not defined in the config for"
+                f"The key '{msg_key}' is not defined in the config for"
                 f" {self.__class__.__name__} or its policy"
             )
         msg_tokens = msg.split(" ")
@@ -451,9 +453,14 @@ class PostfixPassfailActions(PostfixActions):
                 "Pass-fail closure creation for Postfix directive"
                 f" {msg_tokens[0]} is not yet available."
             )
-        action = policy_response(func != PostfixActions.reject, decision)(
-            self.__prepend_action_with_message(func, msg_text)
-        )
+        action = policy_response(
+            (
+                passing
+                if passing is not None
+                else (func != PostfixActions.reject)
+            ),
+            decision,
+        )(self.__prepend_action_with_message(func, msg_text))
         setattr(self, decision, action)
         return action
 
@@ -499,7 +506,9 @@ class PostfixPassfailActions(PostfixActions):
             raise NotImplementedError(
                 f"Pass-fail actions do not include {attrname}"
             )
-        return self._get_closure_for(attrname, msg_key)
+        return self._get_closure_for(
+            attrname, msg_key=msg_key, passing=(attrname == "passing")
+        )
 
 
 class PostfixOQPActions(PostfixPassfailActions):

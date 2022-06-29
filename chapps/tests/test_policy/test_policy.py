@@ -262,7 +262,7 @@ class Test_GreylistingPolicyEvaluation:
             policy, "_get_control_data", lambda x: (None, None, None)
         )
         response = policy._approve_policy_request(allowable_inbound_ppr)
-        assert response == False
+        assert not response  # .passing is False
 
     def test_pass_if_option_false(
         self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
@@ -278,7 +278,7 @@ class Test_GreylistingPolicyEvaluation:
             policy, "_get_control_data", lambda x: (0, None, None)
         )
         response = policy._approve_policy_request(allowable_inbound_ppr)
-        assert response is True
+        assert response == "DUNNO"
 
     def test_first_encounter_updates_tuple(
         self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
@@ -316,7 +316,7 @@ class Test_GreylistingPolicyEvaluation:
             lambda x: (1, time.time() - (60 * 15), None),
         )
         response = policy._approve_policy_request(allowable_inbound_ppr)
-        assert response == True
+        assert response
 
     def test_recognized_tuple_updates_client_tally(
         self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
@@ -376,7 +376,7 @@ class Test_GreylistingPolicyEvaluation:
             #     lambda x: (1, None, policy.allow_after),
             # )
             response = policy._approve_policy_request(ppr)
-        assert response == True
+        assert response
 
     def test_client_tally_updated_when_unrecognized_tuple_passes(
         self,
@@ -427,7 +427,7 @@ class Test_GreylistingPolicyEvaluation:
             policy, "_get_control_data", lambda x: (1, time.time(), None)
         )
         response = policy._approve_policy_request(allowable_inbound_ppr)
-        assert response == False
+        assert not response
 
     def test_retry_too_soon_updates_tuple(
         self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
