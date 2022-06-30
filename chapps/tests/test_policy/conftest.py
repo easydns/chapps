@@ -433,9 +433,9 @@ def _spf_actions():
     return dict(
         passing="PREPEND X-CHAPPSTESTING: SPF prepend",
         fail="550 5.7.1 SPF check failed: CHAPPS failing SPF message",
-        softfail="DEFER_IF_PERMIT Service temporarily unavailable - greylisted CHAPPS softfail SPF message",
-        none="DEFER_IF_PERMIT Service temporarily unavailable - greylisted due to SPF enforcement policy",
-        neutral="DEFER_IF_PERMIT Service temporarily unavailable - greylisted CHAPPS neutral SPF message",
+        softfail="DEFER_IF_PERMIT Service temporarily stupid CHAPPS softfail SPF message",
+        none="DEFER_IF_PERMIT Service temporarily stupid due to SPF enforcement policy",
+        neutral="DEFER_IF_PERMIT Service temporarily stupid CHAPPS neutral SPF message",
         permerror="550 5.5.2 SPF record(s) are malformed: CHAPPS permerror SPF message",
         temperror="451 4.4.3 SPF record(s) temporarily unavailable: CHAPPS temperror SPF message",
     )
@@ -520,8 +520,8 @@ def grl_actions():
 
 
 @fixture
-def spf_actions():
-    return PostfixSPFActions()
+def spf_actions(testing_policy_spf):
+    return PostfixSPFActions(testing_policy_spf)
 
 
 @fixture

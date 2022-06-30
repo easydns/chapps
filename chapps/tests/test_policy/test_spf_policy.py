@@ -1,19 +1,19 @@
 """Tests for CHAPPS SPF Enforcement policy module"""
 import pytest
 import logging
-import redis
-import time
 import spf
 from unittest.mock import Mock
-from chapps.spf_policy import SPFEnforcementPolicy
+from chapps.spf_policy import PostfixActions, PostfixSPFActions
 from chapps.tests.test_policy.conftest import (
     _spf_actions,
     _spf_results,
     _auto_query_param_list,
     idfn,
 )
-import chapps.config
 
+# import redis
+# import time
+# import chapps.config
 # from chapps.tests.test_config.conftest import chapps_mock_cfg_path, chapps_mock_env, chapps_mock_config, chapps_mock_config_file
 
 ### SPF result internal -> native name + message dictionary:
@@ -62,17 +62,19 @@ class Test_PostfixSPFActions:
         message = result(spf_reason, None)
         assert message[0:9] == "550 5.5.2"
 
-    def test_none_produces_greylist(self, spf_actions):
+    def test_none_produces_greylist(self, monkeypatch, spf_actions):
         result = spf_actions.action_for("none")
-        assert result == PostfixSPFActions.greylist
+        assert result == spf_actions.greylist
 
-    def test_neutral_produces_greylist(self, spf_actions):
+    def test_neutral_produces_greylist(self, monkeypatch, spf_actions):
+        ### see above
         result = spf_actions.action_for("neutral")
-        assert result == PostfixSPFActions.greylist
+        assert result == spf_actions.greylist
 
-    def test_softfail_produces_greylist(self, spf_actions):
+    def test_softfail_produces_greylist(self, monkeypatch, spf_actions):
+        ### see above
         result = spf_actions.action_for("softfail")
-        assert result == PostfixSPFActions.greylist
+        assert result == spf_actions.greylist
 
 
 class Test_SPFEnforcementPolicy:
