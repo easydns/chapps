@@ -11,6 +11,7 @@ from chapps.tests.test_policy.conftest import (
     auto_spf_query,
     mock_spf_queries,
     _auto_query_param_list,
+    _auto_query_param_list_spf_plus_greylist,
     idfn,
     testing_policy_spf,
     testing_policy_grl,
@@ -26,6 +27,9 @@ from chapps.tests.test_adapter.conftest import (
 pytestmark = pytest.mark.order(-3)
 
 auto_query_param_list = _auto_query_param_list()
+auto_query_param_list_spf_plus_greylist = (
+    _auto_query_param_list_spf_plus_greylist()
+)
 
 
 @pytest.mark.asyncio
@@ -138,7 +142,7 @@ class Test_InboundMultipolicyHandler:
         indirect=["auto_spf_query"],
         ids=idfn,
     )
-    async def test_handle_policy_request(
+    async def test_handle_policy_request_spf_only(
         self,
         caplog,
         monkeypatch,
@@ -148,20 +152,64 @@ class Test_InboundMultipolicyHandler:
         expected_result,
         mock_reader_factory,
         mock_writer,
-        populated_database_fixture,
+        populated_database_fixture_with_extras,
         clear_redis_grl,
     ):
         """
         GIVEN a particular result from the SPF checker
         WHEN  communicating with Postfix
         THEN  send the appropriate result
-        This test will be parameterized to go through all possible responses
+        This test is parameterized to go through all possible responses
         """
         caplog.set_level(logging.DEBUG)
         handle_spf_request = InboundMultipolicyHandler(
             [testing_policy_spf, testing_policy_grl]
         ).async_policy_handler()
-        mock_reader = mock_reader_factory(None, "someone@chapps.io")
+        mock_reader = mock_reader_factory(
+            None, "someone@easydns.com"  # only SPF is enabled for this domain
+        )
+        with monkeypatch.context() as m:
+            m.setattr(spf, "query", auto_spf_query)
+            # exercise handler
+            with pytest.raises(CallableExhausted):
+                await handle_spf_request(mock_reader, mock_writer)
+        mock_reader.readuntil.assert_called_with(b"\n\n")
+        mock_writer.write.assert_called_with(
+            f"action={expected_result}\n\n".encode("utf-8")
+        )
+
+    @pytest.mark.parametrize(
+        "auto_spf_query, expected_result",
+        auto_query_param_list_spf_plus_greylist,
+        indirect=["auto_spf_query"],
+        ids=idfn,
+    )
+    async def test_handle_policy_request_spf_plus_greylist(
+        self,
+        caplog,
+        monkeypatch,
+        testing_policy_spf,
+        testing_policy_grl,
+        auto_spf_query,
+        expected_result,
+        mock_reader_factory,
+        mock_writer,
+        populated_database_fixture_with_extras,
+        clear_redis_grl,
+    ):
+        """
+        GIVEN a particular result from the SPF checker
+        WHEN  communicating with Postfix
+        THEN  send the appropriate result based on SPF plus Greylisting
+        This test is parameterized to go through all possible responses
+        """
+        caplog.set_level(logging.DEBUG)
+        handle_spf_request = InboundMultipolicyHandler(
+            [testing_policy_spf, testing_policy_grl]
+        ).async_policy_handler()
+        mock_reader = mock_reader_factory(
+            None, "someone@chapps.io"  # enforcing both SPF and greylisting
+        )
         with monkeypatch.context() as m:
             m.setattr(spf, "query", auto_spf_query)
             # exercise handler

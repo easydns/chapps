@@ -449,11 +449,13 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                     policy_payload.decode(encoding).split("\n")
                 )
 
-                action = "DUNNO"
+                actions = ["DUNNO"]
+                # TODO:
+                # track all responses, and then extract non-DUNNO ones if any
                 for policy in policies:
                     try:
                         action = policy.approve_policy_request(policy_data)
-                        resp = (f"action={action}\n\n").encode(encoding)
+                        actions.append(action)
                         logger.info(
                             f"{type(policy).__name__} "
                             # + ("PASS" if action else "FAIL")
@@ -464,8 +466,11 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                     if not action:
                         break
 
+                if action:  # i.e. the mail will be forwarded
+                    non_dunno = [a for a in actions if a != "DUNNO"]
+                    action = non_dunno[-1] if non_dunno else "DUNNO"
                 try:
-                    writer.write(resp)
+                    writer.write((f"action={action}\n\n").encode(encoding))
                 except asyncio.CancelledError:  # pragma: no cover
                     pass
                 except Exception:
