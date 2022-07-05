@@ -225,7 +225,8 @@ class Test_InboundMultipolicyHandler:
         caplog,
         monkeypatch,
         testing_policy_spf,
-        populated_database_fixture,
+        testing_policy_grl,
+        populated_database_fixture_with_extras,
         mock_reader_factory,
         mock_writer,
     ):
@@ -235,8 +236,8 @@ class Test_InboundMultipolicyHandler:
         :THEN:  return DUNNO rather than enforcing the policy
         """
         caplog.set_level(logging.DEBUG)
-        handle_spf_request = SPFEnforcementHandler(
-            testing_policy_spf
+        handle_spf_request = InboundMultipolicyHandler(
+            [testing_policy_spf, testing_policy_grl]
         ).async_policy_handler()
         mock_reader = mock_reader_factory()  # default recip foo@bar.tld
         with monkeypatch.context() as m:
@@ -253,6 +254,7 @@ class Test_InboundMultipolicyHandler:
         caplog,
         monkeypatch,
         testing_policy_spf,
+        testing_policy_grl,
         mock_reader_factory,
         mock_writer,
         populated_database_fixture_with_extras,
@@ -263,8 +265,8 @@ class Test_InboundMultipolicyHandler:
         :THEN:  return DUNNO rather than enforcing the policy
         """
         caplog.set_level(logging.DEBUG)
-        handle_spf_request = SPFEnforcementHandler(
-            testing_policy_spf
+        handle_spf_request = InboundMultipolicyHandler(
+            [testing_policy_spf, testing_policy_grl]
         ).async_policy_handler()
         mock_reader = mock_reader_factory(None, "someguy@easydns.org")
         with monkeypatch.context() as m:
@@ -275,3 +277,100 @@ class Test_InboundMultipolicyHandler:
         mock_writer.write.assert_called_with(
             f"action=DUNNO\n\n".encode("utf-8")
         )
+
+
+@pytest.mark.skip
+class Test_InboundMultipolicyHandler_GreylistingOnly:
+    async def test_handle_new_tuple(
+        self,
+        clear_redis_grl,
+        testing_policy_spf,
+        testing_policy_grl,
+        mock_reader_factory,
+        populated_database_fixture_with_extras,
+        mock_writer,
+    ):
+        """
+        GIVEN an email attempt from a new tuple
+        WHEN  the client isn't auto-allowed
+        THEN  reject the email
+        """
+        clear_redis_grl()
+        handle_greylist_request = InboundMultipolicyHandler(
+            [testing_policy_spf, testing_policy_grl]
+        ).async_policy_handler()
+        reader_grl = mock_reader_factory(
+            None, "someone@easydns.net"  # enforcing only Greylisting
+        )
+        with pytest.raises(CallableExhausted):
+            await handle_greylist_request(reader_grl, mock_writer)
+        reader_grl.readuntil.assert_called_with(b"\n\n")
+        mock_writer.write.assert_called_with(
+            b"action=DEFER_IF_PERMIT Service temporarily stupid\n\n"
+        )
+
+    async def test_handle_retry_too_fast(
+        self,
+        clear_redis_grl,
+        testing_policy_spf,
+        testing_policy_grl,
+        grl_reader_too_fast,
+        mock_writer,
+    ):
+        """
+        GIVEN two back-to-back attempts with the same tuple
+        WHEN  the two attempts are two close together
+        THEN  reject the email
+        """
+        handle_greylist_request = GreylistingHandler(
+            testing_policy_grl
+        ).async_policy_handler()
+        grl_reader = grl_reader_too_fast
+        with pytest.raises(CallableExhausted):
+            await handle_greylist_request(grl_reader, mock_writer)
+        grl_reader.readuntil.assert_called_with(b"\n\n")
+        mock_writer.write.assert_called_with(
+            b"action=DEFER_IF_PERMIT Service temporarily stupid\n\n"
+        )
+
+    async def test_handle_recognized_tuple(
+        self,
+        clear_redis_grl,
+        testing_policy_grl,
+        grl_reader_recognized,
+        mock_writer,
+    ):
+        """
+        GIVEN an email delivery attempt
+        WHEN  the tuple is recognized
+        THEN  return DUNNO to allow other filters to block it; it will be accepted by default
+        """
+        handle_greylist_request = GreylistingHandler(
+            testing_policy_grl
+        ).async_policy_handler()
+        grl_reader = grl_reader_recognized
+        with pytest.raises(CallableExhausted):
+            await handle_greylist_request(grl_reader, mock_writer)
+        grl_reader.readuntil.assert_called_with(b"\n\n")
+        mock_writer.write.assert_called_with(b"action=DUNNO\n\n")
+
+    async def test_handle_allowed_client(
+        self,
+        clear_redis_grl,
+        testing_policy_grl,
+        grl_reader_with_tally,
+        mock_writer,
+    ):
+        """
+        GIVEN an email delivery attempt
+        WHEN  the client is recognized as a reliable sender
+        THEN  return DUNNO to allow other filters to block it; it will be accepted by default
+        """
+        handle_greylist_request = GreylistingHandler(
+            testing_policy_grl
+        ).async_policy_handler()
+        grl_reader = grl_reader_with_tally
+        with pytest.raises(CallableExhausted):
+            await handle_greylist_request(grl_reader, mock_writer)
+        grl_reader.readuntil.assert_called_with(b"\n\n")
+        mock_writer.write.assert_called_with(b"action=DUNNO\n\n")
