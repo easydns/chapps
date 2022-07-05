@@ -333,7 +333,7 @@ class PostfixActions:
         self.params = self.config  # later this is overridden, in subclasses
 
     def _get_closure_for(
-        self, decision: str, wrapper: Optional[callable] = None
+        self, decision: str, *, passing: Optional[bool] = None
     ):
         """Setup the prescribed closure for generating SMTP action directives"""
         action_config = getattr(self.params, decision, None)
@@ -364,9 +364,12 @@ class PostfixActions:
             action_func = lambda reason, ppr, *args, **kwargs: action_config.format(
                 reason=reason
             )
-        action_func = policy_response(action_func != self.reject, action)(
-            action_func
+        passing = (
+            (action_func in [self.reject, self.defer_if_permit])
+            if passing is None
+            else passing
         )
+        action_func = policy_response(passing, action)(action_func)
         # memoize the action function for quicker reference next time
         setattr(self, action, action_func)
         return action_func
