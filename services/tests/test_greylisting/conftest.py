@@ -63,21 +63,26 @@ def chapps_grl_service(
 def chapps_grl_service_with_tuple(
     chapps_grl_service, known_sender, grl_test_recipients
 ):
-    yield from _chapps_grl_service_with_tuple(
+    yield from _chapps_grl_service_with_tuple_factory(
         known_sender, grl_test_recipients
-    )
+    )()
 
 
-def _chapps_grl_service_with_tuple(known_sender, grl_test_recipients):
+def _chapps_grl_service_with_tuple_factory(known_sender, grl_test_recipients):
     """Return service fixture and also setup Redis to reflect seeing the test tuple"""
-    sender = known_sender
-    recipient = ",".join(grl_test_recipients)
-    source_ip = _source_ip()
-    redis_args = _redis_args_grl(source_ip, sender, recipient)
-    clear_redis = _clear_redis("grl")
-    _populate_redis_grl(*redis_args)
-    yield chapps_grl_service
-    clear_redis()
+
+    def _srv_w_tuple(ks=None, recipients=None):
+        sender = ks or known_sender
+        recipients = recipients or grl_test_recipients
+        recipient = ",".join(recipients)
+        source_ip = _source_ip()
+        redis_args = _redis_args_grl(source_ip, sender, recipient)
+        clear_redis = _clear_redis("grl")
+        _populate_redis_grl(*redis_args)
+        yield chapps_grl_service
+        clear_redis()
+
+    return _srv_w_tuple
 
 
 @fixture(scope="session")
