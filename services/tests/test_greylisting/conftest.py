@@ -10,7 +10,11 @@ from services.tests.conftest import (
     known_sender,
     mail_sink,
 )
-from chapps.tests.conftest import _redis_args_grl, _populate_redis_grl, _clear_redis
+from chapps.tests.conftest import (
+    _redis_args_grl,
+    _populate_redis_grl,
+    _clear_redis,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +63,12 @@ def chapps_grl_service(
 def chapps_grl_service_with_tuple(
     chapps_grl_service, known_sender, grl_test_recipients
 ):
+    yield from _chapps_grl_service_with_tuple(
+        known_sender, grl_test_recipients
+    )
+
+
+def _chapps_grl_service_with_tuple(known_sender, grl_test_recipients):
     """Return service fixture and also setup Redis to reflect seeing the test tuple"""
     sender = known_sender
     recipient = ",".join(grl_test_recipients)
