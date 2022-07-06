@@ -102,15 +102,20 @@ def grl_reader_too_fast(postfix_policy_request_payload):
     return _grl_reader_factory_too_fast(postfix_policy_request_payload)()
 
 
+@pytest.fixture
+def grl_reader_too_fast_factory(postfix_policy_request_payload):
+    return _grl_reader_factory_too_fast(postfix_policy_request_payload)
+
+
 def _grl_reader_factory_too_fast(postfix_policy_request_payload):
-    def too_fast_reader_grl(sender: str = None, recipients: List[str] = None):
+    def too_fast_reader_grl(sender: str = None, recip: str = None):
         sender = sender or "somebody@chapps.io"
-        recipients = recipients or ["someguy@chapps.io"]
+        recip = recip or "someguy@chapps.io"
         mock = AsyncMock()
         mock.readuntil = AsyncMock(
             side_effect=[
-                postfix_policy_request_payload(sender, recipients),
-                postfix_policy_request_payload(sender, recipients),
+                postfix_policy_request_payload(sender, [recip]),
+                postfix_policy_request_payload(sender, [recip]),
                 CallableExhausted,
             ]
         )
@@ -124,6 +129,15 @@ def grl_reader_recognized(postfix_policy_request_payload, populate_redis_grl):
     return _grl_reader_factory_recognized(
         postfix_policy_request_payload, populate_redis_grl
     )()
+
+
+@pytest.fixture
+def grl_reader_recognized_factory(
+    postfix_policy_request_payload, populate_redis_grl
+):
+    return _grl_reader_factory_recognized(
+        postfix_policy_request_payload, populate_redis_grl
+    )
 
 
 def _grl_reader_factory_recognized(
@@ -150,6 +164,15 @@ def grl_reader_with_tally(
     return _grl_reader_factory_with_tally(
         postfix_policy_request_payload, populate_redis_grl, mock_client_tally
     )()
+
+
+@pytest.fixture
+def grl_reader_with_tally_factory(
+    postfix_policy_request_payload, populate_redis_grl, mock_client_tally
+):
+    return _grl_reader_factory_with_tally(
+        postfix_policy_request_payload, populate_redis_grl, mock_client_tally
+    )
 
 
 def _grl_reader_factory_with_tally(
