@@ -279,14 +279,14 @@ class Test_InboundMultipolicyHandler:
         )
 
 
-@pytest.mark.skip
+@pytest.mark.asyncio
 class Test_InboundMultipolicyHandler_GreylistingOnly:
     async def test_handle_new_tuple(
         self,
         clear_redis_grl,
         testing_policy_spf,
         testing_policy_grl,
-        mock_reader_factory,
+        grl_reader_recognized_factory,
         populated_database_fixture_with_extras,
         mock_writer,
     ):
@@ -295,13 +295,13 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         WHEN  the client isn't auto-allowed
         THEN  reject the email
         """
-        clear_redis_grl()
         handle_greylist_request = InboundMultipolicyHandler(
             [testing_policy_spf, testing_policy_grl]
         ).async_policy_handler()
-        reader_grl = mock_reader_factory(
+        reader_grl = grl_reader_recognized_factory(
             None, "someone@easydns.net"  # enforcing only Greylisting
         )
+        clear_redis_grl()
         with pytest.raises(CallableExhausted):
             await handle_greylist_request(reader_grl, mock_writer)
         reader_grl.readuntil.assert_called_with(b"\n\n")
@@ -314,7 +314,7 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         clear_redis_grl,
         testing_policy_spf,
         testing_policy_grl,
-        grl_reader_too_fast,
+        grl_reader_too_fast_factory,
         mock_writer,
     ):
         """
@@ -322,10 +322,10 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         WHEN  the two attempts are two close together
         THEN  reject the email
         """
-        handle_greylist_request = GreylistingHandler(
-            testing_policy_grl
+        handle_greylist_request = InboundMultipolicyHandler(
+            [testing_policy_spf, testing_policy_grl]
         ).async_policy_handler()
-        grl_reader = grl_reader_too_fast
+        grl_reader = grl_reader_too_fast_factory(None, "someone@easydns.net")
         with pytest.raises(CallableExhausted):
             await handle_greylist_request(grl_reader, mock_writer)
         grl_reader.readuntil.assert_called_with(b"\n\n")
@@ -336,8 +336,9 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
     async def test_handle_recognized_tuple(
         self,
         clear_redis_grl,
+        testing_policy_spf,
         testing_policy_grl,
-        grl_reader_recognized,
+        grl_reader_recognized_factory,
         mock_writer,
     ):
         """
@@ -345,10 +346,10 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         WHEN  the tuple is recognized
         THEN  return DUNNO to allow other filters to block it; it will be accepted by default
         """
-        handle_greylist_request = GreylistingHandler(
-            testing_policy_grl
+        handle_greylist_request = InboundMultipolicyHandler(
+            [testing_policy_spf, testing_policy_grl]
         ).async_policy_handler()
-        grl_reader = grl_reader_recognized
+        grl_reader = grl_reader_recognized_factory(None, "someone@easydns.net")
         with pytest.raises(CallableExhausted):
             await handle_greylist_request(grl_reader, mock_writer)
         grl_reader.readuntil.assert_called_with(b"\n\n")
@@ -357,8 +358,9 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
     async def test_handle_allowed_client(
         self,
         clear_redis_grl,
+        testing_policy_spf,
         testing_policy_grl,
-        grl_reader_with_tally,
+        grl_reader_with_tally_factory,
         mock_writer,
     ):
         """
@@ -366,10 +368,10 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         WHEN  the client is recognized as a reliable sender
         THEN  return DUNNO to allow other filters to block it; it will be accepted by default
         """
-        handle_greylist_request = GreylistingHandler(
-            testing_policy_grl
+        handle_greylist_request = InboundMultipolicyHandler(
+            [testing_policy_spf, testing_policy_grl]
         ).async_policy_handler()
-        grl_reader = grl_reader_with_tally
+        grl_reader = grl_reader_with_tally_factory(None, "someone@easydns.net")
         with pytest.raises(CallableExhausted):
             await handle_greylist_request(grl_reader, mock_writer)
         grl_reader.readuntil.assert_called_with(b"\n\n")
