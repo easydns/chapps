@@ -544,7 +544,7 @@ if HAVE_SPF:
 
         def __init__(
             self,
-            policies: Optional[List[EmailPolicy]],
+            policies: Optional[List[EmailPolicy]] = None,
             *,
             pprclass: Optional[PostfixPolicyRequest] = InboundPPR,
         ):
