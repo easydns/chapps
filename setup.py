@@ -191,8 +191,7 @@ with open("README.md", "r") as fh:
 setup(
     cmdclass={"install": PostInstallSetup},
     name="chapps",
-    packages=find_packages(exclude=("tests",)),
-    # ["chapps", "chapps.rest", "chapps.rest.routers"],
+    # packages are defined in setup.cfg
     data_files=[
         (
             "chapps",
