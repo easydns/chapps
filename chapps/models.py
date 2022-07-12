@@ -379,7 +379,11 @@ class Domain(CHAPPSModel):
 
     class Config:
         orm_mode = True
-        schema_extra = dict(example=dict(id=0, name="[sub.]domain.tld"))
+        schema_extra = dict(
+            example=dict(
+                id=0, name="[sub.]domain.tld", greylist=False, check_spf=True
+            )
+        )
 
     class Meta:
         orm_model = dbmodels.Domain
