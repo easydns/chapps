@@ -714,7 +714,9 @@ class GreylistingPolicy(InboundPolicy):
         tuple_key = self.tuple_key(ppr)
         client_key = self.client_key(ppr)
         option_key = self.domain_option_key(ppr)
-        logger.debug(f"Redis keys: {tuple_key} {client_key} {option_key}")
+        logger.debug(
+            f"Redis keys: tuple={tuple_key} opt={option_key} client={client_key} (zrange)"
+        )
         pipe = self.redis.pipeline()
         pipe.zremrangebyscore(client_key, 0, now - float(self.cache_ttl))
         pipe.get(tuple_key)
