@@ -5,11 +5,15 @@ import time
 import os
 from pathlib import Path
 from pytest import fixture
+
 # the following hack makes testing work from within Emacs; at some point, it will go away
-os.environ['CHAPPS_CONFIG'] = str(Path(os.getcwd()) / "etc" / "chapps" / "chapps.ini")
+os.environ["CHAPPS_CONFIG"] = str(
+    Path(os.getcwd()) / "etc" / "chapps" / "chapps.ini"
+)
 from chapps.policy import GreylistingPolicy
 
 seconds_per_day = 3600 * 24
+
 
 class ErrorAfter(object):
     """Return a callable object which will raise CallableExhausted after a set number of calls"""
@@ -47,7 +51,10 @@ def _mock_client_tally(unique_instance):
     def _mct(ct):
         t = int(time.time()) - seconds_per_day
         tally = dict(
-            zip(unique_instance(ct), [float(t + 60 + i * 300) for i in range(0, ct)])
+            zip(
+                unique_instance(ct),
+                [float(t + 60 + i * 300) for i in range(0, ct)],
+            )
         )
         return tally
 
@@ -71,7 +78,9 @@ def _redis_args_grl(src_ip, sender, recipient, tally_count=0):
         mock_client_tally = _mock_client_tally(
             _unique_instance()
         )  # this is weird, I know; fixtures get weird
-        tally = {GreylistingPolicy._fmtkey(src_ip): mock_client_tally(tally_count)}
+        tally = {
+            GreylistingPolicy._fmtkey(src_ip): mock_client_tally(tally_count)
+        }
     return (GreylistingPolicy._fmtkey(src_ip, sender, recipient), tally)
 
 
@@ -79,9 +88,11 @@ def _populate_redis_grl(tuple_key, entries={}):
     if len(tuple_key) < 7:
         raise ValueError("Tuple key is too short to be legal.")
     rh = redis.Redis()
+    ts = time.time() - 305
     with rh.pipeline() as pipe:
-        pipe.set(tuple_key, time.time() - 305)  # seen 5 min ago
+        pipe.set(tuple_key, ts)  # seen 5 min ago
         if len(entries) > 0:
             for k, v in entries.items():
                 pipe.zadd(k, v)
         pipe.execute()
+    return ts
