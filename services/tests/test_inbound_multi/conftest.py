@@ -2,6 +2,7 @@
 import os
 import pytest
 import logging
+import redis
 from contextlib import contextmanager
 from pytest import fixture
 
@@ -57,19 +58,24 @@ def chapps_ibm_service_with_tally_factory(chapps_ibm_service, known_sender):
 def _chapps_ibm_service_with_tuples_factory(known_sender):
     source_ip = _source_ip()
 
-    @contextmanager
+    # @contextmanager
     def _srv_w_tuples(tuples):
-        clear_redis = _clear_redis("grl")
+        # clear_redis = _clear_redis("grl")
         for t in tuples:
             sender, recipients = t if type(t) == tuple else (None, t)
             sender = sender or known_sender
             recipient = ",".join(recipients)
             redis_args = _redis_args_grl(source_ip, sender, recipient)
-            _populate_redis_grl(*redis_args)
-        try:
-            yield None
-        finally:
-            clear_redis()
+            logger.warning(f"Populating redis with: {redis_args!r}")
+            set_ts = _populate_redis_grl(*redis_args)
+            rh = redis.Redis()
+            ts = float(rh.get(redis_args[0]))
+            logger.warning(f"Redis returns value {ts} for {redis_args[0]}")
+            if ts != set_ts:
+                logger.warning(
+                    "Redis setting does not match what was returned by setter:"
+                    f" {ts} != {set_ts}"
+                )
 
     return _srv_w_tuples
 
@@ -122,6 +128,11 @@ def spf_test_recipients():
 @pytest.fixture
 def spf_and_grl_recipients():
     return _spf_and_grl_recipients()
+
+
+@pytest.fixture
+def no_enforcement_recipients():
+    return _no_enforcement_recipients()
 
 
 @pytest.fixture(scope="session")
