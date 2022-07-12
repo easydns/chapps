@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.install import install
 from pathlib import Path
 import re
@@ -15,6 +15,7 @@ SERVICE_DESCRIPTIONS = {
     "services/chapps_outbound_quota.py": "CHAPPS Outbound Quota Service",
     "services/chapps_outbound_multi.py": "CHAPPS Outbound Multipolicy Service",
     "services/chapps_greylisting.py": "CHAPPS Greylisting Service",
+    "services/chapps_inbound_multi.py": "CHAPPS Inbound Multipolicy Service",
 }
 # create a list of service-script locations for the setup() call
 SERVICES = SERVICE_DESCRIPTIONS.keys()
@@ -190,7 +191,8 @@ with open("README.md", "r") as fh:
 setup(
     cmdclass={"install": PostInstallSetup},
     name="chapps",
-    packages=["chapps", "chapps.rest", "chapps.rest.routers"],
+    packages=find_packages(exclude=("tests",)),
+    # ["chapps", "chapps.rest", "chapps.rest.routers"],
     data_files=[
         (
             "chapps",
@@ -218,6 +220,13 @@ setup(
             ],
         ),
         (
+            "chapps/postfix/inbound_multi",
+            [
+                "postfix/inbound_multi/main.cf",
+                "postfix/inbound_multi/master.cf",
+            ],
+        ),
+        (
             "chapps/postfix/null_filter",
             ["postfix/null_filter/main.cf", "postfix/null_filter/master.cf"],
         ),
@@ -228,6 +237,9 @@ setup(
         "install/chapps_database_init.py",
         "services/chapps-cli",
     ],
+    entry_points={
+        "console_scripts": ["apply-migrations=chapps.alembic.apply:main"]
+    },
     version=verstr,
     license="MIT",
     description="Caching, Highly-Available Postfix Policy Service",
