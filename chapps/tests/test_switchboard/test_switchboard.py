@@ -111,17 +111,23 @@ class Test_GreylistingHandler:
     """Tests of the Greylisting switchboard"""
 
     async def test_handle_new_tuple(
-        self, clear_redis_grl, testing_policy_grl, mock_reader_ok, mock_writer
+        self,
+        clear_redis_grl,
+        testing_policy_grl,
+        grl_reader_recognized,
+        populated_database_fixture,
+        mock_writer,
     ):
         """
         GIVEN an email attempt from a new tuple
         WHEN  the client isn't auto-allowed
         THEN  reject the email
         """
+        clear_redis_grl()
         handle_greylist_request = GreylistingHandler(
             testing_policy_grl
         ).async_policy_handler()
-        reader_grl = mock_reader_ok
+        reader_grl = grl_reader_recognized
         with pytest.raises(CallableExhausted):
             await handle_greylist_request(reader_grl, mock_writer)
         reader_grl.readuntil.assert_called_with(b"\n\n")

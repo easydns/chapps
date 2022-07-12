@@ -89,75 +89,6 @@ def test_emails():
 
 
 def _populated_database_fixture(database_fixture):
-    user_table = (
-        "CREATE TABLE IF NOT EXISTS users ("  # pragma: no cover
-        "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
-        "name VARCHAR(128) UNIQUE NOT NULL"
-        ")"
-    )
-    quota_table = (
-        "CREATE TABLE IF NOT EXISTS quotas ("  # pragma: no cover
-        "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
-        "name VARCHAR(32) UNIQUE NOT NULL, "
-        "quota BIGINT UNIQUE NOT NULL"
-        ")"
-    )
-    domain_table = (
-        "CREATE TABLE IF NOT EXISTS domains ("  # pragma: no cover
-        "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
-        "name VARCHAR(64) UNIQUE NOT NULL"
-        ")"
-    )
-    email_table = (
-        "CREATE TABLE IF NOT EXISTS emails ("
-        "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
-        "name VARCHAR(128) UNIQUE NOT NULL"
-        ")"
-    )
-    quota_join_table = (  # pragma: no cover
-        "CREATE TABLE IF NOT EXISTS quota_user ("
-        "quota_id BIGINT NOT NULL,"
-        "user_id BIGINT NOT NULL PRIMARY KEY,"
-        "CONSTRAINT fk_user_quota"
-        " FOREIGN KEY (user_id) REFERENCES users (id)"
-        " ON DELETE CASCADE"
-        " ON UPDATE RESTRICT,"
-        "CONSTRAINT fk_quota_user"
-        " FOREIGN KEY (quota_id) REFERENCES quotas (id)"
-        " ON DELETE CASCADE"
-        " ON UPDATE CASCADE"  # allow replacement of quota defs
-        ")"
-    )
-    domain_join_table = (  # pragma: no cover
-        "CREATE TABLE IF NOT EXISTS domain_user ("
-        "domain_id BIGINT NOT NULL,"
-        "user_id BIGINT NOT NULL,"
-        "PRIMARY KEY (domain_id, user_id),"  # comp. primary key allows more than one user per domain
-        "CONSTRAINT fk_user_domain"
-        " FOREIGN KEY (user_id) REFERENCES users (id)"
-        " ON DELETE CASCADE"
-        " ON UPDATE RESTRICT,"
-        "CONSTRAINT fk_domain_user"
-        " FOREIGN KEY (domain_id) REFERENCES domains (id)"
-        " ON DELETE CASCADE"
-        " ON UPDATE CASCADE"  # allow replacement of domain defs
-        ")"
-    )
-    email_join_table = (
-        "CREATE TABLE IF NOT EXISTS email_user ("
-        "email_id BIGINT NOT NULL,"
-        "user_id BIGINT NOT NULL,"
-        "PRIMARY KEY (email_id, user_id),"
-        "CONSTRAINT fk_user_email"
-        " FOREIGN KEY (user_id) REFERENCES users (id)"
-        " ON DELETE CASCADE"
-        " ON UPDATE RESTRICT,"
-        "CONSTRAINT fk_email"
-        " FOREIGN KEY (email_id) REFERENCES emails (id)"
-        " ON DELETE CASCADE"
-        " ON UPDATE CASCADE"
-        ")"
-    )
     basic_quotas = (
         "INSERT INTO quotas ( name, quota ) VALUES "
         "('10eph', 240),"
@@ -168,7 +99,8 @@ def _populated_database_fixture(database_fixture):
         "BEGIN;",
         "INSERT INTO users ( name ) VALUES ( 'ccullen@easydns.com' );",
         "SELECT LAST_INSERT_ID() INTO @userid;",
-        "INSERT INTO domains ( name ) VALUES ( 'chapps.io' );",
+        "INSERT INTO domains ( name, greylist, check_spf )"
+        " VALUES ( 'chapps.io', 1, 1 );",
         "SELECT LAST_INSERT_ID() INTO @chappsid;",
         "INSERT INTO emails (name) VALUES ( 'caleb@chapps.com' );",
         "SELECT LAST_INSERT_ID() INTO @emailid;",
@@ -208,13 +140,8 @@ def _populated_database_fixture(database_fixture):
     ]
     count_users = "SELECT COUNT(name) FROM users;"
     cur = database_fixture
-    cur.execute(user_table)
-    cur.execute(quota_table)
-    cur.execute(domain_table)
-    cur.execute(email_table)
-    cur.execute(quota_join_table)
-    cur.execute(domain_join_table)
-    cur.execute(email_join_table)
+    for policy in [MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter]:
+        _adapter_fixture(policy)._initialize_tables()
     cur.execute(count_users)
     usercount = cur.fetchone()[0]
     if usercount == 0:
@@ -229,10 +156,10 @@ def _populated_database_fixture(database_fixture):
 def _populated_database_fixture_with_extras(database_fixture):
     cur = _populated_database_fixture(database_fixture)
     extra_domains = (
-        "INSERT INTO domains (name) VALUES"
-        " ('easydns.com'),"
-        " ('easydns.net'),"
-        " ('easydns.org');"
+        "INSERT INTO domains (name, greylist, check_spf) VALUES"
+        " ('easydns.com', 0, 1),"
+        " ('easydns.net', 1, 0),"
+        " ('easydns.org', 0, 0);"
     )
     extra_users = (
         "INSERT INTO users (name) VALUES "

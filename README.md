@@ -62,16 +62,11 @@ destination, ensure that you create a log-rotation profile for it.
 
 ## Installation Overview
 
-Please ensure that MariaDB Connector/C is installed before attempting
-installation of this package.  The Debian packages recommended are:
-  - `mariadb-client`
-  - `libmariadb-dev-compat`
+The recommended Debian packages are:
+  - `mysqlclient`
   - `redis`
   - `python3-pip`
-The package contains a dependency on the `mariadb`
-package; it will not install properly without Connector/C installed,
-which is not a Python package.  (Perhaps this dependency should be
-left out.)
+  - `python3-venv`
 
 It is highly recommended to install CHAPPS into a venv.  You may need
 to install the system package `python3-venv` in order for this to
@@ -86,6 +81,29 @@ The package may be installed via PyPI, using the following command:
 ```
 python3 -m pip install chapps
 ```
+
+### DB Initialization
+
+As of this writing, it should be possible to run `apply-migrations`
+once the venv is started, and that should apply all of the necessary
+Alembic migrations to bring the database up to date from zero, based
+on the database access configuration in the CHAPPS config file.  If
+the config file has not yet been populated with database credentials,
+do that first, and ensure that the named database exists (has been
+created) on the database server before attempting to install the
+schema into it.
+
+**Please Note:**
+
+	Databases created with earlier versions of CHAPPS (v<=0.4.12) need to
+	be dumped to SQL, and the database dropped and re-created via the
+	`apply-migrations` mechanism in order for it to exactly match
+	Alembic's notion of how it is built.  Once Alembic has built the
+	schema, the data may be read back into the database.  We will be using
+	Alembic going forward so this should be a one-time annoyance.
+
+
+### Starting and Auto-launching Services
 
 With a venv, the SystemD service files are installed to a folder
 called `chapps/install` inside the venv directory, and Postfix
@@ -266,11 +284,14 @@ avoided.
 
 Current quota usage is **not** kept in a relational database.
 
-TODO: There is a plan to provide both CLI (scripted) access to
-data about current quota usage, and to provide facilities for updating
-quota policy information immediately: clearing quotas, upgrading them,
-adding new users, adding new quotas, etc.  At present the REST API
-may be used to do any of these tasks, using cURL or similar.
+There is CLI access to data about current quota usage, providing
+facilities for updating quota policy information immediately: clearing
+quotas, upgrading them, adding new users, adding new quotas, etc.,
+along with a number of other useful functions.  The CLI, `chapps-cli`,
+is self-documenting.
+
+There is also a REST API service which can perform any of these tasks,
+using cURL or similar.
 
 In order to set up Postfix for policy delegation, consult [Postfix
 documentation](http://www.postfix.org/SMTPD_POLICY_README.html) to
@@ -288,11 +309,18 @@ should be avoided.)
 ### Outbound Quota Policy Configuration: Database Setup
 
 At present, the service expects to obtain quota policy enforcement
-parameters from a relational database (MariaDB).  The
+parameters from a relational database (MySQL or MariaDB).  The
 framework has been designed to make it easy to write adapters to any
 particular backend datasource regarding quota information.
 
-The database schema used has been kept as simple as possible:
+As of CHAPPS v0.4.13, Alembic is used to maintain the database schema
+as it mutates across versions.  [See above](#db-initialization) for
+advice related to software upgrades and database migrations.
+
+The database schema used has been kept as simple as possible: (please
+note that this schema may differ slightly in terms of index and key
+names from the one installed by Alembic)
+
 ```
 CREATE TABLE `users` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -320,9 +348,9 @@ CREATE TABLE `quota_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-The `users` table contains a record for each authorized customer who is
-allowed to send email.  Customers without entries will not be able to send
-email, despite authenticating with Postfix.
+The `users` table contains a record for each authorized customer who
+is allowed to send email.  Customers without entries will not be able
+to send email, despite authenticating with Postfix.
 
 The `quotas` table contains quota definitions, the `name` is meant to
 hold a user-readable tag for the quota and max outbound email count
@@ -378,7 +406,7 @@ a percentage, and it divided by 100.0 is used as the ratio.
 
 ## Sender Domain Authorization (Outbound multi-policy service)
 
-As of this writing, sender-domain authorization (SDA) is only
+As of CHAPPS v0.4.12 , sender-domain authorization (SDA) is only
 available as part of the outbound multi-policy service, consisting of
 SDA followed by outbound quota.  There is a plan (TODO:) to produce a
 standalone SDA service script.
@@ -408,17 +436,21 @@ subdomains must have entries in the domains table, and those entries
 must be linked to the logged-in (email-sending) customer via the
 `domain_user` join table.
 
-Here is the schema, for reference:
+Here is the schema, for reference: (please note that this schema may
+differ slightly in terms of index and key names from the one installed
+by Alembic)
 
 ```
 CREATE TABLE `domains` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
+  `greylist` tinyint(1) NOT NULL,
+  `check_spf` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
+  UNIQUE KEY `ix_domains_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
- CREATE TABLE `domain_user` (
+CREATE TABLE `domain_user` (
   `domain_id` bigint(20) NOT NULL,
   `user_id` bigint(20) NOT NULL,
   PRIMARY KEY (`domain_id`,`user_id`),
@@ -496,15 +528,20 @@ deliveries.  Because a large proportion of spam is (or was) sent this
 way, the simple act of deferring emails from unknown (untrusted)
 sources eliminates a large amount of spam.
 
-CHAPPS can perform [RCPT or DATA
+CHAPPS can, on a per-domain, opt-in basis, perform [RCPT or DATA
 greylisting](https://datatracker.ietf.org/doc/html/rfc6647#section-2.4)
 at present, since it wants to use the sender's email address and IP
-address as well as the recipient list.  Emails will be
-greylisted--that is, deferred--when they are associated with source
-tuples which are not recognized.  Tracking data regarding recognized
-tuples is stored in Redis.  Config data regarding which inbound
-domains request greylisting will be obtained from the database
-(feature TBD) and cached in Redis.
+address as well as the recipient list.  CHAPPS is written to expect to
+be invoked during the RCPT phase, but should work in the DATA phase.
+That has not been tested.
+
+Emails addressed to enforcing domains will be greylisted--that is,
+deferred--when they are associated with source tuples which are not
+recognized.  Tracking data regarding recognized tuples and domain
+option setting is stored in Redis.  Config data regarding option
+status is obtained from the database and cached in Redis.  Domains
+which do not set the `greylist` bit on their records will receive all
+mail addressed to them immediately, without any greylisting.
 
 Please note that in the context of comprehensive inbound email
 filtering, SPF and greylisting have an interesting relationship which
@@ -541,11 +578,18 @@ check results.  The [SPF specification in RFC
 exactly what response to take in each case, saying that it is a site's
 prerogative to decide the fates of those emails.
 
-As of this writing, there is no completed SPF service, though there is
-a completed SPF enforcement handler, which needs only a script wrapper
-to become a service.  However, it seems better to create a unified
-inbound service offering SPF with integrated greylisting, because of
-the odd interaction of greylisting with SPF.
+Domains must opt-in to SPF checking, just as with Greylisting.
+Domains which opt out of both will simply receive all email addressed
+to them without any SPF checking or Greylisting.
+
+There is no standalone SPF service; it is part of the multipolicy
+inbound service.  It would be trivial to create a standalone SPF
+service.  Since we intend to provide both options to our customers,
+creating a standalone service is a low priority.  **Please note** that
+as with Greylisting, the domain-level option will be honored even by
+standalone handlers, meaning that in order for a domain's incoming
+email to have SPF enforced, that option will still need to be set on
+its record.
 
 ## Inbound Multi-policy Service (SPF + Greylisting)
 
@@ -583,13 +627,17 @@ the interesting option of using greylisting for grey areas.
 
 By default, CHAPPS SPF policy enforcement service uses greylisting for
 emails which receive `softfail` and `none`/`neutral` responses on
-their SPF checks.  The plan, as it becomes possible to control whether
-greylisting and/or SPF are applied to the inbound email of particular
-domains, is to greylist even emails which receive `pass` from SPF,
-meaning that any "deliverable" email will be deferred unless it is
-already coming from a recognized source (tuple), when both are
-enabled.  (Non-deliverable categories are: `fail`, `temperror`,
-`permerror`.)
+their SPF checks.
+
+If a domain is set to enforce SPF **and** Greylisting, that will cause
+CHAPPS to greylist even emails which receive `pass` from SPF, meaning
+that any "deliverable" email will be deferred unless it is already
+coming from a recognized source (tuple), when both are enabled.
+(Non-deliverable categories are: `fail`, `temperror`, `permerror`.)
+
+The messages which accompany the various rejections and deferrals
+indicate what the reason was.  In some cases, those messages indicate
+that a message has been greylisted due to the SPF enforcement policy.
 
 ## Upcoming features
 
@@ -597,18 +645,14 @@ A mini-roadmap of upcoming changes:
 
 minor:
 
-  - Switch older code from using the `mariadb` package to using
-    `mysqlclient` in order to remove extra dependency
-  - SDA Redis keys will have tunable expiry times
+  - add database initialization / migration to CLI
+  - SDA (and other) Redis keys will have tunable expiry times
   - Look into specifying log facility and level in the config file
 
 major:
 
-  - Adapt older database code to use SQLAlchemy rather than a low-level
-    package such as `mariadb` or `mysqlclient`
-  - CHAPPS will also offer a multipolicy-inbound service as described
-    above, with SPF+Greylisting.  It will allow for a per-domain
-    option indicating whether to apply each of greylisting and SPF.
+  - Switch adapter layer to one based on SQLAlchemy
+  - Possibly support multiple enforcement intervals
   - It seems inevitable that other features will also be added.  There
     is some skeletal code in the repo for building email content
     filters, which are not the same as policy delegates.

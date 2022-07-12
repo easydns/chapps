@@ -1,5 +1,6 @@
 """fixtures for testing chapps.switchboard"""
 
+from typing import List
 from unittest.mock import Mock, AsyncMock
 import pytest
 from chapps.policy import (
@@ -25,6 +26,7 @@ from chapps.tests.test_policy.conftest import (
     testing_policy,
     testing_policy_grl,
     populate_redis_grl,
+    clear_redis_grl,
     unique_instance,
     mock_client_tally,
 )
@@ -97,45 +99,103 @@ def mock_reader_sda_unauth(postfix_policy_request_payload):
 
 @pytest.fixture
 def grl_reader_too_fast(postfix_policy_request_payload):
-    mock = AsyncMock()
-    mock.readuntil = AsyncMock(
-        side_effect=[
-            postfix_policy_request_payload("somebody@chapps.io"),
-            postfix_policy_request_payload("somebody@chapps.io"),
-            CallableExhausted,
-        ]
-    )
-    return mock
+    return _grl_reader_factory_too_fast(postfix_policy_request_payload)()
+
+
+@pytest.fixture
+def grl_reader_too_fast_factory(postfix_policy_request_payload):
+    return _grl_reader_factory_too_fast(postfix_policy_request_payload)
+
+
+def _grl_reader_factory_too_fast(postfix_policy_request_payload):
+    def too_fast_reader_grl(sender: str = None, recip: str = None):
+        sender = sender or "somebody@chapps.io"
+        recip = recip or "someguy@chapps.io"
+        mock = AsyncMock()
+        mock.readuntil = AsyncMock(
+            side_effect=[
+                postfix_policy_request_payload(sender, [recip]),
+                postfix_policy_request_payload(sender, [recip]),
+                CallableExhausted,
+            ]
+        )
+        return mock
+
+    return too_fast_reader_grl
 
 
 @pytest.fixture
 def grl_reader_recognized(postfix_policy_request_payload, populate_redis_grl):
-    sender = "somebody@chapps.io"
-    pprp = postfix_policy_request_payload(sender)
-    populate_redis_grl(
-        GreylistingPolicy._fmtkey("10.10.10.10", sender, "bar@foo.tld")
+    return _grl_reader_factory_recognized(
+        postfix_policy_request_payload, populate_redis_grl
+    )()
+
+
+@pytest.fixture
+def grl_reader_recognized_factory(
+    postfix_policy_request_payload, populate_redis_grl
+):
+    return _grl_reader_factory_recognized(
+        postfix_policy_request_payload, populate_redis_grl
     )
-    mock = AsyncMock()
-    mock.readuntil = AsyncMock(side_effect=[pprp, CallableExhausted])
-    return mock
+
+
+def _grl_reader_factory_recognized(
+    postfix_policy_request_payload, populate_redis_grl
+):
+    def _recognized_reader_grl(sender: str = None, recip: str = None):
+        sender = sender or "somebody@chapps.io"
+        recip = recip or "someguy@chapps.io"
+        pprp = postfix_policy_request_payload(sender, [recip])
+        populate_redis_grl(
+            GreylistingPolicy._fmtkey("10.10.10.10", sender, recip)
+        )
+        mock = AsyncMock()
+        mock.readuntil = AsyncMock(side_effect=[pprp, CallableExhausted])
+        return mock
+
+    return _recognized_reader_grl
 
 
 @pytest.fixture
 def grl_reader_with_tally(
     postfix_policy_request_payload, populate_redis_grl, mock_client_tally
 ):
-    sender = "somebody@chapps.io"
-    pprp = postfix_policy_request_payload(sender)
-    tally = {GreylistingPolicy._fmtkey("10.10.10.10"): mock_client_tally(10)}
-    populate_redis_grl(
-        GreylistingPolicy._fmtkey(
-            "10.10.10.10", "someschmo@chapps.io", "bar@foo.tld"
-        ),
-        tally,
+    return _grl_reader_factory_with_tally(
+        postfix_policy_request_payload, populate_redis_grl, mock_client_tally
+    )()
+
+
+@pytest.fixture
+def grl_reader_with_tally_factory(
+    postfix_policy_request_payload, populate_redis_grl, mock_client_tally
+):
+    return _grl_reader_factory_with_tally(
+        postfix_policy_request_payload, populate_redis_grl, mock_client_tally
     )
-    mock = AsyncMock()
-    mock.readuntil = AsyncMock(side_effect=[pprp, CallableExhausted])
-    return mock
+
+
+def _grl_reader_factory_with_tally(
+    postfix_policy_request_payload, populate_redis_grl, mock_client_tally
+):
+    def _with_tally_reader_grl(sender: str = None, recip: str = None):
+        sender = sender or "somebody@chapps.io"
+        recip = recip or "someguy@chapps.io"
+        pprp = postfix_policy_request_payload(sender, [recip])
+        tally = {
+            GreylistingPolicy._fmtkey("10.10.10.10"): mock_client_tally(10)
+        }
+        populate_redis_grl(
+            GreylistingPolicy._fmtkey(
+                "10.10.10.10", "someschmo@chapps.io", recip
+            ),
+            tally,
+        )
+        mock = AsyncMock()
+        mock.readuntil = AsyncMock(side_effect=[pprp, CallableExhausted])
+        return mock
+
+    return _with_tally_reader_grl
 
 
 @pytest.fixture
@@ -157,9 +217,11 @@ def unique_instance():
 
 @pytest.fixture
 def mock_reader_factory(unique_instance, postfix_policy_request_payload):
-    def mock_reader(sender="somebody@chapps.io", **kwargs):
+    def mock_reader(
+        sender="somebody@chapps.io", recip="foo@bar.tld", **kwargs
+    ):
         pprp = postfix_policy_request_payload(
-            sender, None, unique_instance(), **kwargs
+            sender, [recip], unique_instance(), **kwargs
         )
         mock = AsyncMock()
         mock.readuntil = AsyncMock(side_effect=[pprp, CallableExhausted])

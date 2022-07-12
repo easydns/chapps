@@ -18,16 +18,23 @@ import redis
 import logging
 from expiring_dict import ExpiringDict
 from chapps.config import config, CHAPPSConfig
-from chapps.adapter import MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter
+from chapps.adapter import (
+    MariaDBQuotaAdapter,
+    MariaDBSenderDomainAuthAdapter,
+    MariaDBInboundFlagsAdapter,
+)
 from chapps.signals import (
     TooManyAtsException,
     NullSenderException,
     NotAnEmailAddressException,
+    NoRecipientsException,
 )
-from chapps.models import Quota, SDAStatus
+from chapps.models import Quota, SDAStatus, PolicyResponse
 from chapps.util import PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
+from chapps.inbound import InboundPPR
 
+policy_response = PolicyResponse.policy_response  # a parameterized decorator
 logger = logging.getLogger(__name__)
 seconds_per_day = 3600 * 24
 SENTINEL_TIMEOUT = 0.1
@@ -123,6 +130,90 @@ class EmailPolicy:
         self.redis = self._redis()  # pass True to get read-only
         self.instance_cache = ExpiringDict(3)  # entries expire after 3 seconds
 
+    @contextmanager
+    def _adapter_handle(self):
+        """Context manager for obtaining a database handle
+
+        In order to acquire policy configuration data, the policy manager must
+        be able to reach the RDBMS or other policy-config data store.  One of
+        the policy manager's priciple jobs is to obtain this data from the
+        database and stuff it into Redis for future reference.
+
+        Adapter configuration, in terms of how to access the database, is
+        obtained from the config object.
+
+        .. todo::
+
+          It is clear now that the adapter classes should also accept an
+          optional config argument, and then use it for default values, so that
+          this routine need not enumerate all the options.
+
+        :meta public:
+        """
+        adapter = self.adapter_class(cfg=self.config)
+        try:
+            yield adapter
+        finally:
+            adapter.conn.close()
+
+    @contextmanager
+    def _control_data_storage_context(self):
+        """Context manager for storing control data in Redis
+
+        This is the most basic of routines, provided for policies which store
+        only one item in Redis, perhaps an option flag for instance.
+
+        The context manager yields a callable which expects up to three
+        arguments:
+
+        .. code::
+
+            dsc(token, setting, expire=seconds_per_day)
+
+        :token: is a token unique to the resource along with the setting.  The
+                `redis_key_prefix` is automatically prepended to the token.  If
+                the token is otherwise compound, it should be compounded
+                beforehand and presented as a string.
+
+        :setting: is the value to be stored in Redis
+
+        :expire: the Redis entry's TTL in seconds; defaults to 24hr
+
+        This pattern is used throughout the policy managers to handle making
+        Redis settings in pipelines.  Some policy managers declare overrides
+        for this method, in order to automate creation of compound keys or to
+        store more than one piece of data at once.  Where a policy has a
+        per-domain enforcement flag, that flag is generally being stored on a
+        Redis key formed by tacking the `redis_key_prefix` onto the front of
+        the domain name.
+
+        In practice, to use this context manager, capture its yielded output
+        and call it in order to store data:
+
+        .. code::
+
+            resource_settings_map = {d: True for d in domains}
+            with policy._control_data_storage_context() as dsc:
+                for domain, option in resource_settings_map.items():
+                    dsc(domain, option)
+
+        If there are a number of settings to create, make sure to place the
+        loop within the context so that all the settings will be submitted as
+        part of the same pipeline.
+
+        """
+        pipe = self.redis.pipeline()
+        fmtkey = self._fmtkey
+
+        def _dsc(token, setting, expire=seconds_per_day):
+            pipe.set(fmtkey(token), setting, ex=expire)
+
+        try:
+            yield _dsc
+        finally:
+            pipe.execute()
+            pipe.reset()
+
     def _redis(self, read_only: bool = False):
         """Get a Redis handle, possibly from Sentinel
 
@@ -160,13 +251,13 @@ class EmailPolicy:
         )
 
     def approve_policy_request(
-        self, ppr: PostfixPolicyRequest
+        self, ppr: PostfixPolicyRequest, **opts
     ) -> Union[str, bool]:
         """Determine a policy outcome based on the PPR provided
 
         This routine may return a boolean PASS/FAIL response, or it may for
         some policy classes return a string, which represents the policy
-        outcome.
+        outcome and is suitable for sending to Postfix.
 
         The result of the policy approval is cached based on the instance value
         provided by Postfix.  The memoization is done here in the superclass in
@@ -175,12 +266,12 @@ class EmailPolicy:
         """
         response = self.instance_cache.get(ppr.instance, None)
         if response is None:
-            response = self._approve_policy_request(ppr)
+            response = self._approve_policy_request(ppr, **opts)
             self.instance_cache[ppr.instance] = response
         return response
 
     def _approve_policy_request(
-        self, ppr: PostfixPolicyRequest
+        self, ppr: PostfixPolicyRequest, **opts
     ) -> Union[str, bool]:
         """Placeholder method which must be implemented by subclasses.
         """
@@ -189,7 +280,285 @@ class EmailPolicy:
         )
 
 
-class GreylistingPolicy(EmailPolicy):
+class PostfixActions:
+    """Superclass for Postfix action adapters"""
+
+    @staticmethod
+    def dunno(*args, **kwargs):
+        """Return the Postfix directive `DUNNO`"""
+        return "DUNNO"
+
+    @staticmethod
+    def okay(*args, **kwargs):
+        """Return the Postfix directive `OK`"""
+        return "OK"
+
+    ok = okay
+    """`ok()` is an alias for `okay()`"""
+
+    @staticmethod
+    def defer_if_permit(msg, *args, **kwargs):
+        """
+        Return the Postfix `DEFER_IF_PERMIT` directive with the provided
+        message
+        """
+        return f"DEFER_IF_PERMIT {msg}"
+
+    @staticmethod
+    def reject(msg, *args, **kwargs):
+        """
+        Return the Postfix `REJECT` directive along with the provided message
+        """
+        return f"REJECT {msg}"
+
+    @staticmethod
+    def prepend(*args, **kwargs):
+        """
+        Return the Postfix `PREPEND` directive.
+        Include the header to prepend as keyword-argument `prepend`
+        """
+        new_header = kwargs.get("prepend", None)
+        if new_header is None or len(new_header) < 5:
+            raise ValueError(
+                f"Prepended header expected to be at least 5 chars in length."
+            )
+        return f"PREPEND {new_header}"
+
+    def __init__(self, cfg=None):
+        """
+        Optionally supply a :py:class:`chapps.config.CHAPPSConfig` instance as
+        the first argument.
+        """
+        self.config = cfg or config
+        self.params = self.config  # later this is overridden, in subclasses
+
+    def _get_closure_for(
+        self, decision: str, *, passing: Optional[bool] = None
+    ):
+        """Setup the prescribed closure for generating SMTP action directives"""
+        action_config = getattr(self.params, decision, None)
+        if not action_config:
+            raise ValueError(
+                f"Action config for {self.__class__.__name__} does not contain a key named {decision}"
+            )
+        action_tokens = action_config.split(" ")
+        action = action_tokens[0]
+        try:
+            i = int(action)  #  if the first token is a number, its a directive
+        except ValueError:  #  first token was a string, and therefore refers to a method
+            # look for predefined or memoized version
+            af = getattr(self, action, None)
+            if af:
+                return af
+            # no local version found, find function reference
+            action_func = getattr(PostfixActions, action, None)
+            if not action_func:
+                action_func = getattr(self.__class__, action, None)
+            if not action_func:
+                raise NotImplementedError(
+                    f"Action {action} is not implemented by PostfixActions"
+                    f" or by {self.__class__.__name__}"
+                )
+        else:
+            # construct closure from configured message string
+            action_func = lambda reason, ppr, *args, **kwargs: action_config.format(
+                reason=reason
+            )
+        passing = (
+            (action_func in [self.reject, self.defer_if_permit])
+            if passing is None
+            else passing
+        )
+        action_func = policy_response(passing, action)(action_func)
+        # memoize the action function for quicker reference next time
+        setattr(self, action, action_func)
+        return action_func
+
+    def _get_message_for(self, decision, config_name=None):
+        """Grab a status message for a decision from the config, optionally with another name"""
+        msg_key = config_name or decision
+        msg = getattr(self, msg_key, None)
+        if not msg:
+            raise ValueError(
+                f"There is no key {msg_key} in the config for {self.__class__.__name__} or its policy"
+            )
+        return msg
+
+    def _mangle_action(self, action):
+        """
+        Policy decisions which are also reserved words need to be altered.
+        Currently, this routine handles only the action 'pass'
+        """
+        if action == "pass":
+            return "passing"
+        return action
+
+    def action_for(self, *args, **kwargs):
+        """Abstract method which must be implemented in subclasses.
+
+        This method is intended to map responses from a policy
+        manager onto Postfix directives.
+
+        Not all policy managers return only yes/no answers.  Some, like
+        :py:class:`chapps.spf_policy.SPFEnforcementPolicy`, return a handful of
+        different possible values, and so there must be a mechanism for
+        allowing sites to determine what happens when each of those different
+        outcomes occurs.
+
+        """
+        raise NotImplementedError(
+            f"Subclasses of {self.__class__.__name__} must define the method"
+            " action_for() for themselves, to map policy module responses"
+            " (decisions) onto Postfix action directives."
+        )
+
+
+class PostfixPassfailActions(PostfixActions):
+    """Postfix Actions adapter for PASS/FAIL policy responses.
+
+    Many policies return `True` if the email should be accepted/forwarded and
+    return `False` if the email should be rejected/dropped.  This class
+    encapsulates the common case, and includes some logic to extract precise
+    instructions from the config.
+
+    """
+
+    def __init__(self, cfg=None):
+        super().__init__(cfg)
+
+    def _get_closure_for(
+        self, decision, *, passing: bool = None, msg_key: str = None
+    ):
+        """Create a closure for formatting these messages and store it on
+        self.<decision>, and also return it
+        """
+        msg_key = msg_key or decision
+        msg = getattr(self.params, msg_key, None)
+        if not msg:
+            raise ValueError(
+                f"The key '{msg_key}' is not defined in the config for"
+                f" {self.__class__.__name__} or its policy"
+            )
+        msg_tokens = msg.split(" ")
+        msg_text = ""
+        if msg_tokens[0] == "OK":
+            func = PostfixActions.okay
+        elif msg_tokens[0] == "DUNNO":
+            func = PostfixActions.dunno
+        elif msg_tokens[0] == "DEFER_IF_PERMIT":
+            func = PostfixActions.defer_if_permit
+            msg_text = " ".join(msg_tokens[1:])
+        elif msg_tokens[0] == "REJECT" or msg_tokens[0] == "554":
+            func = PostfixActions.reject
+            msg_text = " ".join(msg_tokens[1:])
+        else:
+            raise NotImplementedError(
+                "Pass-fail closure creation for Postfix directive"
+                f" {msg_tokens[0]} is not yet available."
+            )
+        action = policy_response(
+            (
+                passing
+                if passing is not None
+                else (func != PostfixActions.reject)
+            ),
+            decision,
+        )(self.__prepend_action_with_message(func, msg_text))
+        setattr(self, decision, action)
+        return action
+
+    def __prepend_action_with_message(self, func, prepend_msg_text):
+        """Wrap an action func in order to prepend an additional message"""
+        # avoiding use of nonlocal required if definition is embedded inline
+        # in calling procedure
+        def action(message="", *args, **kwargs):
+            msg_text = prepend_msg_text
+            if len(message) > 0:
+                msg_text = " ".join([msg_text, message])
+            return func(msg_text, *args, **kwargs)
+
+        return action
+
+    def action_for(self, pf_result):
+        """Return an action closure for a pass/fail policy
+
+        Evaluates its argument `pf_result` as a boolean and returns the
+        action closure for 'passing' if True, otherwise the action closure for
+        'fail'.  To provide backwards-compatibility with older versions, and to
+        allow for more descriptive configuration elements, the actions may be
+        attached to keys named `acceptance_message` or `rejection_message`
+        instead of `passing` and `fail` respectively.  This is only true
+        of policies with action factories inheriting from
+        :py:class:`chapps.actions.PostfixPassfailActions`
+
+        """
+        if pf_result:  # True / pass
+            action_name = "passing"
+        else:  # False / fail
+            action_name = "fail"
+        return getattr(self, action_name, None)
+
+    def __getattr__(self, attrname, *args, **kwargs):
+        """Allow use of old config elements with long descriptive names."""
+        attrname = self._mangle_action(attrname)
+        if attrname == "passing":
+            msg_key = "acceptance_message"
+        elif attrname == "fail":
+            msg_key = "rejection_message"
+        else:
+            raise NotImplementedError(
+                f"Pass-fail actions do not include {attrname}"
+            )
+        return self._get_closure_for(
+            attrname, msg_key=msg_key, passing=(attrname == "passing")
+        )
+
+
+class PostfixOQPActions(PostfixPassfailActions):
+    """Postfix Action translator for :py:class:`chapps.policy.OutboundQuotaPolicy`"""
+
+    def __init__(self, cfg=None):
+        """
+        Optionally provide an instance of :py::class`chapps.config.CHAPPSConfig`.
+
+        All this class does is wire up `self.config` to
+        point at the :py:class:`chapps.policy.OutboundQuotaPolicy` config block.
+        """
+        super().__init__(cfg)
+        self.params = self.config.policy_oqp
+
+
+class PostfixGRLActions(PostfixPassfailActions):
+    """Postfix Action translator for :py:class:`chapps.policy.GreylistingPolicy`"""
+
+    def __init__(self, cfg=None):
+        """
+        Optionally provide an instance of :py:class:`chapps.config.CHAPPSConfig`.
+
+        All this class does is wire up `self.config` to
+        point at the :py:class:`chapps.policy.GreylistingPolicy` config block.
+        """
+        super().__init__(cfg)
+        self.params = self.config.policy_grl
+
+
+class InboundPolicy(EmailPolicy):
+    adapter_class = MariaDBInboundFlagsAdapter
+
+    def domain_option_key(self, ppr: InboundPPR):
+        """Return the Redis key for the domain's Greylisting option
+
+        Uses the first of the list of tokenized recipients.  Generally,
+        inbound mail is expected to contain only one recipient per email.
+        """
+        return self._fmtkey(ppr.recipient_domain)
+
+    def _store_control_data(self, domain: str, flag: bool):
+        with self._control_data_storage_context() as dsc:
+            dsc(domain, 1 if flag else 0)
+
+
+class GreylistingPolicy(InboundPolicy):
     """Policy manager which implements greylisting
 
     `Greylisting <https://en.wikipedia.org/wiki/Greylisting_(email)>`_ is a
@@ -233,6 +602,7 @@ class GreylistingPolicy(EmailPolicy):
 
         """
         super().__init__(cfg)
+        self.actions = PostfixGRLActions(self.config)
         self.min_defer = minimum_deferral
         self.cache_ttl = cache_ttl
         self.allow_after = auto_allow_after
@@ -264,7 +634,7 @@ class GreylistingPolicy(EmailPolicy):
         """
         return self._fmtkey(ppr.client_address, ppr.sender, ppr.recipient)
 
-    def client_key(self, ppr):
+    def client_key(self, ppr: PostfixPolicyRequest):
         """Return the greylisting client key
 
         This key indicates whether the client has enough successful
@@ -273,58 +643,104 @@ class GreylistingPolicy(EmailPolicy):
         """
         return self._fmtkey(ppr.client_address)
 
-    def _approve_policy_request(self, ppr: PostfixPolicyRequest):
-        """Do the dirty work of policy evaluation"""
+    def acquire_policy_for(self, ppr: InboundPPR):
+        with self._adapter_handle() as adapter:
+            result = adapter.do_greylisting_on(ppr.recipient_domain)
+        logger.debug(
+            "Got greylisting option flag "
+            + str(result)
+            + " from RDBMS for domain "
+            + ppr.recipient_domain
+        )
+        self._store_control_data(ppr.recipient_domain, 1 if result else 0)
+        return result
+
+    def _approve_policy_request(self, ppr: InboundPPR, **opts):
+        """Perform greylisting
+
+        .. todo::
+
+            It would be possible to allow domains to set the whitelisting
+            threshhold, since this routine has to obtain option flag data from
+            the policy config source at this point anyway.  Because we're also
+            concerned with time between attempts, we could also do some
+            time-based things here, such as starting to refuse clients who
+            retry much too quickly, implementing per-domain rules about how
+            frequently a client is allowed to send email to their addresses,
+            etc.
+
+        :meta public:
+        """
+        option_set, tuple_seen, client_tally = None, None, None
         try:
-            # logger.debug(f"Getting control data for {self.tuple_key( ppr )}")
-            tuple_seen, client_tally = self._get_control_data(ppr)
-            # logger.debug(f"Got values ({tuple_seen}, {client_tally})")
+            option_set, tuple_seen, client_tally = self._get_control_data(ppr)
+            if option_set is None:
+                option_set = self.acquire_policy_for(ppr)
+        except NoRecipientsException:
+            logger.exception(f"No recipient in PPR {ppr.instance}.")
+            return False
         except Exception:  # pragma: no cover
             logger.exception("UNEXPECTED")
             logger.debug(
                 f"Returning denial for {ppr.instance} (unexpected exception)."
             )
+        if opts.get("force", False):
+            option_set = True
+        if not option_set:
+            logger.debug(
+                "Not enforcing greylisting for domain "
+                f"{ppr.recipient_domain or 'N/A'}"
+            )
+            return "DUNNO"  # not enforcing this policy
         # if not whitelisting, client_tally will be None
         if client_tally is not None and client_tally >= self.allow_after:
             self._update_client_tally(ppr)
-            return True
+            return self.actions.action_for(True)("", ppr=ppr)
         if tuple_seen:
             # The tuple is recognized; need to check if it was long enough ago
             now = time.time()
             if now - tuple_seen >= self.min_defer:
                 # the email will be approved; some housekeeping is necessary
                 self._update_client_tally(ppr)
-                return True
+                return self.actions.action_for(True)("", ppr=ppr)
         # if we get here, the tuple either isn't stored or was stored too
         # recently; either way, we update it
         self._update_tuple(ppr)
-        return False
+        return self.actions.action_for(False)("", ppr=ppr)
 
-    def _get_control_data(self, ppr):
+    def _get_control_data(self, ppr: InboundPPR):
         """Extract data from Redis in order to answer the policy request"""
         now = time.time()
         tuple_key = self.tuple_key(ppr)
         client_key = self.client_key(ppr)
+        option_key = self.domain_option_key(ppr)
+        logger.debug(
+            f"Redis keys: tuple={tuple_key} opt={option_key} client={client_key} (zrange)"
+        )
         pipe = self.redis.pipeline()
         pipe.zremrangebyscore(client_key, 0, now - float(self.cache_ttl))
         pipe.get(tuple_key)
+        pipe.get(option_key)
         if self.allow_after > 0:
             pipe.zrange(client_key, 0, -1)
 
         result = pipe.execute()
+        logger.debug(f"Redis result: {result!r}")
         tuple_bits = result[1]
-        if len(result) == 3:
-            client_tally_bits = result[2]
+        option_bits = result[2]
+        if len(result) == 4:
+            client_tally_bits = result[3]
 
         tuple_seen = (
             float(tuple_bits) if tuple_bits else None
         )  # UNIX epoch time
+        option_set = int(option_bits) if option_bits else None
         client_tally = None
         if self.allow_after > 0 and client_tally_bits:
             client_tally = len(client_tally_bits)
-        return (tuple_seen, client_tally)
+        return (option_set, tuple_seen, client_tally)
 
-    def _update_client_tally(self, ppr):
+    def _update_client_tally(self, ppr: InboundPPR):
         """Update client reliability score in Redis
 
         When an email is allowed, increment the reliability score of the
@@ -343,7 +759,7 @@ class GreylistingPolicy(EmailPolicy):
             pipe.expire(client_key, self.cache_ttl)
             pipe.execute()
 
-    def _update_tuple(self, ppr):
+    def _update_tuple(self, ppr: InboundPPR):
         """Set or update a greylisting tuple in Redis"""
         self.redis.setex(self.tuple_key(ppr), self.cache_ttl, time.time())
 
@@ -369,6 +785,7 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     """
 
+    adapter_class = MariaDBQuotaAdapter
     redis_key_prefix = "oqp"
     """OutboundQuotaPolicy Redis prefix"""
 
@@ -434,37 +851,6 @@ class OutboundQuotaPolicy(EmailPolicy):
         finally:
             pipe.execute()
             pipe.reset()
-
-    @contextmanager
-    def _adapter_handle(self):
-        """Context manager for obtaining a database handle
-
-        In order to acquire policy configuration data, the policy manager must
-        be able to reach the RDBMS or other policy-config data store.  One of
-        the policy manager's priciple jobs is to obtain this data from the
-        database and stuff it into Redis for future reference.
-
-        Adapter configuration, in terms of how to access the database, is
-        obtained from the config object.
-
-        .. todo::
-
-          It is clear now that the adapter classes should also accept an
-          optional config argument, and then use it for default values, so that
-          this routine need not enumerate all the options.
-
-        """
-        adapter = MariaDBQuotaAdapter(
-            db_host=self.config.adapter.db_host,
-            db_port=self.config.adapter.db_port,
-            db_name=self.config.adapter.db_name,
-            db_user=self.config.adapter.db_user,
-            db_pass=self.config.adapter.db_pass,
-        )
-        try:
-            yield adapter
-        finally:
-            adapter.conn.close()
 
     def _get_control_data(self, ppr):
         """Obtain essential data for policy decisionmaking
@@ -841,7 +1227,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     """
 
-    # every subclass of EmailPolicy must set a key prefix
+    adapter_class = MariaDBSenderDomainAuthAdapter
     redis_key_prefix = "sda"
     """Sender domain auth Redis key prefix"""
     # initialization is when we plug in the config
@@ -924,22 +1310,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
         """
         if ppr.sender:
-            parts = ppr.sender.split("@")
-            if len(parts) > 2:
-                logger.info(
-                    "Found sender email with more than one at-sign: "
-                    f"sender={ppr.sender} instance={ppr.instance} "
-                    f"parts={parts!r}"
-                )
-                raise TooManyAtsException(f"{ppr.sender}=>{parts!r}")
-            elif len(parts) == 1:
-                logger.info(
-                    "Found sender string without at-sign: "
-                    f"sender={ppr.sender} instance={ppr.instance} "
-                    f"parts={parts!r}"
-                )
-                raise NotAnEmailAddressException
-            return parts[-1]
+            return ppr.domain_from(ppr.sender)
         raise NullSenderException
 
     # We will need to be able to access policy data in the RDBMS
@@ -996,25 +1367,6 @@ class SenderDomainAuthPolicy(EmailPolicy):
         finally:
             pipe.execute()
             pipe.reset()
-
-    # We will need a database adapter context manager
-    @contextmanager
-    def _adapter_handle(self):
-        """Context manager for policy config access; yields a database handle"""
-        # TODO: identical to OQP -- should be factored up into a superclass
-        #       complemented by similar TODO regarding refactorization to avoid
-        #       passing these arguments
-        adapter = MariaDBSenderDomainAuthAdapter(
-            db_host=self.config.adapter.db_host,
-            db_port=self.config.adapter.db_port,
-            db_name=self.config.adapter.db_name,
-            db_user=self.config.adapter.db_user,
-            db_pass=self.config.adapter.db_pass,
-        )
-        try:
-            yield adapter
-        finally:
-            adapter.conn.close()
 
     # How to obtain control data
     def acquire_policy_for(self, ppr) -> bool:

@@ -19,6 +19,7 @@ from chapps.tests.test_adapter.conftest import (
     finalizing_pcadapter,
     database_fixture,
     populated_database_fixture,
+    populated_database_fixture_with_extras,
 )
 from chapps.tests.conftest import (
     _unique_instance,
@@ -35,8 +36,14 @@ from chapps.policy import (
     OutboundQuotaPolicy,
     GreylistingPolicy,
     SenderDomainAuthPolicy,
+    PostfixActions,
+    PostfixGRLActions,
+    PostfixOQPActions,
+    PostfixPassfailActions,
 )
+from chapps.spf_policy import SPFEnforcementPolicy, PostfixSPFActions
 from chapps.util import PostfixPolicyRequest
+from chapps.inbound import InboundPPR
 from chapps.outbound import OutboundPPR
 from chapps.signals import NullSenderException
 
@@ -71,21 +78,26 @@ def null_sender_policy_sda(
 
 @fixture
 def testing_policy_grl(chapps_mock_env, chapps_mock_config_file):
-    newconfig = CHAPPSConfig()
-    policy = GreylistingPolicy(newconfig)
-    return policy
+    return testing_policy_factory(GreylistingPolicy)
 
 
 @fixture
-def testing_policy_spf():
-    # insert logic similar to above, to have an alternate config
-    # for testing SPF there seems little reason
-    return None
+def testing_policy_spf(chapps_mock_env, chapps_mock_config_file):
+    return testing_policy_factory(SPFEnforcementPolicy)
 
 
 @fixture
 def allowable_ppr(postfix_policy_request_message):
     return OutboundPPR(postfix_policy_request_message("underquota@chapps.io"))
+
+
+@fixture
+def allowable_inbound_ppr(postfix_policy_request_message):
+    return InboundPPR(
+        postfix_policy_request_message(
+            "underquota@chapps.io", ["somebody@chapps.io"]
+        )
+    )
 
 
 @fixture
@@ -421,29 +433,30 @@ def _spf_actions():
     return dict(
         passing="PREPEND X-CHAPPSTESTING: SPF prepend",
         fail="550 5.7.1 SPF check failed: CHAPPS failing SPF message",
-        softfail="DEFER_IF_PERMIT Service temporarily unavailable - greylisted CHAPPS softfail SPF message",
-        none="DEFER_IF_PERMIT Service temporarily unavailable - greylisted due to SPF enforcement policy",
-        neutral="DEFER_IF_PERMIT Service temporarily unavailable - greylisted CHAPPS neutral SPF message",
+        softfail="DEFER_IF_PERMIT Service temporarily stupid CHAPPS softfail SPF message",
+        none="DEFER_IF_PERMIT Service temporarily stupid due to SPF enforcement policy",
+        neutral="DEFER_IF_PERMIT Service temporarily stupid CHAPPS neutral SPF message",
         permerror="550 5.5.2 SPF record(s) are malformed: CHAPPS permerror SPF message",
         temperror="451 4.4.3 SPF record(s) temporarily unavailable: CHAPPS temperror SPF message",
     )
 
 
-def _auto_query_param_list(helo_list=["fail"]):
-    """Constructs a map for parameterized testing via pytest
+def _spf_plus_greylist_actions():
+    return dict(
+        passing="DEFER_IF_PERMIT Service temporarily stupid",
+        fail="550 5.7.1 SPF check failed: CHAPPS failing SPF message",
+        softfail="DEFER_IF_PERMIT Service temporarily stupid CHAPPS softfail SPF message",
+        none="DEFER_IF_PERMIT Service temporarily stupid due to SPF enforcement policy",
+        neutral="DEFER_IF_PERMIT Service temporarily stupid CHAPPS neutral SPF message",
+        permerror="550 5.5.2 SPF record(s) are malformed: CHAPPS permerror SPF message",
+        temperror="451 4.4.3 SPF record(s) temporarily unavailable: CHAPPS temperror SPF message",
+    )
 
-    The map is a list of tuples.
-    Each tuple's first element is a tuple of (helo_result, mf_result).
-    The second element is the action indicated by the `spf_actions` dict.
 
-    Right now `spf_actions` (not quite a fixture) is created from constants,
-    which are the same as the default configuration.  If the default config
-    changes, some of these tests may start to fail.
-
-    """
+def __auto_queries(helo_list, actions_f, results_f=_spf_results):
     result = []
-    spf_actions = _spf_actions()
-    spf_results = _spf_results()
+    spf_actions = actions_f()
+    spf_results = results_f()
     [  # list comps are faster than for loops
         result.extend(
             [
@@ -459,6 +472,25 @@ def _auto_query_param_list(helo_list=["fail"]):
         for outer_key, first in spf_results.items()
     ]
     return result
+
+
+def _auto_query_param_list(helo_list=["fail"]):
+    """Constructs a map for parameterized testing via pytest
+
+    The map is a list of tuples.
+    Each tuple's first element is a tuple of (helo_result, mf_result).
+    The second element is the action indicated by the `spf_actions` dict.
+
+    Right now `spf_actions` (not quite a fixture) is created from constants,
+    which are the same as the mock configuration.  If the mock config
+    changes, some of these tests may start to fail.
+
+    """
+    return __auto_queries(helo_list, _spf_actions)
+
+
+def _auto_query_param_list_spf_plus_greylist(helo_list=["fail"]):
+    return __auto_queries(helo_list, _spf_plus_greylist_actions)
 
 
 def _auto_ppr_param_list(*, senders=["ccullen@easydns.com"]):
@@ -487,3 +519,31 @@ def _auto_ppr_param_list(*, senders=["ccullen@easydns.com"]):
         else:
             params.append((ppr_for(s), NotAnEmailAddressException))
     return params
+
+
+# ## Actions stuff
+
+
+@fixture
+def postfix_actions():
+    return PostfixActions()
+
+
+@fixture
+def oqp_actions():
+    return PostfixOQPActions()
+
+
+@fixture
+def grl_actions():
+    return PostfixGRLActions()
+
+
+@fixture
+def spf_actions(testing_policy_spf):
+    return PostfixSPFActions(testing_policy_spf)
+
+
+@fixture
+def spf_reason():
+    return "mock SPF explanation"

@@ -2,6 +2,19 @@
 
 ## Alpha Releases
 
+###v0.4.13:
+    - Refactored elements of the adapter classes to reduce code duplication.
+	- Added Alembic to project to manage database migrations.
+	- Created as-of-0.4.12 base migration, and an update migration to
+      add new option flag columns.
+	- Added greylisting and SPF-checking option flags to **Domain** records.
+	- Updated greylisting and SPF policy tests to accommodate new flags.
+	- Created new inbound handler class hierarchy, encompassing SPF
+      and inbound multipolicy handler.
+	- Created new multipolicy inbound service which combines SPF and
+      Greylisting in one service.
+	- NB: pre-existing databases need special care during upgrade, see README
+
 ###v0.4.12:
     - Adding missing documentation to new bulk user-domain and
       user-email auth policy routes.

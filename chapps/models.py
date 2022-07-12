@@ -116,6 +116,77 @@ class SDAStatus(str, Enum):
     NONE = "NOT CACHED"
 
 
+class SPFResult(str, Enum):
+    """SPF check results"""
+
+    passing = "pass"
+    fail = "fail"
+    temperror = "temperror"
+    permerror = "permerror"
+    softfail = "softfail"
+    none_neutral = "none_neutral"
+
+
+class PolicyResponse:
+    """A wrapper for policy results"""
+
+    @staticmethod
+    def policy_response(passing: bool, decision: str):
+        """Wrap an action in order to return it as a PolicyResponse
+
+        This routine is suitable for use as a decorator
+        """
+
+        def pr_decorator(func: callable):
+            def policy_response(message="", *args, **kwargs):
+                return PolicyResponse(
+                    response=func(message, *args, **kwargs),
+                    passing=passing,
+                    decision=decision,
+                )
+
+            return policy_response
+
+        return pr_decorator
+
+    def __init__(
+        self, *, response: str, passing: bool, decision: Optional[str] = None
+    ):
+        self.response = response
+        self.passing = passing
+        self.decision = decision
+
+    def __getattribute__(self, attr):
+        if attr in dir(str):
+
+            def method(self, *args, **kwargs):
+                return getattr(self.response, attr)(*args, **kwargs)
+
+            return method.__get__(self)
+        else:
+            return super().__getattribute__(attr)
+
+    def __getitem__(self, *args, **kwargs):
+        return self.response.__getitem__(*args, **kwargs)
+
+    def __eq__(self, *args, **kwargs):
+        return self.response.__eq__(*args, **kwargs)
+
+    def __bool__(self):
+        return self.passing
+
+    def __str__(self):
+        return self.response
+
+    def __repr__(self):
+        return (
+            f"PolicyResponse(response='{self.response}',"
+            f" passing={self.passing}"
+            + (f", decision='{self.decision}'" if self.decision else "")
+            + ")"
+        )
+
+
 # a metaclass for passing calls through to the orm_model
 class CHAPPSMetaModel(ModelMetaclass):
     """Metaclass for CHAPPS Pydantic models
@@ -301,10 +372,18 @@ class Domain(CHAPPSModel):
         strip_whitespace=True, to_lower=True, min_length=5, max_length=63
     ) = Field(title="domain name")
     """domain names may be up to 63 chars long"""
+    greylist: bool = Field(title="perform greylisting")
+    """flag indicating whether to greylist all domain's inbound email"""
+    check_spf: bool = Field(title="enforce SPF")
+    """flag indicating whether to check SPF for domain's inbound email"""
 
     class Config:
         orm_mode = True
-        schema_extra = dict(example=dict(id=0, name="[sub.]domain.tld"))
+        schema_extra = dict(
+            example=dict(
+                id=0, name="[sub.]domain.tld", greylist=False, check_spf=True
+            )
+        )
 
     class Meta:
         orm_model = dbmodels.Domain

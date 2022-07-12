@@ -31,14 +31,16 @@ def test_message_factory(sn, ln=None, *, subject="{sn} Testing"):
     default_subject = subject.format(**locals())
 
     def __message_factory(sender, recipients, subject=default_subject):
-        recipient = recipients if type(recipients) == str else ",".join(recipients)
+        recipient = (
+            recipients if type(recipients) == str else ",".join(recipients)
+        )
         return message_text.format(**locals())
 
     return __message_factory
 
 
 def test_recipients():
-    return ["ccullen@easydns.com"]
+    return ["ccullen@easydns.net"]
 
 
 def standard_sender():
@@ -86,7 +88,9 @@ def populated_database_fixture(database_fixture):
 
 @fixture(scope="session")
 def chapps_mock_config_file(chapps_mock_config, chapps_mock_cfg_path):
-    yield from _chapps_mock_config_file(chapps_mock_config, chapps_mock_cfg_path)
+    yield from _chapps_mock_config_file(
+        chapps_mock_config, chapps_mock_cfg_path
+    )
 
 
 @fixture(scope="session")

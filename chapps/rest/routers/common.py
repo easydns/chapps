@@ -832,7 +832,6 @@ def create_item(
 
     @db_interaction(cls=cls, engine=engine)
     async def create_i(*pargs, **args):
-        """Bogus create item docstring"""
         extras = {}
         assoc_ret = {}
         if assoc:

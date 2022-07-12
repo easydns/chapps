@@ -29,6 +29,7 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
+    Boolean,
     ForeignKey,
     Table,
     select,
@@ -43,12 +44,21 @@ from sqlalchemy.orm import (
     DeclarativeMeta,
     selectinload,
 )
+from sqlalchemy.schema import MetaData
 import logging
 import chapps.logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(chapps.logging.DEFAULT_LEVEL)
 
+convention = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",  # or column_0_name
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+"""SQLA's recommended naming convention for constraints"""
 
 # declare subclass of the SQLAlchemy DeclarativeMeta class
 # in order to attach custom routines to the ORM objects
@@ -167,7 +177,10 @@ class DB_Customizations(DeclarativeMeta):
 
 
 # declare DB model base class
-DB_Base = declarative_base(metaclass=DB_Customizations)
+DB_Base = declarative_base(
+    metaclass=DB_Customizations,
+    metadata=MetaData(naming_convention=convention),
+)
 """DB_Base serves as the base of all `ORM models`_
 
 This class itself contains literally no code apart from documentation.
@@ -239,9 +252,9 @@ class Quota(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer primary key"""
-    name = Column(String(32), unique=True)
+    name = Column(String(32), unique=True, nullable=False, index=True)
     """unique string of 32 chars or less"""
-    quota = Column(Integer, unique=True)
+    quota = Column(Integer, unique=True, nullable=False, index=True)
     """unique integer transmission attempt limit"""
 
     def __repr__(self):
@@ -259,8 +272,12 @@ class Domain(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer primary key"""
-    name = Column(String(64), unique=True)
+    name = Column(String(64), unique=True, nullable=False, index=True)
     """unique string of 64 chars or less"""
+    greylist = Column(Boolean(name="greylist"), nullable=False, default=0)
+    """if True perform greylisting"""
+    check_spf = Column(Boolean(name="check_spf"), nullable=False, default=0)
+    """if True perform SPF enforcement"""
 
     def __repr__(self):
         return f"Domain[ORM](id={self.id!r}, name={self.name!r})"
@@ -277,7 +294,7 @@ class Email(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer primary key"""
-    name = Column(String(128), unique=True)
+    name = Column(String(128), unique=True, nullable=False, index=True)
     """unique string of 128 chars or less"""
 
     def __repr__(self):
@@ -295,7 +312,7 @@ class User(DB_Base):
 
     id = Column(Integer, primary_key=True)
     """integer auto-incremented primary key"""
-    name = Column(String(128), unique=True)
+    name = Column(String(128), unique=True, nullable=False, index=True)
     """unique string of up to 128 chars"""
     quota = relationship(
         Quota,

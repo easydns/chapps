@@ -4,8 +4,12 @@ Actions
 
 These classes intepret policy manager output to produce instructions for Postfix."""
 import functools
+from typing import Optional
 from chapps.config import config
 from chapps.policy import GreylistingPolicy
+from chapps.models import PolicyResponse
+
+policy_response = PolicyResponse.policy_response
 
 
 class PostfixActions:
@@ -60,7 +64,9 @@ class PostfixActions:
         self.cfg = cfg or config
         self.config = self.cfg  # later this is overridden, in subclasses
 
-    def _get_closure_for(self, decision):
+    def _get_closure_for(
+        self, decision: str, wrapper: Optional[callable] = None
+    ):
         """Setup the prescribed closure for generating SMTP action directives"""
         action_config = getattr(self.config, decision, None)
         if not action_config:
@@ -90,6 +96,9 @@ class PostfixActions:
             action_func = lambda reason, ppr, *args, **kwargs: action_config.format(
                 reason=reason
             )
+        action_func = policy_response(action_func != self.reject, action)(
+            action_func
+        )
         # memoize the action function for quicker reference next time
         setattr(self, action, action_func)
         return action_func
@@ -174,7 +183,9 @@ class PostfixPassfailActions(PostfixActions):
                 "Pass-fail closure creation for Postfix directive"
                 f" {msg_tokens[0]} is not yet available."
             )
-        action = self.__prepend_action_with_message(func, msg_text)
+        action = policy_response(func != PostfixActions.reject, decision)(
+            self.__prepend_action_with_message(func, msg_text)
+        )
         setattr(self, decision, action)
         return action
 
@@ -298,9 +309,12 @@ class PostfixSPFActions(PostfixActions):
         ppr = kwargs.get("ppr", None)
         if ppr is None:
             raise ValueError(
-                f"PostfixSPFActions.greylist() expects a ppr= kwarg providing the PPR for greylisting."
+                "PostfixSPFActions.greylist() expects a ppr= kwarg "
+                "providing the PPR for greylisting."
             )
-        if PostfixSPFActions.greylisting_policy.approve_policy_request(ppr):
+        if PostfixSPFActions.greylisting_policy.approve_policy_request(
+            ppr, force=True
+        ):
             passing = PostfixSPFActions().action_for("pass")
             return passing(msg, ppr, *args, **kwargs)
         if len(msg) == 0:
@@ -331,9 +345,11 @@ class PostfixSPFActions(PostfixActions):
 
     def action_for(self, spf_result):
         """
-        Override :py:meth:`chapps.actions.PostfixActions.action_for()` to provide action closures
-        for the different SPF results.  The closures are memoized, so that
-        they only need be constructed once per runtime.
+
+        Override
+        :py:meth:`chapps.actions.PostfixActions.action_for()` to provide
+        action closures for the different SPF results.  The closures are
+        memoized, so that they only need be constructed once per runtime.
 
         """
         spf_result = self._mangle_action(spf_result)
