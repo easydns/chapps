@@ -194,6 +194,7 @@ setup(
     packages=[
         "chapps",
         "chapps.alembic",
+        "chapps.alembic.versions",
         "chapps.rest",
         "chapps.rest.routers",
     ],

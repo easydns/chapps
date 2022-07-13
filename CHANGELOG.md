@@ -2,6 +2,10 @@
 
 ## Alpha Releases
 
+###v0.4.15:
+	- added chapps.alembic.versions subpackage, because of course Alembic
+	  cannot work without the version files
+
 ###v0.4.14:
 	- added missing package data which prevented Alembic migrations
       from functioning as expected
