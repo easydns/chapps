@@ -2,6 +2,10 @@
 
 ## Alpha Releases
 
+###v0.4.14:
+	- added missing package data which prevented Alembic migrations
+      from functioning as expected
+
 ###v0.4.13:
     - Refactored elements of the adapter classes to reduce code duplication.
 	- Added Alembic to project to manage database migrations.

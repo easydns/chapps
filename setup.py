@@ -191,7 +191,13 @@ with open("README.md", "r") as fh:
 setup(
     cmdclass={"install": PostInstallSetup},
     name="chapps",
-    # packages are defined in setup.cfg
+    packages=[
+        "chapps",
+        "chapps.alembic",
+        "chapps.rest",
+        "chapps.rest.routers",
+    ],
+    package_data={"chapps.alembic": ["alembic.ini"]},
     data_files=[
         (
             "chapps",
