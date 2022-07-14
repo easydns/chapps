@@ -22,8 +22,10 @@ from chapps.models import (
     LiveQuotaResp,
     TextResp,
     TimeResp,
+    InstanceTimesResp,
     SourceUserMapResp,
     BulkQuotaResp,
+    DeleteResp,
     user_quota_assoc,
 )
 from chapps.policy import (
@@ -310,3 +312,32 @@ async def grl_peek_tuple(
     except TypeError as e:
         return TimeResp.send(0.0)
     return TimeResp.send(timestamp)
+
+
+@api.get("/grl/tally/{client_address}", response_model=InstanceTimesResp)
+async def grl_list_tally(client_address: str):
+    """
+    Accepts the client IP address as the path argument.
+
+    Returns a list of instance IDs and their timestamps.
+    """
+    grl = GreylistingPolicy()
+    tally = grl.redis.zrange(
+        grl._client_key(client_address), 0, -1, withscores=True
+    )
+    tally_decoded = []
+    if tally:
+        tally_decoded = [(i.decode("utf-8"), float(t)) for i, t in tally]
+    return InstanceTimesResp.send(tally_decoded)
+
+
+@api.delete("/grl/option_cache/{recipient_domain}", response_model=DeleteResp)
+async def grl_clear_option_cache(recipient_domain: str):
+    """
+    Accepts a domain name as the path argument.
+
+    Returns 'deleted' on success.
+    """
+    grl = GreylistingPolicy()
+    grl.redis.delete(grl._domain_option_key(recipient_domain))
+    return DeleteResp.send()

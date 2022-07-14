@@ -83,7 +83,7 @@ so there are some response models to use in such cases.
 
 from chapps.config import config
 from chapps import dbmodels
-from typing import Optional, List, Dict, Union
+from typing import Optional, List, Dict, Union, Tuple
 from pydantic import BaseModel, constr, Field, validator
 from pydantic.main import ModelMetaclass
 from enum import Enum
@@ -532,6 +532,13 @@ class TimeResp(FloatResp):
 
     response: float
     """UNIX epoch time (UTC)"""
+
+
+class InstanceTimesResp(CHAPPSResponse):
+    """Data model for returning a list of instances and timestamps"""
+
+    response: List[Tuple[str, float]]
+    """A list of (instance, timestamp) tuples"""
 
 
 class LiveQuotaResp(CHAPPSResponse):
