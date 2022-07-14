@@ -551,7 +551,10 @@ class InboundPolicy(EmailPolicy):
         Uses the first of the list of tokenized recipients.  Generally,
         inbound mail is expected to contain only one recipient per email.
         """
-        return self._fmtkey(ppr.recipient_domain)
+        return self._domain_option_key(ppr.recipient_domain)
+
+    def _domain_option_key(self, recipient_domain):
+        return self._fmtkey(recipient_domain)
 
     def _store_control_data(self, domain: str, flag: bool):
         with self._control_data_storage_context() as dsc:
@@ -632,7 +635,10 @@ class GreylistingPolicy(InboundPolicy):
              - `recipient`
 
         """
-        return self._fmtkey(ppr.client_address, ppr.sender, ppr.recipient)
+        return self._tuple_key(ppr.client_address, ppr.sender, ppr.recipient)
+
+    def _tuple_key(self, client_address, sender, recipient):
+        return self._fmtkey(client_address, sender, recipient)
 
     def client_key(self, ppr: PostfixPolicyRequest):
         """Return the greylisting client key
@@ -641,7 +647,10 @@ class GreylistingPolicy(InboundPolicy):
         resubmissions to be whitelisted.
 
         """
-        return self._fmtkey(ppr.client_address)
+        return self._client_key(ppr.client_address)
+
+    def _client_key(self, client_address):
+        return self._fmtkey(client_address)
 
     def acquire_policy_for(self, ppr: InboundPPR):
         with self._adapter_handle() as adapter:
