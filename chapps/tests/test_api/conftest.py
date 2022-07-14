@@ -22,6 +22,7 @@ from chapps.tests.test_util.conftest import (
 from chapps.tests.test_policy.conftest import (
     populate_redis,
     populate_redis_multi,
+    populate_redis_grl,
     clear_redis,
     clear_redis_sda,
     clear_redis_grl,
@@ -34,6 +35,7 @@ from chapps.tests.test_policy.conftest import (
     testing_policy_sda,
     testing_policy_grl,
 )
+from chapps.tests.conftest import _redis_args_grl
 import chapps.config
 import time
 
