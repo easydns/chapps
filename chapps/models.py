@@ -513,11 +513,25 @@ class IntResp(CHAPPSResponse):
     """An integer"""
 
 
+class FloatResp(CHAPPSResponse):
+    """Data model for responding with a float"""
+
+    response: float
+    """A floating-point number"""
+
+
 class TextResp(CHAPPSResponse):
     """Data model for responding with a string"""
 
     response: str
     """A string"""
+
+
+class TimeResp(FloatResp):
+    """Data model for responding with a UNIX epoch time value"""
+
+    response: float
+    """UNIX epoch time (UTC)"""
 
 
 class LiveQuotaResp(CHAPPSResponse):
