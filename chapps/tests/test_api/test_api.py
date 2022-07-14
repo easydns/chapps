@@ -1635,3 +1635,34 @@ class Test_Live_API:
             "timestamp": fixed_time,
             "version": verstr,
         }
+
+    def test_grl_peek_tuple(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_grl,
+        allowable_inbound_ppr,
+        populated_database_fixture_with_extras,
+        clear_redis_grl,
+    ):
+        grl = testing_policy_grl
+        ppr = allowable_inbound_ppr
+        t0 = time.time()
+        result = grl.approve_policy_request(ppr)
+        t1 = time.time()
+        response = testing_api_client.get(
+            "/live/grl/tuple/",
+            json={
+                "client_address": ppr.client_address,
+                "sender": ppr.sender,
+                "recipient": ppr.recipient,
+            },
+        )
+        assert response.status_code == 200
+        timestamp = float(response.json()["response"])
+        assert timestamp >= t0 and timestamp <= t1
+        assert response.json() == {
+            "response": timestamp,  # the last-seen time of the tuple
+            "timestamp": fixed_time,  # the timestamp of the API transaction
+            "version": verstr,
+        }
