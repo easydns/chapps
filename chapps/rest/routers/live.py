@@ -21,14 +21,20 @@ from chapps.models import (
     Email,
     LiveQuotaResp,
     TextResp,
+    TimeResp,
     SourceUserMapResp,
     BulkQuotaResp,
     user_quota_assoc,
 )
-from chapps.policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
+from chapps.policy import (
+    OutboundQuotaPolicy,
+    SenderDomainAuthPolicy,
+    GreylistingPolicy,
+)
 from chapps.config import config
 import hashlib
 import logging
+import ipaddress
 
 logger = logging.getLogger(__name__)
 Session = sessionmaker(sql_engine)
@@ -281,3 +287,26 @@ async def sda_clear(source_name: str, user_name: str) -> TextResp:
     """
     sda = SenderDomainAuthPolicy()
     return TextResp.send(sda.clear_policy_cache(user_name, source_name))
+
+
+@api.get("/grl/tuple/", response_model=TimeResp)
+async def grl_peek_tuple(
+    client_address: str = Body(...),
+    sender: str = Body(...),
+    recipient: str = Body(...),
+):
+    """
+    Accepts client IP address, sender email address and recipient email
+    address as required arguments in the request body.
+
+    Returns a float which is the UNIX epoch time of the last time that
+    tuple was encountered by greylisting.
+    """
+    grl = GreylistingPolicy()
+    try:
+        timestamp = float(
+            grl.redis.get(grl._tuple_key(client_address, sender, recipient))
+        )
+    except TypeError as e:
+        return TimeResp.send(0.0)
+    return TimeResp.send(timestamp)
