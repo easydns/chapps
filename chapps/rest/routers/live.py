@@ -34,7 +34,7 @@ from chapps.policy import (
     GreylistingPolicy,
 )
 from chapps.config import config
-import hashlib
+from chapps.util import hash_password
 import logging
 import ipaddress
 
@@ -179,9 +179,7 @@ async def refresh_config_on_disk(passcode: str = Body(...)) -> TextResp:
 
     """
     if (
-        hashlib.sha256(
-            passcode.encode(config.chapps.payload_encoding)
-        ).hexdigest()
+        hash_password(passcode, config.chapps.payload_encoding)
         == config.chapps.password
     ):
         response = config.write()
