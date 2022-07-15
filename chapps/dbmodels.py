@@ -280,7 +280,12 @@ class Domain(DB_Base):
     """if True perform SPF enforcement"""
 
     def __repr__(self):
-        return f"Domain[ORM](id={self.id!r}, name={self.name!r})"
+        return (
+            f"Domain[ORM](id={self.id!r}, "
+            f"name={self.name!r}, "
+            f"greylist={'Y' if self.greylist else 'N'}, "
+            f"check_spf={'Y' if self.check_spf else 'N'})"
+        )
 
 
 class Email(DB_Base):
