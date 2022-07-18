@@ -24,6 +24,11 @@ from chapps._version import __version__
 from sqlalchemy.exc import IntegrityError
 from pathlib import Path
 import typer
+import validators
+import json as JSON
+import time
+from pprint import pformat
+
 
 try:
     from chapps.spf_policy import SPFEnforcementPolicy
@@ -32,6 +37,7 @@ try:
 except Exception:
     HAVE_SPF = False
 
+TIMEFMT = "%b %d %Y %T %Z"
 
 app = typer.Typer(help="CHAPPS Configuration Management CLI")
 admin_app = typer.Typer(help="CHAPPS administration subcommands")
@@ -254,6 +260,68 @@ def flush(domainname: str):
     flush_greylisting()
     if HAVE_SPF:
         flush_spf()
+
+
+@app.command()
+def tally(client_address: str, epoch: bool = False, json: bool = False):
+    """Display the successful Greylisting tally for a client by IP
+
+    Supply the IP address as the sole argument to this command.  The tally will
+    be displayed, consisting of instance values and timestamps.  Instance
+    values are an internal tracking value used between Postfix and the policy
+    delegate, and they are intended to be unique.  The timestamp is the time at
+    which the successful delivery (post-greylisting) occurred.  If the tally
+    contains enough records, then emails which would be greylisted are
+    delivered immediately instead.
+
+    The timestamp is given by default in human-readable format.  If the output
+    is intended for consumption by a program, two different options may be of
+    interest.  Supply the `--epoch` flag to cause times to be printed in UNIX
+    epoch time, as a float.  Supply the `--json` flag instead to receive the
+    data in JSON format, suitable for machine parsing.
+
+    """
+    if ":" in client_address:
+        val = validators.ipv6
+    else:
+        val = validators.ipv4
+    try:
+        val(client_address)
+    except validators.ValidationFailure:
+        _print(
+            f"The string '{_b(client_address)}' is not a valid IP address."
+            "  Please note that port numbers (extra digits after a colon)"
+            " may not be included."
+        )
+    # if we got this far, client_address contains a valid IP address
+    grl = GreylistingPolicy()
+    client_key = grl._client_key(client_address)
+    tally_bytes = grl.redis.zrange(client_key, 0, -1, withscores=True)
+    tally_tuples = [
+        (i.decode(grl.config.chapps.payload_encoding), float(t))
+        for i, t in tally_bytes
+    ]
+    if json:
+        _print(JSON.dumps(tally_tuples))
+        return
+    if epoch:
+        # _print(pformat(tally_tuples))
+        # return
+        instance_times = tally_tuples
+    else:
+        instance_times = [
+            (i, time.strftime(TIMEFMT, time.gmtime(t)))
+            for i, t in tally_tuples
+        ]
+    # _print(pformat(instance_times))
+    if len(instance_times) >= grl.allow_after:
+        _print(f"Whitelisting tally for {_b(client_address)}:")
+    else:
+        _print(
+            f"Greylisting tally for {_b(client_address)} ({grl.allow_after} are required for whitelisting):"
+        )
+    for idx, (instance, timestamp) in enumerate(instance_times):
+        _print(f"  [{idx}] {instance}: {_b(timestamp)}")
 
 
 @domain_app.command()
