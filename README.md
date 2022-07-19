@@ -84,24 +84,37 @@ python3 -m pip install chapps
 
 ### DB Initialization
 
-As of this writing, it should be possible to run `apply-migrations`
-once the venv is started, and that should apply all of the necessary
-Alembic migrations to bring the database up to date from zero, based
-on the database access configuration in the CHAPPS config file.  If
-the config file has not yet been populated with database credentials,
-do that first, and ensure that the named database exists (has been
-created) on the database server before attempting to install the
-schema into it.
+As of this writing, it should be possible to run `apply-migrations` or
+`chapps-cli admin db-setup` once the venv is started, and that should
+apply all of the necessary Alembic migrations to bring the database up
+to date from zero, based on the database access configuration in the
+CHAPPS config file.
+
+If the config file has not yet been populated with database
+credentials, do that first, and ensure that the named database exists
+(has been created) on the database server before attempting to install
+the schema into it.
 
 **Please Note:**
 
 	Databases created with earlier versions of CHAPPS (v<=0.4.12) need to
-	be dumped to SQL, and the database dropped and re-created via the
-	`apply-migrations` mechanism in order for it to exactly match
-	Alembic's notion of how it is built.  Once Alembic has built the
+	have their data dumped to SQL, and the database dropped and the schema
+	re-created via the `apply-migrations` mechanism in order for it to exactly
+	match Alembic's notion of how it is built.  Once Alembic has built the
 	schema, the data may be read back into the database.  We will be using
 	Alembic going forward so this should be a one-time annoyance.
 
+	For convenience, here is the `mysqldump` commandline recommended for
+	dumping the data:
+
+	.. code:
+
+	    mysqldump --skip-add-drop-table -tc chapps > chapps-data-only.sql
+
+	These options tell `mysqldump` not to drop the tables, not to try to create
+	the tables, and to use "complete" INSERT statements, which ensures that the
+	target columns are listed in the INSERT statement, in case the native column
+	order changes between dump and restore.
 
 ### Starting and Auto-launching Services
 

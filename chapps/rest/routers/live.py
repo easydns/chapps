@@ -314,10 +314,14 @@ async def grl_peek_tuple(
 
 @api.get("/grl/tally/{client_address}", response_model=InstanceTimesResp)
 async def grl_list_tally(client_address: str):
-    """
-    Accepts the client IP address as the path argument.
+    """Accepts the client IP address as the path argument.
 
-    Returns a list of instance IDs and their timestamps.
+    Returns a list of instance IDs and their timestamps as floats in UNIX epoch
+    time (UTC).  In the standard time library, `localtime()` will convert them
+    to a time struct in local time based on locale, or `gmtime()` will convert
+    them to a struct in UTC.  Then `strftime()` may be used to format them for
+    a human to read.
+
     """
     grl = GreylistingPolicy()
     tally = grl.redis.zrange(
@@ -334,7 +338,7 @@ async def grl_clear_tally(client_address: str):
     """
     Accepts the client IP address as the path argument.
 
-    Returns a list of instance IDs and their timestamps.
+    Returns "deleted" if successful.
     """
     grl = GreylistingPolicy()
     grl.redis.delete(grl._client_key(client_address))

@@ -2,6 +2,15 @@
 
 ## Alpha Releases
 
+###v0.4.16:
+	- Added basic admin functions in CLI: initialize/update database schema,
+	  change API config-flush password, perform config-flush (with option to
+	  write to an alternate location).
+	- Added Greylisting & SPF enforcement management commands in CLI.
+	- Added Greylisting & SPF enforcement management routes to API,
+      including routes to set a domain's enforcement preference, and
+      others to clear a domain's enforcement option cache in Redis.
+
 ###v0.4.15:
 	- added chapps.alembic.versions subpackage, because of course Alembic
 	  cannot work without the version files
@@ -21,7 +30,8 @@
       and inbound multipolicy handler.
 	- Created new multipolicy inbound service which combines SPF and
       Greylisting in one service.
-	- NB: pre-existing databases need special care during upgrade, see README
+	- NB: pre-existing databases need special care during upgrade, see
+      [README](README.md#db-initialization)
 
 ###v0.4.12:
     - Adding missing documentation to new bulk user-domain and
