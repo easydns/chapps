@@ -263,8 +263,13 @@ def flush(domainname: str):
 
 
 @app.command()
-def tally(client_address: str, epoch: bool = False, json: bool = False):
-    """Display the successful Greylisting tally for a client by IP
+def tally(
+    client_address: str,
+    epoch: bool = False,
+    json: bool = False,
+    clear: bool = False,
+):
+    """Display or clear the successful Greylisting tally for a client by IP
 
     Supply the IP address as the sole argument to this command.  The tally will
     be displayed, consisting of instance values and timestamps.  Instance
@@ -279,6 +284,10 @@ def tally(client_address: str, epoch: bool = False, json: bool = False):
     interest.  Supply the `--epoch` flag to cause times to be printed in UNIX
     epoch time, as a float.  Supply the `--json` flag instead to receive the
     data in JSON format, suitable for machine parsing.
+
+    If the `--clear` flag is specified, then the tally will be deleted after it
+    is read.  The values found therein will still be returned, in case they are
+    of interest.
 
     """
     if ":" in client_address:
@@ -297,6 +306,8 @@ def tally(client_address: str, epoch: bool = False, json: bool = False):
     grl = GreylistingPolicy()
     client_key = grl._client_key(client_address)
     tally_bytes = grl.redis.zrange(client_key, 0, -1, withscores=True)
+    if clear:
+        grl.redis.delete(client_key)
     tally_tuples = [
         (i.decode(grl.config.chapps.payload_encoding), float(t))
         for i, t in tally_bytes
@@ -314,11 +325,20 @@ def tally(client_address: str, epoch: bool = False, json: bool = False):
             for i, t in tally_tuples
         ]
     # _print(pformat(instance_times))
-    if len(instance_times) >= grl.allow_after:
-        _print(f"Whitelisting tally for {_b(client_address)}:")
+    if len(instance_times) == 0:
+        _print(f"There is no tally for client {_b(client_address)}")
+    elif len(instance_times) >= grl.allow_after:
+        _print(
+            f"Whitelisting tally for {_b(client_address)}"
+            f"{' ('+_b('cleared')+')' if clear else ''}"
+            ":"
+        )
     else:
         _print(
-            f"Greylisting tally for {_b(client_address)} ({grl.allow_after} are required for whitelisting):"
+            f"Greylisting tally for {_b(client_address)} ({grl.allow_after}"
+            " are required for whitelisting)"
+            f"{' ('+_b('cleared')+')' if clear else ''}"
+            ":"
         )
     for idx, (instance, timestamp) in enumerate(instance_times):
         _print(f"  [{idx}] {instance}: {_b(timestamp)}")

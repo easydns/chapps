@@ -329,6 +329,18 @@ async def grl_list_tally(client_address: str):
     return InstanceTimesResp.send(tally_decoded)
 
 
+@api.delete("/grl/tally/{client_address}", response_model=DeleteResp)
+async def grl_clear_tally(client_address: str):
+    """
+    Accepts the client IP address as the path argument.
+
+    Returns a list of instance IDs and their timestamps.
+    """
+    grl = GreylistingPolicy()
+    grl.redis.delete(grl._client_key(client_address))
+    return DeleteResp.send()
+
+
 @api.delete("/grl/option_cache/{recipient_domain}", response_model=DeleteResp)
 async def grl_clear_option_cache(recipient_domain: str):
     """
