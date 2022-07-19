@@ -1692,6 +1692,40 @@ class Test_Live_API:
         assert response.json()["timestamp"] == fixed_time
         assert response.json()["version"] == verstr
 
+    def test_grl_clear_tally(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_grl,
+        allowable_inbound_ppr,
+        populated_database_fixture_with_extras,
+        populate_redis_grl,
+        clear_redis_grl,
+    ):
+        grl = testing_policy_grl
+        ppr = allowable_inbound_ppr
+        redis_args = _redis_args_grl(
+            ppr.client_address, ppr.sender, ppr.recipient, 10
+        )
+        populate_redis_grl(*redis_args)
+        response = testing_api_client.get(
+            "/live/grl/tally/" + ppr.client_address
+        )
+        assert response.status_code == 200
+        assert len(response.json()["response"]) == 10
+        # now we're assured tally exists; see that we can delete it
+        response = testing_api_client.delete(
+            "/live/grl/tally/" + ppr.client_address
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "deleted",
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+        tally = grl.redis.zrange(grl.client_key(ppr), 0, -1)
+        assert not tally
+
     def test_grl_clear_option_cache(
         self,
         fixed_time,
