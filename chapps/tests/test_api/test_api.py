@@ -13,6 +13,7 @@ from urllib.parse import quote as urlencode
 from chapps._version import __version__
 from chapps.policy import TIME_FORMAT
 from chapps.models import SDAStatus
+from chapps.tests.conftest import _redis_args_grl
 import logging
 
 logger = logging.getLogger(__name__)
@@ -1635,3 +1636,119 @@ class Test_Live_API:
             "timestamp": fixed_time,
             "version": verstr,
         }
+
+    def test_grl_peek_tuple(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_grl,
+        allowable_inbound_ppr,
+        populated_database_fixture_with_extras,
+        clear_redis_grl,
+    ):
+        grl = testing_policy_grl
+        ppr = allowable_inbound_ppr
+        t0 = time.time()
+        result = grl.approve_policy_request(ppr)
+        t1 = time.time()
+        response = testing_api_client.get(
+            "/live/grl/tuple/",
+            json={
+                "client_address": ppr.client_address,
+                "sender": ppr.sender,
+                "recipient": ppr.recipient,
+            },
+        )
+        assert response.status_code == 200
+        timestamp = float(response.json()["response"])
+        assert timestamp >= t0 and timestamp <= t1
+        assert response.json() == {
+            "response": timestamp,  # the last-seen time of the tuple
+            "timestamp": fixed_time,  # the timestamp of the API transaction
+            "version": verstr,
+        }
+
+    def test_grl_list_tally(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_grl,
+        allowable_inbound_ppr,
+        populated_database_fixture_with_extras,
+        populate_redis_grl,
+        clear_redis_grl,
+    ):
+        grl = testing_policy_grl
+        ppr = allowable_inbound_ppr
+        redis_args = _redis_args_grl(
+            ppr.client_address, ppr.sender, ppr.recipient, 10
+        )
+        populate_redis_grl(*redis_args)
+        response = testing_api_client.get(
+            "/live/grl/tally/" + ppr.client_address
+        )
+        assert response.status_code == 200
+        assert len(response.json()["response"]) == 10
+        assert response.json()["timestamp"] == fixed_time
+        assert response.json()["version"] == verstr
+
+    def test_grl_clear_tally(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_grl,
+        allowable_inbound_ppr,
+        populated_database_fixture_with_extras,
+        populate_redis_grl,
+        clear_redis_grl,
+    ):
+        grl = testing_policy_grl
+        ppr = allowable_inbound_ppr
+        redis_args = _redis_args_grl(
+            ppr.client_address, ppr.sender, ppr.recipient, 10
+        )
+        populate_redis_grl(*redis_args)
+        response = testing_api_client.get(
+            "/live/grl/tally/" + ppr.client_address
+        )
+        assert response.status_code == 200
+        assert len(response.json()["response"]) == 10
+        # now we're assured tally exists; see that we can delete it
+        response = testing_api_client.delete(
+            "/live/grl/tally/" + ppr.client_address
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "deleted",
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+        tally = grl.redis.zrange(grl.client_key(ppr), 0, -1)
+        assert not tally
+
+    def test_grl_clear_option_cache(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_grl,
+        allowable_inbound_ppr,
+        populated_database_fixture_with_extras,
+        populate_redis_grl,
+        clear_redis_grl,
+    ):
+        grl = testing_policy_grl
+        ppr = allowable_inbound_ppr
+        result = grl.approve_policy_request(ppr)  # loads the option cache
+        cache = grl.redis.get(grl._domain_option_key(ppr.recipient_domain))
+        assert cache
+        response = testing_api_client.delete(
+            "/live/grl/option_cache/" + ppr.recipient_domain
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": "deleted",
+            "timestamp": fixed_time,  # the timestamp of the API transaction
+            "version": verstr,
+        }
+        cache = grl.redis.get(grl._domain_option_key(ppr.recipient_domain))
+        assert cache is None

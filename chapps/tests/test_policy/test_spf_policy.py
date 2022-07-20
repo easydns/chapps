@@ -96,7 +96,7 @@ class Test_SPFEnforcementPolicy:
             result = testing_policy_spf.approve_policy_request(
                 allowable_inbound_ppr
             )
-        assert result == "PREPEND X-CHAPPSTESTING: SPF prepend"
+        assert result == "PREPEND Received-SPF: SPF prepend"
 
     def test_domain_spf_flag_false(
         self,
@@ -157,7 +157,7 @@ class Test_SPFEnforcementPolicy:
             result = testing_policy_spf.approve_policy_request(
                 allowable_inbound_ppr
             )
-        assert result == "PREPEND X-CHAPPSTESTING: SPF prepend"
+        assert result == "PREPEND Received-SPF: SPF prepend"
 
     def test_passing_helo_failing_mf_gets_reject(
         self,

@@ -324,9 +324,7 @@ def mock_client_tally(unique_instance):
 def _mock_spf_query(result, message):
     mock = Mock(name="spf_query")
     mock.check = Mock(name="check", return_value=(result, None, message))
-    mock.get_header = Mock(
-        name="get_header", return_value="X-CHAPPSTESTING: SPF prepend"
-    )
+    mock.get_header = Mock(name="get_header", return_value="SPF prepend")
     return mock
 
 
@@ -431,7 +429,7 @@ def _spf_results():
 
 def _spf_actions():
     return dict(
-        passing="PREPEND X-CHAPPSTESTING: SPF prepend",
+        passing="PREPEND Received-SPF: SPF prepend",
         fail="550 5.7.1 SPF check failed: CHAPPS failing SPF message",
         softfail="DEFER_IF_PERMIT Service temporarily stupid CHAPPS softfail SPF message",
         none="DEFER_IF_PERMIT Service temporarily stupid due to SPF enforcement policy",

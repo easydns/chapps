@@ -11,14 +11,39 @@ from chapps.models import (
     user_emails_assoc,
     user_domains_assoc,
 )
-from chapps.policy import OutboundQuotaPolicy
+from chapps.policy import (
+    EmailPolicy,
+    OutboundQuotaPolicy,
+    GreylistingPolicy,
+    config,
+)
 from chapps.dbsession import sql_engine, sessionmaker
+from chapps.alembic.apply import main as apply_migrations
+from chapps.util import hash_password
 from chapps._version import __version__
 from sqlalchemy.exc import IntegrityError
 from pathlib import Path
 import typer
+import validators
+import json as JSON
+import time
+from pprint import pformat
+
+
+try:
+    from chapps.spf_policy import SPFEnforcementPolicy
+
+    HAVE_SPF = True
+except Exception:
+    HAVE_SPF = False
+
+TIMEFMT = "%b %d %Y %T %Z"
 
 app = typer.Typer(help="CHAPPS Configuration Management CLI")
+admin_app = typer.Typer(help="CHAPPS administration subcommands")
+domain_app = typer.Typer(help="CHAPPS Domain settings subcommands")
+app.add_typer(admin_app, name="admin")
+app.add_typer(domain_app, name="domain")
 Session = sessionmaker(sql_engine)
 association = {
     "Email": user_emails_assoc,
@@ -28,6 +53,8 @@ association = {
 
 MIN_IMPORT_LINE_LENGTH = 6 + 5 + 4  # assuming tiniest emails and domains
 """There is always an operation and there are 2 colons, username, and a resource"""
+
+NO = ["0", "n", "N", "no", "No", "NO", "F", "false", "FALSE"]
 
 
 class CHAPPS_CLI_Exception(Exception):
@@ -42,6 +69,10 @@ class UnrecoverableException(CHAPPS_CLI_Exception):
 
 class NoSuchUserException(UnrecoverableException):
     """No such User as the one provided exists in the control DB"""
+
+
+class NoSuchDomainException(UnrecoverableException):
+    """No such Domain as the one provided exists in the control DB"""
 
 
 class NoSuchAssocException(UnrecoverableException):
@@ -112,6 +143,17 @@ def user_or_die(sess: Session, username: str) -> Optional[str]:
     return user
 
 
+def domain_or_die(sess: Session, domainname: str) -> Optional[str]:
+    domain = sess.execute(Domain.select_by_name(domainname)).scalar()
+    if domain is None:
+        _print(
+            f"Cannot find domain {_b(domainname)}\nPlease check "
+            "the spelling."
+        )
+        raise NoSuchDomainException(f"No such domain '{domainname}'.")
+    return domain
+
+
 def showUser(username: str, *, quota: bool = False):
     with Session() as sess:
         user = user_or_die(sess, username)
@@ -147,10 +189,272 @@ def showUser(username: str, *, quota: bool = False):
         )
 
 
+def showDomain(domainname: str, live: bool = True, users: bool = False):
+    domain_users = []
+    with Session() as sess:
+        domain = domain_or_die(sess, domainname)
+        if users:
+            domain_users = User.wrap(domain.users)
+    grl = GreylistingPolicy()
+    spf = SPFEnforcementPolicy()
+    grl_cache, spf_cache = ["--"] * 2
+    _print(domain)
+    if live:
+        try:
+            grl_cache = grl.redis.get(
+                grl._domain_option_key(domainname)
+            ).decode(grl.config.chapps.payload_encoding)
+            spf_cache = spf.redis.get(
+                spf._domain_option_key(domainname)
+            ).decode(spf.config.chapps.payload_encoding)
+        except AttributeError:
+            pass
+        _print(
+            "Cached option values: SPF: "
+            + spf_cache
+            + " Greylisting: "
+            + grl_cache
+        )
+    if users:
+        _print(
+            "Users:\n"
+            + "\n".join([f"  {u.name} [#{u.id}]" for u in domain_users])
+        )
+
+
 @app.command()
 def version():
     """Report the current CHAPPS version"""
     _print(f"This is CHAPPS version {__version__}")
+
+
+@domain_app.command("show")
+def domain_show(domainname: str, live: bool = True, users: bool = False):
+    """Show information about a Domain
+
+    Optionally list the Domain's Users in a brief way.
+
+    By default, the option-cache status is also displayed, but may be disabled
+    with the `--no-live` option.
+
+    """
+    showDomain(domainname, live, users)
+
+
+def domain_flush_factory(policyclass: EmailPolicy):
+    def flush(domainname):
+        pol = policyclass()
+        pol.redis.delete(pol._domain_option_key(domainname))
+
+    return flush
+
+
+flush_greylisting = domain_flush_factory(GreylistingPolicy)
+if HAVE_SPF:
+    flush_spf = domain_flush_factory(SPFEnforcementPolicy)
+
+
+@domain_app.command()
+def flush(domainname: str):
+    """Flush all enforcement option flags for a Domain"""
+    flush_greylisting()
+    if HAVE_SPF:
+        flush_spf()
+
+
+@app.command()
+def tally(
+    client_address: str,
+    epoch: bool = False,
+    json: bool = False,
+    clear: bool = False,
+):
+    """Display or clear the successful Greylisting tally for a client by IP
+
+    Supply the IP address as the sole argument to this command.  The tally will
+    be displayed, consisting of instance values and timestamps.  Instance
+    values are an internal tracking value used between Postfix and the policy
+    delegate, and they are intended to be unique.  The timestamp is the time at
+    which the successful delivery (post-greylisting) occurred.  If the tally
+    contains enough records, then emails which would be greylisted are
+    delivered immediately instead.
+
+    The timestamp is given by default in human-readable format.  If the output
+    is intended for consumption by a program, two different options may be of
+    interest.  Supply the `--epoch` flag to cause times to be printed in UNIX
+    epoch time, as a float.  Supply the `--json` flag instead to receive the
+    data in JSON format, suitable for machine parsing.
+
+    If the `--clear` flag is specified, then the tally will be deleted after it
+    is read.  The values found therein will still be returned, in case they are
+    of interest.
+
+    """
+    if ":" in client_address:
+        val = validators.ipv6
+    else:
+        val = validators.ipv4
+    try:
+        val(client_address)
+    except validators.ValidationFailure:
+        _print(
+            f"The string '{_b(client_address)}' is not a valid IP address."
+            "  Please note that port numbers (extra digits after a colon)"
+            " may not be included."
+        )
+    # if we got this far, client_address contains a valid IP address
+    grl = GreylistingPolicy()
+    client_key = grl._client_key(client_address)
+    tally_bytes = grl.redis.zrange(client_key, 0, -1, withscores=True)
+    if clear:
+        grl.redis.delete(client_key)
+    tally_tuples = [
+        (i.decode(grl.config.chapps.payload_encoding), float(t))
+        for i, t in tally_bytes
+    ]
+    if json:
+        _print(JSON.dumps(tally_tuples))
+        return
+    if epoch:
+        # _print(pformat(tally_tuples))
+        # return
+        instance_times = tally_tuples
+    else:
+        instance_times = [
+            (i, time.strftime(TIMEFMT, time.gmtime(t)))
+            for i, t in tally_tuples
+        ]
+    # _print(pformat(instance_times))
+    if len(instance_times) == 0:
+        _print(f"There is no tally for client {_b(client_address)}")
+    elif len(instance_times) >= grl.allow_after:
+        _print(
+            f"Whitelisting tally for {_b(client_address)}"
+            f"{' ('+_b('cleared')+')' if clear else ''}"
+            ":"
+        )
+    else:
+        _print(
+            f"Greylisting tally for {_b(client_address)} ({grl.allow_after}"
+            " are required for whitelisting)"
+            f"{' ('+_b('cleared')+')' if clear else ''}"
+            ":"
+        )
+    for idx, (instance, timestamp) in enumerate(instance_times):
+        _print(f"  [{idx}] {instance}: {_b(timestamp)}")
+
+
+@domain_app.command()
+def greylist(
+    domainname: str,
+    enforce: str = typer.Option("", help="[Y/N]"),
+    flush: bool = typer.Option(True, help="Whether to clear the option cache"),
+):
+    """Toggle or set Greylisting enforcement for a Domain
+
+    With no options, the Greylisting option will be toggled, and the cache
+    flushed.
+
+    Supply the `--enforce` option to specify the desired setting, instead of
+    toggling.
+
+    """
+    with Session() as sess:
+        domain = domain_or_die(sess, domainname)
+        if enforce:
+            domain.greylist = enforce not in NO
+        else:
+            domain.greylist = not domain.greylist
+        sess.commit()
+    if flush:
+        flush_greylisting(domainname)
+    showDomain(domainname, live=flush)
+
+
+if HAVE_SPF:
+
+    @domain_app.command()
+    def check_spf(
+        domainname: str,
+        enforce: str = typer.Option("", help="[Y/N]"),
+        flush: bool = typer.Option(
+            True, help="Whether to clear the option cache"
+        ),
+    ):
+        """Toggle or set SPF enforcement for a Domain
+
+        With no options, the SPF checking option will be toggled, and the
+        cache flushed.
+
+        Supply the `--enforce` option to specify the desired setting, instead
+        of toggling.
+
+        """
+        with Session() as sess:
+            domain = domain_or_die(sess, domainname)
+            if enforce:
+                domain.check_spf = enforce not in NO
+            else:
+                domain.check_spf = not domain.check_spf
+            sess.commit()
+        if flush:
+            flush_spf(domainname)
+        showDomain(domainname, live=flush)
+
+
+@admin_app.command()
+def flush_config(to_file: str = None):
+    """Flush the currently active config to disk.
+
+    By default, this updates the current config file in place.  An argument may
+    be supplied in order to have the new config file written out to some other
+    location.
+    """
+    config.write(to_file)
+
+
+@admin_app.command()
+def active_config():
+    """Show what config file chapps-cli is using.
+
+    """
+    _print("Using config from " + config.chapps.config_file)
+
+
+@admin_app.command()
+def api_password(
+    to_file: str = None,
+    password: str = typer.Option(
+        ..., prompt=True, confirmation_prompt=True, hide_input=True
+    ),
+):
+    """Performs a config-file flush to change the API password
+
+    Generally it should be fine to flush the config file, but if your situation
+    is somehow weird, you will want to be aware that this over-writes the
+    'current' config file with a new one, wherein the password has been
+    changed.  Provide the `--to-file` option to write to an alternate location.
+
+    """
+    config.configparser["CHAPPS"]["password"] = hash_password(
+        password, config.chapps.payload_encoding
+    )
+    config.write(to_file)
+    _print(
+        "New config has been written."
+        "  Please restart CHAPPS for changes to take effect."
+    )
+
+
+@admin_app.command()
+def db_setup():
+    """Initialize or migrate the database schema.
+
+    The target database must already exist.  Empty databases will be populated
+    with the current schema, and older databases will be brought up to date via
+    incremental Alembic migrations.
+    """
+    return apply_migrations()
 
 
 @app.command()

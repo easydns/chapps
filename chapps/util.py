@@ -24,11 +24,16 @@ from collections.abc import Mapping
 import re
 import logging
 import sys
+import hashlib
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from chapps.signals import TooManyAtsException, NotAnEmailAddressException
 
 logger = logging.getLogger(__name__)
+
+
+def hash_password(password: str, encoding: str = "utf-8") -> str:
+    return hashlib.sha256(password.encode(encoding)).hexdigest()
 
 
 class VenvDetector:

@@ -26,7 +26,9 @@ particular user or domain, CHAPPS needs to know how those two kinds of
 entities are connected to one another.  Additionally, as a fallback
 for domain matching, entire email addresses may be associated with a
 user, to permit that user to send mail with the MAIL FROM set to that
-email (or possibly for inbound purposes to come).
+email.  Settings on Domain records indicate whether to perform SPF
+enforcement and/or Greylisting upon inbound emails destined for the
+named domain.
 
 ### The Rules
 

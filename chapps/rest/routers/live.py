@@ -21,14 +21,22 @@ from chapps.models import (
     Email,
     LiveQuotaResp,
     TextResp,
+    TimeResp,
+    InstanceTimesResp,
     SourceUserMapResp,
     BulkQuotaResp,
+    DeleteResp,
     user_quota_assoc,
 )
-from chapps.policy import OutboundQuotaPolicy, SenderDomainAuthPolicy
+from chapps.policy import (
+    OutboundQuotaPolicy,
+    SenderDomainAuthPolicy,
+    GreylistingPolicy,
+)
 from chapps.config import config
-import hashlib
+from chapps.util import hash_password
 import logging
+import ipaddress
 
 logger = logging.getLogger(__name__)
 Session = sessionmaker(sql_engine)
@@ -171,9 +179,7 @@ async def refresh_config_on_disk(passcode: str = Body(...)) -> TextResp:
 
     """
     if (
-        hashlib.sha256(
-            passcode.encode(config.chapps.payload_encoding)
-        ).hexdigest()
+        hash_password(passcode, config.chapps.payload_encoding)
         == config.chapps.password
     ):
         response = config.write()
@@ -281,3 +287,71 @@ async def sda_clear(source_name: str, user_name: str) -> TextResp:
     """
     sda = SenderDomainAuthPolicy()
     return TextResp.send(sda.clear_policy_cache(user_name, source_name))
+
+
+@api.get("/grl/tuple/", response_model=TimeResp)
+async def grl_peek_tuple(
+    client_address: str = Body(...),
+    sender: str = Body(...),
+    recipient: str = Body(...),
+):
+    """
+    Accepts client IP address, sender email address and recipient email
+    address as required arguments in the request body.
+
+    Returns a float which is the UNIX epoch time of the last time that
+    tuple was encountered by greylisting.
+    """
+    grl = GreylistingPolicy()
+    try:
+        timestamp = float(
+            grl.redis.get(grl._tuple_key(client_address, sender, recipient))
+        )
+    except TypeError as e:
+        return TimeResp.send(0.0)
+    return TimeResp.send(timestamp)
+
+
+@api.get("/grl/tally/{client_address}", response_model=InstanceTimesResp)
+async def grl_list_tally(client_address: str):
+    """Accepts the client IP address as the path argument.
+
+    Returns a list of instance IDs and their timestamps as floats in UNIX epoch
+    time (UTC).  In the standard time library, `localtime()` will convert them
+    to a time struct in local time based on locale, or `gmtime()` will convert
+    them to a struct in UTC.  Then `strftime()` may be used to format them for
+    a human to read.
+
+    """
+    grl = GreylistingPolicy()
+    tally = grl.redis.zrange(
+        grl._client_key(client_address), 0, -1, withscores=True
+    )
+    tally_decoded = []
+    if tally:
+        tally_decoded = [(i.decode("utf-8"), float(t)) for i, t in tally]
+    return InstanceTimesResp.send(tally_decoded)
+
+
+@api.delete("/grl/tally/{client_address}", response_model=DeleteResp)
+async def grl_clear_tally(client_address: str):
+    """
+    Accepts the client IP address as the path argument.
+
+    Returns "deleted" if successful.
+    """
+    grl = GreylistingPolicy()
+    grl.redis.delete(grl._client_key(client_address))
+    return DeleteResp.send()
+
+
+@api.delete("/grl/option_cache/{recipient_domain}", response_model=DeleteResp)
+async def grl_clear_option_cache(recipient_domain: str):
+    """
+    Accepts a domain name as the path argument.
+
+    Returns 'deleted' on success.
+    """
+    grl = GreylistingPolicy()
+    grl.redis.delete(grl._domain_option_key(recipient_domain))
+    return DeleteResp.send()

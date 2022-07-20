@@ -83,7 +83,7 @@ so there are some response models to use in such cases.
 
 from chapps.config import config
 from chapps import dbmodels
-from typing import Optional, List, Dict, Union
+from typing import Optional, List, Dict, Union, Tuple
 from pydantic import BaseModel, constr, Field, validator
 from pydantic.main import ModelMetaclass
 from enum import Enum
@@ -420,9 +420,9 @@ class Email(CHAPPSModel):
 class CHAPPSResponse(BaseModel):
     """Base :mod:`Pydantic` model for API responses"""
 
-    version: str
+    version: str = VERSTR
     """The CHAPPS version as a string"""
-    timestamp: float
+    timestamp: float = time.time()
     """When this response was generated"""
     response: object
     """Whatever piece of data was requested"""
@@ -513,11 +513,44 @@ class IntResp(CHAPPSResponse):
     """An integer"""
 
 
+class FloatResp(CHAPPSResponse):
+    """Data model for responding with a float"""
+
+    response: float
+    """A floating-point number"""
+
+
 class TextResp(CHAPPSResponse):
     """Data model for responding with a string"""
 
     response: str
     """A string"""
+
+
+class TimeResp(FloatResp):
+    """Data model for responding with a UNIX epoch time value"""
+
+    response: float = time.time()
+    """UNIX epoch time (UTC)"""
+
+
+class InstanceTimesResp(CHAPPSResponse):
+    """Data model for returning a list of instances and timestamps"""
+
+    response: List[Tuple[str, float]]
+    """A list of (instance, timestamp) tuples"""
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "response": [
+                    ["instance001", time.time() - 12000.0],
+                    ["instance002", time.time() - 6000.0],
+                ],
+                "timestamp": time.time(),
+                "version": config.chapps.version,
+            }
+        }
 
 
 class LiveQuotaResp(CHAPPSResponse):

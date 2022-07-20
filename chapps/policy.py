@@ -551,7 +551,10 @@ class InboundPolicy(EmailPolicy):
         Uses the first of the list of tokenized recipients.  Generally,
         inbound mail is expected to contain only one recipient per email.
         """
-        return self._fmtkey(ppr.recipient_domain)
+        return self._domain_option_key(ppr.recipient_domain)
+
+    def _domain_option_key(self, recipient_domain):
+        return self._fmtkey(recipient_domain)
 
     def _store_control_data(self, domain: str, flag: bool):
         with self._control_data_storage_context() as dsc:
@@ -586,7 +589,7 @@ class GreylistingPolicy(InboundPolicy):
         *,
         minimum_deferral: int = 60,
         cache_ttl: int = seconds_per_day,
-        auto_allow_after: int = 10,
+        auto_allow_after: int = None,
     ):
         """Initialize a greylisting policy manager
 
@@ -605,7 +608,11 @@ class GreylistingPolicy(InboundPolicy):
         self.actions = PostfixGRLActions(self.config)
         self.min_defer = minimum_deferral
         self.cache_ttl = cache_ttl
-        self.allow_after = auto_allow_after
+        self.allow_after = (
+            auto_allow_after
+            if auto_allow_after is not None
+            else self.params.whitelist_threshold
+        )
         if self.cache_ttl <= self.min_defer:
             logger.warning(
                 f"Cache TTL (={datetime.timedelta(seconds=self.cache_ttl)}) is not allowed to be smaller than or equal to the minimum deferral window (={datetime.timedelta(seconds=self.min_defer)}).  Defaulting to 24 hr."
@@ -632,7 +639,10 @@ class GreylistingPolicy(InboundPolicy):
              - `recipient`
 
         """
-        return self._fmtkey(ppr.client_address, ppr.sender, ppr.recipient)
+        return self._tuple_key(ppr.client_address, ppr.sender, ppr.recipient)
+
+    def _tuple_key(self, client_address, sender, recipient):
+        return self._fmtkey(client_address, sender, recipient)
 
     def client_key(self, ppr: PostfixPolicyRequest):
         """Return the greylisting client key
@@ -641,7 +651,10 @@ class GreylistingPolicy(InboundPolicy):
         resubmissions to be whitelisted.
 
         """
-        return self._fmtkey(ppr.client_address)
+        return self._client_key(ppr.client_address)
+
+    def _client_key(self, client_address):
+        return self._fmtkey(client_address)
 
     def acquire_policy_for(self, ppr: InboundPPR):
         with self._adapter_handle() as adapter:
