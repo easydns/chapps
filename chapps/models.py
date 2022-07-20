@@ -268,7 +268,7 @@ class CHAPPSModel(BaseModel, metaclass=CHAPPSMetaModel):
         :param cls.Meta.orm_model orm_instance: an ORM instance of the
           appropriate type
 
-        :returns: a pydantic model created from an ORM model
+        :returns: a Pydantic model or list of them created from ORM models
 
         """
         if not orm_instance:  # could be None or []
