@@ -420,9 +420,9 @@ class Email(CHAPPSModel):
 class CHAPPSResponse(BaseModel):
     """Base :mod:`Pydantic` model for API responses"""
 
-    version: str
+    version: str = VERSTR
     """The CHAPPS version as a string"""
-    timestamp: float
+    timestamp: float = time.time()
     """When this response was generated"""
     response: object
     """Whatever piece of data was requested"""
@@ -530,7 +530,7 @@ class TextResp(CHAPPSResponse):
 class TimeResp(FloatResp):
     """Data model for responding with a UNIX epoch time value"""
 
-    response: float
+    response: float = time.time()
     """UNIX epoch time (UTC)"""
 
 
@@ -539,6 +539,18 @@ class InstanceTimesResp(CHAPPSResponse):
 
     response: List[Tuple[str, float]]
     """A list of (instance, timestamp) tuples"""
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "response": [
+                    ["instance001", time.time() - 12000.0],
+                    ["instance002", time.time() - 6000.0],
+                ],
+                "timestamp": time.time(),
+                "version": config.chapps.version,
+            }
+        }
 
 
 class LiveQuotaResp(CHAPPSResponse):
