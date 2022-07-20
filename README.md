@@ -561,8 +561,8 @@ on a tally of successfully delivered deferred emails.  That is to say,
 emails which have been deferred and then redelivered on the required
 schedule are counted in a tally per-client (by source IP address).
 When that tally reaches 10, further emails with matching source IPs
-are whitelisted.  There is at present no way to adjust that
-threshhold.
+are whitelisted.  This threshhold may be adjusted in the
+`GreylistingPolicy` config, as `whitelist_threshold`.
 
 Please note that in the context of comprehensive inbound email
 filtering, SPF and greylisting have an interesting relationship which
