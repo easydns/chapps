@@ -210,4 +210,8 @@ class SPFEnforcementPolicy(InboundPolicy):
             query = spf.query(ppr.client_address, ppr.sender, ppr.helo_name)
             result, _, message = query.check()
             action = self.actions.action_for(result)
-        return action(message, ppr=ppr, prepend=query.get_header(result))
+        return action(
+            message,
+            ppr=ppr,
+            prepend="Received-SPF: " + query.get_header(result, "spfquery"),
+        )
