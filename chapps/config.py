@@ -123,9 +123,13 @@ class CHAPPSConfig:
         cp["GreylistingPolicy"] = {
             "listen_address": "localhost",
             "listen_port": 10226,
-            "rejection_message": "DEFER_IF_PERMIT Service temporarily unavailable - greylisted",
+            "rejection_message": (
+                "DEFER_IF_PERMIT Service temporarily"
+                " unavailable - greylisted"
+            ),
             "acceptance_message": "DUNNO",
             "null_sender_ok": False,
+            "whitelist_threshold": 10,
         }
         cp["SPFEnforcementPolicy"] = {
             "listen_address": "localhost",

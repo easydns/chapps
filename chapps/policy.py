@@ -589,7 +589,7 @@ class GreylistingPolicy(InboundPolicy):
         *,
         minimum_deferral: int = 60,
         cache_ttl: int = seconds_per_day,
-        auto_allow_after: int = 10,
+        auto_allow_after: int = None,
     ):
         """Initialize a greylisting policy manager
 
@@ -608,7 +608,11 @@ class GreylistingPolicy(InboundPolicy):
         self.actions = PostfixGRLActions(self.config)
         self.min_defer = minimum_deferral
         self.cache_ttl = cache_ttl
-        self.allow_after = auto_allow_after
+        self.allow_after = (
+            auto_allow_after
+            if auto_allow_after is not None
+            else self.params.whitelist_threshold
+        )
         if self.cache_ttl <= self.min_defer:
             logger.warning(
                 f"Cache TTL (={datetime.timedelta(seconds=self.cache_ttl)}) is not allowed to be smaller than or equal to the minimum deferral window (={datetime.timedelta(seconds=self.min_defer)}).  Defaulting to 24 hr."
