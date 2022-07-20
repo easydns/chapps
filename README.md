@@ -556,11 +556,19 @@ status is obtained from the database and cached in Redis.  Domains
 which do not set the `greylist` bit on their records will receive all
 mail addressed to them immediately, without any greylisting.
 
+The Greylisting module performs whitelisting at its own level, based
+on a tally of successfully delivered deferred emails.  That is to say,
+emails which have been deferred and then redelivered on the required
+schedule are counted in a tally per-client (by source IP address).
+When that tally reaches 10, further emails with matching source IPs
+are whitelisted.  There is at present no way to adjust that
+threshhold.
+
 Please note that in the context of comprehensive inbound email
 filtering, SPF and greylisting have an interesting relationship which
 is not entirely straightforward, and so a special combined, inbound
-multi-policy service is planned, which will combine the features of
-greylisting and SPF checking in a sane fashion, and provide a
+multi-policy service has been provided which combines the features of
+greylisting and SPF checking in a sane fashion, and provides a
 framework for adding further policies.
 
 ## SPF Policy Enforcement
@@ -569,14 +577,15 @@ The [Sender Policy
 Framework](https://en.wikipedia.org/wiki/Sender_Policy_Framework) is a
 complicated and intricate beast, and so I will not try to describe it
 in great detail, but instead link to relevant documentation about what
-SPF is.  Important to note is the fact that SPF provides a framework
-for using DNS as the policy configuration source.
+SPF is.  Important to note is the fact that SPF is a framework for
+using the DNS as the policy configuration source.
 
 There is no provision in the RFC for the caching of SPF results in
 order to apply them to other circumstances, such as another email with
 the same inputs.  It is possible that the policy itself, i.e. the TXT
 record containing the SPF policy string, could change between emails.
-As such, this module does not use Redis.
+As such, this module does not use Redis to cache operational data.
+Redis is used to cache the per-domain SPF-enablement option.
 
 There is a very widely-used and well-supported implementation of the
 SPF check itself in the Python community called
