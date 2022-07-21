@@ -1,10 +1,15 @@
 """Policy Configuration Adapters based on SQLAlchemy
------------------------------
+-------------------------------------------------
 
 Policy-configuration source data adapters.
 
 These adapter classes have been adjusted from their original form to use
 SQLAlchemy.
+
+The primary obstacle to their complete adoption is that their tests do not seem
+to be compatible with the tests for the rest of the suite.  Also, with the
+adoption of SPF and Greylisting, this adapter module is a bit behind.  This
+will be addressed in a near-future version.
 
 """
 import logging
@@ -102,7 +107,7 @@ class SQLAQuotaAdapter(SQLAPolicyConfigAdapter):
 
 
 class SQLASenderDomainAuthAdapter(SQLAPolicyConfigAdapter):
-    """An adapter to obtain sender domain authorization data from MariaDB"""
+    """An adapter to obtain sender domain authorization data from SQLAlchemy_"""
 
     def check_domain_for_user(self, user: str, domain: str) -> bool:
         """Returns True if the user is authorized to send for this domain
