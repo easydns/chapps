@@ -2,6 +2,16 @@
 
 ## Alpha Releases
 
+###v0.4.17:
+	- Corrected problem in SPF enforcement where Greylisted emails
+	  which soft-failed were not properly handled, due to bug in code
+	  and failure of tests to cover that scenario.  Tests will be
+	  added to address the lack.
+	- Corrected problem wherein Sphinx attempted to load all the files
+      in the Alembic directory during documentation-building, which
+      does not work (luckily, or the migrations would all end up being
+      run).  Sphinx has now been instructed to skip those locations.
+
 ###v0.4.16:
 	- Added basic admin functions in CLI: initialize/update database schema,
 	  change API config-flush password, perform config-flush (with option to
