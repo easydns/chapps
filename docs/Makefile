@@ -6,10 +6,11 @@
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 AUTODOC       ?= sphinx-apidoc
-AUTODOCOPTS   ?= -Mef -o "$(SOURCEDIR)" "$(CODEROOT)"
+AUTODOCOPTS   ?= -Mef -o "$(SOURCEDIR)" "$(CODEROOT)" "$(SKIPDIRS)"
 WORKSTATIONOPTS = -b html -t workstation
 TODOLIST      = build/doctrees/todolist.doctree
 CODEROOT      = ../chapps
+SKIPDIRS      = ../chapps/alembic/*
 SOURCEDIR     = source
 BUILDDIR      = build
 
