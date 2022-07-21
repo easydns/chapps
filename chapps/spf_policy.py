@@ -56,7 +56,7 @@ class PostfixSPFActions(PostfixActions):
                     "providing the PPR for greylisting."
                 )
             if greylisting_policy.approve_policy_request(ppr, force=True):
-                passing = spf_policy.action_for("pass")
+                passing = spf_policy.actions.action_for("pass")
                 return passing(msg, ppr, *args, **kwargs)
             if len(msg) == 0:
                 msg = "due to SPF enforcement policy"
