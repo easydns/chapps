@@ -11,6 +11,7 @@ from chapps.tests.test_policy.conftest import (
     auto_spf_query,
     mock_spf_queries,
     passing_spf_query,
+    softfail_spf_query,
     _auto_query_param_list,
     _auto_query_param_list_spf_plus_greylist,
     idfn,
@@ -247,6 +248,45 @@ class Test_InboundMultipolicyHandler:
         )
         with monkeypatch.context() as m:
             m.setattr(spf, "query", passing_spf_query)
+            with pytest.raises(CallableExhausted):
+                await handle_spf_request(mock_reader, mock_writer)
+        mock_reader.readuntil.assert_called_with(b"\n\n")
+        mock_writer.write.assert_called_with(
+            f"action=PREPEND Received-SPF: SPF prepend\n\n".encode("utf-8")
+        )
+
+    async def test_softfail_after_greylist(
+        self,
+        caplog,
+        monkeypatch,
+        testing_policy_spf,
+        testing_policy_grl,
+        grl_reader_recognized_factory,
+        softfail_spf_query,
+        mock_writer,
+        populated_database_fixture_with_extras,
+        clear_redis_grl,
+    ):
+        """
+        :GIVEN: an email delivery attempt has occured and been greylisted
+        :WHEN:  the tuple is seen again
+        :THEN:  the policy handler should pass the email and prepend an SPF header
+
+        .. note:
+
+          This test is necessary to exercise `spf_policy.py:59` where greylisting
+          is used internally by SPF.
+
+        """
+        caplog.set_level(logging.DEBUG)
+        handle_spf_request = InboundMultipolicyHandler(
+            [testing_policy_spf, testing_policy_grl]
+        ).async_policy_handler()
+        mock_reader = grl_reader_recognized_factory(
+            "ccullen@easydns.com", "someone@chapps.io"
+        )
+        with monkeypatch.context() as m:
+            m.setattr(spf, "query", softfail_spf_query)
             with pytest.raises(CallableExhausted):
                 await handle_spf_request(mock_reader, mock_writer)
         mock_reader.readuntil.assert_called_with(b"\n\n")
