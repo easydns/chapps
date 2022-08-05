@@ -120,3 +120,18 @@ def mail_sink(request, run_services, watcher_getter):
             request=request,
         )
         return mail_sink_watcher
+
+
+@fixture(scope="session")
+def mail_echo_uds(request, run_services, watcher_getter):
+    """
+    Set up a mail UDS echo, so that once Postfix forwards email,
+    it may be inspected by the test method
+    """
+    if run_services:
+        mail_sink_watcher = watcher_getter(
+            "./services/mail-echo-uds.py",
+            checker=lambda: os.path.exists("/tmp/mail-echo-uds.pid"),
+            request=request,
+        )
+        return mail_sink_watcher

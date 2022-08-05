@@ -11,6 +11,7 @@ from services.tests.conftest import (
     test_recipients,
     known_sender,
     mail_sink,
+    mail_echo_uds,
 )
 from chapps.tests.conftest import (
     _redis_args_grl,
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 def chapps_ibm_service(
     request,
     run_services,
-    mail_sink,
+    mail_echo_uds,
     chapps_mock_session,
     chapps_mock_config_file,
     watcher_getter,
