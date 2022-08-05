@@ -8,10 +8,14 @@ echoes over a UDS which it opens
 import asyncio, pidfile, signal, functools
 from smtplib import SMTP, SMTPRecipientsRefused
 import aiosmtpd
-from aiosmtpd.handlers import Sink
+from aiosmtpd.handlers import Sink, Debugging
 from aiosmtpd.smtp import SMTP as SMTPServer
+from tempfile import TemporaryDirectory
+from contextlib import ExitStack
+from pathlib import Path
 import logging
 
+APPNAME = "CHAPPS testing SMTP-UDS echo service"
 LISTEN_PORT = 25025
 # TRANSMIT_PORT = 10026
 
@@ -31,46 +35,33 @@ def install_asyncio_signal_handlers(loop):
         loop.add_signal_handler(sig, functools.partial(signal_handler, sig))
 
 
-# class NullFilterHandler:
-#     async def handle_RCPT(self, server, session, envelope, address, rcpt_options):
-#         """Handle recipient phase"""
-#         envelope.rcpt_tos.append( address )
-#         return "250 OK"
-
-#     async def handle_DATA(self, server, session, envelope):
-#         """Handle DATA phase"""
-#         logger.debug(f"Message from {envelope.mail_from} to ")
-#         try:
-#             client = SMTP.sendmail( envelope.mail_from, envelope.rcpt_tos, envelope.content )
-#             return '250 Message accepted for delivery'
-#         except smtplib.SMTPResponseException as e:
-#             logger.exception("Upstream Postfix did not like this message.")
-#             return f"{e.smtp_code} {e.smtp_error}"
-#         except smtplib.SMTPException:
-#             logger.exception("Raised trying to send from {envelope.mail_from} to {','.join(envelope.rcpt_tos)}")
-#             return "550 Requested action not taken"
-
-
 async def main():
     """The grand shebang"""
-    logger.debug("Starting SMTP sink...")
+    logger.debug("Starting {APPNAME}...")
+    resources = ExitStack()
+    tempdir = resources.enter_context(TemporaryDirectory())
+    pidfile_name = Path(__file__).stem + ".pid"
     try:
-        with pidfile.PIDFile("/tmp/mail-sink.pid"):
-            logger.debug("mail-sink started.")
+        with pidfile.PIDFile(f"/tmp/{pidfile_name}"):
+            echofile = Path("/tmp") / "smtp-echo.txt"
+            efh = resources.enter_context(echofile.open("a"))
+            logger.debug("{APPNAME} started.")
+            print(f"Opened for writing.", file=efh)
             loop = asyncio.get_running_loop()
             install_asyncio_signal_handlers(loop)
             srv = await loop.create_server(
-                functools.partial(SMTPServer, Sink),
+                functools.partial(SMTPServer, Debugging(efh)),
                 "localhost",
                 LISTEN_PORT,
                 start_serving=False,
             )
             async with srv:
-                await srv.serve_forever()
+                await asyncio.gather(srv.serve_forever())
     except pidfile.AlreadyRunningError:
         logger.exception("mail-sink is already running. Exiting.")
     except asyncio.exceptions.CancelledError:
         logger.debug("mail-sink exiting on signal.")
+    resources.close()
 
 
 if __name__ == "__main__":
