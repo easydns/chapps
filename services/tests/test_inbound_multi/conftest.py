@@ -18,6 +18,10 @@ from chapps.tests.conftest import (
     _populate_redis_grl,
     _clear_redis,
 )
+from chapps.tests.test_policy.conftest import (
+    clear_redis_grl,
+    populate_redis_grl,
+)
 from services.tests.test_greylisting.conftest import (
     _source_ip,
     source_ip,
