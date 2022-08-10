@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 """
 Starts a service on 127.0.0.1:25025 which serves to receive email which it
-echoes over a UDS which it opens
+echoes into a file which the test may open
 """
 ### requires the python-pidfile library from https://github.com/mosquito/python-pidfile
 ### requires aiosmtpd
-import asyncio, pidfile, signal, functools
-from smtplib import SMTP, SMTPRecipientsRefused
-import aiosmtpd
-from aiosmtpd.handlers import Sink, Debugging
+import asyncio
+import pidfile
+import signal
+import functools
+from aiosmtpd.handlers import Debugging
 from aiosmtpd.smtp import SMTP as SMTPServer
-from tempfile import TemporaryDirectory
 from contextlib import ExitStack
 from pathlib import Path
 import logging
 
-APPNAME = "CHAPPS testing SMTP-UDS echo service"
+APPNAME = "CHAPPS testing SMTP-file echo service"
 LISTEN_PORT = 25025
+ECHO_FILE = Path("/tmp/smtp-echo.txt")
 # TRANSMIT_PORT = 10026
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ logger.setLevel(logging.DEBUG)
 
 def signal_handler(sig, *args):
     if sig in {signal.SIGTERM, sig.SIGINT}:
-        logger.debug(f"CHAPPS exiting on {signal.Signals(sig)} ({sig}).")
+        logger.debug(f"{APPNAME} exiting on {signal.Signals(sig)} ({sig}).")
         raise SystemExit
 
 
@@ -35,22 +36,35 @@ def install_asyncio_signal_handlers(loop):
         loop.add_signal_handler(sig, functools.partial(signal_handler, sig))
 
 
+class SavingEmailHandler(Debugging):
+    def __init__(self, pathname: str = None):
+        super().__init__()
+        self.echo_file = Path(pathname or ECHO_FILE)
+
+    async def handle_DATA(self, server, session, envelope):
+        data = envelope.original_content.decode("utf-8")
+        self.echo_file.write_text(data)
+        return "250 Message saved"
+
+
 async def main():
     """The grand shebang"""
     logger.debug("Starting {APPNAME}...")
     resources = ExitStack()
-    tempdir = resources.enter_context(TemporaryDirectory())
     pidfile_name = Path(__file__).stem + ".pid"
     try:
         with pidfile.PIDFile(f"/tmp/{pidfile_name}"):
-            echofile = Path("/tmp") / "smtp-echo.txt"
-            efh = resources.enter_context(echofile.open("a"))
+            echofile = ECHO_FILE
+            try:
+                echofile.unlink()
+            except OSError:
+                if echofile.exists():
+                    raise
             logger.debug("{APPNAME} started.")
-            print(f"Opened for writing.", file=efh)
             loop = asyncio.get_running_loop()
             install_asyncio_signal_handlers(loop)
             srv = await loop.create_server(
-                functools.partial(SMTPServer, Debugging(efh)),
+                functools.partial(SMTPServer, SavingEmailHandler(echofile)),
                 "localhost",
                 LISTEN_PORT,
                 start_serving=False,
