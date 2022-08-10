@@ -2,6 +2,16 @@
 
 ## Alpha Releases
 
+###v0.4.17:
+	- Fix bug in Greylisting-via-SPF which caused errors when
+      softfailing emails passed greylisting.
+	- Add some tests to ensure that the code referenced above is
+      exercised properly to expose regressions.
+	- Add new "mail sink" for integration tests, which in fact does not
+	  sink the email but instead reflects it back to the test via a UDS,
+	  enabling integration tests to inspect the contents of the emails
+	  they send.
+
 ###v0.4.16:
 	- Added basic admin functions in CLI: initialize/update database schema,
 	  change API config-flush password, perform config-flush (with option to
