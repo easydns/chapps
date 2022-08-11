@@ -259,3 +259,61 @@ class Test_MariaDBSenderDomainAuthAdapter:
         assert not finalizing_mdbsdaadapter.check_domain_for_user(
             "nonexistent@example.com", "chapps.io"
         )
+
+
+class Test_MariaDBInboundFlagsAdapter:
+    def test_greylisting_flag_set(
+        self,
+        finalizing_mdbifadapter,
+        populated_database_fixture_with_extras,
+        greylisting_domain,
+    ):
+        """
+        :GIVEN: a domain has greylisting option set ON
+        :WHEN:  the adapter is asked about that option
+        :THEN:  the adapter should return True
+        """
+        domain = greylisting_domain
+        assert finalizing_mdbifadapter.do_greylisting_on(domain)
+
+    def test_greylisting_flag_unset(
+        self,
+        finalizing_mdbifadapter,
+        populated_database_fixture_with_extras,
+        no_options_domain,
+    ):
+        """
+        :GIVEN: a domain has greylisting option set OFF
+        :WHEN:  the adapter is asked about that option
+        :THEN:  the adapter should return False
+        """
+        domain = no_options_domain
+        assert not finalizing_mdbifadapter.do_greylisting_on(domain)
+
+    def test_spf_flag_set(
+        self,
+        finalizing_mdbifadapter,
+        populated_database_fixture_with_extras,
+        spf_domain,
+    ):
+        """
+        :GIVEN: a domain has spf option set ON
+        :WHEN:  the adapter is asked about that option
+        :THEN:  the adapter should return True
+        """
+        domain = spf_domain
+        assert finalizing_mdbifadapter.check_spf_on(domain)
+
+    def test_spf_flag_unset(
+        self,
+        finalizing_mdbifadapter,
+        populated_database_fixture_with_extras,
+        no_options_domain,
+    ):
+        """
+        :GIVEN: a domain has spf option set ON
+        :WHEN:  the adapter is asked about that option
+        :THEN:  the adapter should return True
+        """
+        domain = no_options_domain
+        assert not finalizing_mdbifadapter.check_spf_on(domain)
