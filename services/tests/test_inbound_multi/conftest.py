@@ -126,6 +126,11 @@ def passing_spf_sender():
 
 
 @pytest.fixture
+def softfail_spf_sender():
+    return "caleb@moretestingdomainsforever.com"
+
+
+@pytest.fixture
 def spf_test_recipients():
     return _spf_recipients()
 
