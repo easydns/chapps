@@ -151,3 +151,17 @@ class SQLASenderDomainAuthAdapter(SQLAPolicyConfigAdapter):
             )
             res = sess.execute(stmt)
             return len(list(res.scalars()))
+
+
+class SQLAInboundFlagsAdapter(SQLAPolicyConfigAdapter):
+    def do_greylisting_on(self, domain: str):
+        """Returns true if the domains enforces greylisting, otherwise False
+
+        :param domain: full domain part
+
+        """
+        Session = sessionmaker(self.sql_engine)
+        with Session() as sess:
+            domain_select = Domain.select_by_name(domain)
+            domain = sess.execute(domain_select).scalar()
+            return domain.greylist

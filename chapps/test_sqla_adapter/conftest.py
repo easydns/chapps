@@ -3,16 +3,19 @@ from unittest.mock import Mock
 import pytest
 from pytest import fixture
 import MySQLdb as dbmodule
-from chapps.adapter import (
-    PolicyConfigAdapter,
-    MariaDBQuotaAdapter,
-    MariaDBSenderDomainAuthAdapter,
-)
+from chapps.adapter import PolicyConfigAdapter
 
 from chapps.sqla_adapter import (
     SQLAPolicyConfigAdapter,
     SQLAQuotaAdapter,
     SQLASenderDomainAuthAdapter,
+    SQLAInboundFlagsAdapter,
+)
+from chapps.tests.test_adapter.conftest import (
+    greylisting_domain,
+    no_options_domain,
+    spf_domain,
+    enforcing_both_domain,
 )
 
 from chapps.config import CHAPPSConfig
@@ -84,6 +87,11 @@ def sqla_oqp_adapter_fixture():
 @fixture
 def sqla_sda_adapter_fixture():
     return _sqla_adapter_fixture(SQLASenderDomainAuthAdapter)
+
+
+@fixture
+def sqla_if_adapter_fixture():
+    return _sqla_adapter_fixture(SQLAInboundFlagsAdapter)
 
 
 @fixture
