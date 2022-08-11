@@ -7,6 +7,13 @@ from chapps.adapter import (
     PolicyConfigAdapter,
     MariaDBQuotaAdapter,
     MariaDBSenderDomainAuthAdapter,
+    MariaDBInboundFlagsAdapter,
+)
+from chapps.tests.conftest import (
+    _no_options_domain,
+    _greylisting_domain,
+    _spf_domain,
+    _enforcing_both_domain,
 )
 
 
@@ -74,9 +81,20 @@ def mdbsdaadapter_fixture():
 
 
 @fixture
+def mdbifadapter_fixture():
+    return _adapter_fixture(MariaDBInboundFlagsAdapter)
+
+
+@fixture
 def finalizing_mdbsdaadapter(mdbsdaadapter_fixture):
     yield mdbsdaadapter_fixture
     mdbsdaadapter_fixture.finalize()
+
+
+@fixture
+def finalizing_mdbifadapter(mdbifadapter_fixture):
+    yield mdbifadapter_fixture
+    mdbifadapter_fixture.finalize()
 
 
 @fixture
@@ -219,3 +237,23 @@ def populated_database_fixture_with_breakage(database_fixture):
 def mock_mapping():
     m = Mock(name="mapping", ident="mock_mapping_func", return_value=True)
     return m
+
+
+@fixture
+def no_options_domain():
+    return _no_options_domain()
+
+
+@fixture
+def greylisting_domain():
+    return _greylisting_domain()
+
+
+@fixture
+def spf_domain():
+    return _spf_domain()
+
+
+@fixture
+def enforcing_both_domain():
+    return _enforcing_both_domain()
