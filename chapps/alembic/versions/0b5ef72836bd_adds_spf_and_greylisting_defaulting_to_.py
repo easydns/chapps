@@ -19,11 +19,21 @@ depends_on = None
 def upgrade() -> None:
     op.add_column(
         "domains",
-        sa.Column("greylist", sa.Boolean(name="greylist"), nullable=False),
+        sa.Column(
+            "greylist",
+            sa.Boolean(name="greylist"),
+            nullable=False,
+            server_default="0",
+        ),
     )
     op.add_column(
         "domains",
-        sa.Column("check_spf", sa.Boolean(name="check_spf"), nullable=False),
+        sa.Column(
+            "check_spf",
+            sa.Boolean(name="check_spf"),
+            nullable=False,
+            server_default="0",
+        ),
     )
 
 
