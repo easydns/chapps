@@ -18,7 +18,7 @@ from chapps.tests.test_adapter.conftest import (
     enforcing_both_domain,
 )
 
-from chapps.config import CHAPPSConfig
+# from chapps.config import CHAPPSConfig
 
 
 @fixture
