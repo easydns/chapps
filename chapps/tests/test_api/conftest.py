@@ -36,7 +36,9 @@ from chapps.tests.test_policy.conftest import (
     testing_policy_grl,
 )
 from chapps.tests.conftest import _redis_args_grl
-import chapps.config
+from chapps.test_sqla_adapter.conftest import mock_chapps_config
+
+# import chapps.config
 import time
 
 
@@ -53,9 +55,16 @@ def fixed_time(monkeypatch):
 
 @pytest.fixture
 def testing_api_client(monkeypatch, chapps_mock_env, chapps_mock_config_file):
-    cfg = chapps.config.CHAPPSConfig()
+    import chapps.dbsession
+
     with monkeypatch.context() as m:
-        m.setattr(chapps.config, "config", cfg)
+        m.setattr(
+            chapps.dbsession,
+            "sql_engine",
+            chapps.dbsession.create_engine(
+                chapps.dbsession.create_db_url(mock_chapps_config())
+            ),
+        )
         from chapps.rest.api import api
 
         client = TestClient(api)
