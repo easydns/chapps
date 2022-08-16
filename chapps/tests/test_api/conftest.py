@@ -36,7 +36,7 @@ from chapps.tests.test_policy.conftest import (
     testing_policy_grl,
 )
 from chapps.tests.conftest import _redis_args_grl
-from chapps.test_sqla_adapter.conftest import mock_chapps_config
+from chapps.tests.test_sqla_adapter.conftest import mock_chapps_config
 
 # import chapps.config
 import time
