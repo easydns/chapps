@@ -7,6 +7,16 @@ from chapps.adapter import (
     PolicyConfigAdapter,
     MariaDBQuotaAdapter,
     MariaDBSenderDomainAuthAdapter,
+    MariaDBInboundFlagsAdapter,
+)
+from chapps.tests.test_sqla_adapter.conftest import (
+    no_options_domain,
+    greylisting_domain,
+    spf_domain,
+    enforcing_both_domain,
+    _populated_database_fixture,
+    _populated_database_fixture_with_extras,
+    _populated_database_fixture_with_breakage,
 )
 
 
@@ -74,9 +84,20 @@ def mdbsdaadapter_fixture():
 
 
 @fixture
+def mdbifadapter_fixture():
+    return _adapter_fixture(MariaDBInboundFlagsAdapter)
+
+
+@fixture
 def finalizing_mdbsdaadapter(mdbsdaadapter_fixture):
     yield mdbsdaadapter_fixture
     mdbsdaadapter_fixture.finalize()
+
+
+@fixture
+def finalizing_mdbifadapter(mdbifadapter_fixture):
+    yield mdbifadapter_fixture
+    mdbifadapter_fixture.finalize()
 
 
 @fixture
@@ -88,116 +109,116 @@ def test_emails():
     ]
 
 
-def _populated_database_fixture(database_fixture):
-    basic_quotas = (
-        "INSERT INTO quotas ( name, quota ) VALUES "
-        "('10eph', 240),"
-        "('50eph', 1200),"
-        "('200eph', 4800)"
-    )
-    test_users = [
-        "BEGIN;",
-        "INSERT INTO users ( name ) VALUES ( 'ccullen@easydns.com' );",
-        "SELECT LAST_INSERT_ID() INTO @userid;",
-        "INSERT INTO domains ( name, greylist, check_spf )"
-        " VALUES ( 'chapps.io', 1, 1 );",
-        "SELECT LAST_INSERT_ID() INTO @chappsid;",
-        "INSERT INTO emails (name) VALUES ( 'caleb@chapps.com' );",
-        "SELECT LAST_INSERT_ID() INTO @emailid;",
-        (
-            "INSERT INTO quota_user ( quota_id, user_id ) VALUES"
-            " ( (SELECT id FROM quotas WHERE name = '10eph'), @userid );"
-        ),
-        (
-            "INSERT INTO domain_user ( domain_id, user_id ) VALUES"
-            " ( @chappsid, @userid );"
-        ),
-        (
-            "INSERT INTO email_user ( email_id, user_id ) VALUES"
-            " ( @emailid, @userid );"
-        ),
-        "INSERT INTO users (name) VALUES ('somebody@chapps.io');",
-        "SELECT LAST_INSERT_ID() INTO @userid;",
-        (
-            "INSERT INTO quota_user ( quota_id, user_id ) VALUES"
-            " ( (SELECT id FROM quotas WHERE name = '50eph'), @userid );"
-        ),
-        (
-            "INSERT INTO domain_user ( domain_id, user_id ) VALUES"
-            " ( @chappsid, @userid );"
-        ),
-        "INSERT INTO users (name) VALUES ('bigsender@chapps.io');",
-        "SELECT LAST_INSERT_ID() INTO @userid;",
-        (
-            "INSERT INTO quota_user ( quota_id, user_id ) VALUES"
-            " ( (SELECT id FROM quotas WHERE name = '200eph'), @userid );"
-        ),
-        (
-            "INSERT INTO domain_user ( domain_id, user_id ) VALUES"
-            " ( @chappsid, @userid );"
-        ),
-        "COMMIT;",
-    ]
-    count_users = "SELECT COUNT(name) FROM users;"
-    cur = database_fixture
-    for policy in [MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter]:
-        _adapter_fixture(policy)._initialize_tables()
-    cur.execute(count_users)
-    usercount = cur.fetchone()[0]
-    if usercount == 0:
-        cur.execute(basic_quotas)
-        for stmt in test_users:
-            cur.execute(stmt)
-    return cur
-    # yield cur
-    # could drop and re-create the DB here, but we do that elsewhere
+# def _populated_database_fixture(database_fixture):
+#     basic_quotas = (
+#         "INSERT INTO quotas ( name, quota ) VALUES "
+#         "('10eph', 240),"
+#         "('50eph', 1200),"
+#         "('200eph', 4800)"
+#     )
+#     test_users = [
+#         "BEGIN;",
+#         "INSERT INTO users ( name ) VALUES ( 'ccullen@easydns.com' );",
+#         "SELECT LAST_INSERT_ID() INTO @userid;",
+#         "INSERT INTO domains ( name, greylist, check_spf )"
+#         " VALUES ( 'chapps.io', 1, 1 );",
+#         "SELECT LAST_INSERT_ID() INTO @chappsid;",
+#         "INSERT INTO emails (name) VALUES ( 'caleb@chapps.com' );",
+#         "SELECT LAST_INSERT_ID() INTO @emailid;",
+#         (
+#             "INSERT INTO quota_user ( quota_id, user_id ) VALUES"
+#             " ( (SELECT id FROM quotas WHERE name = '10eph'), @userid );"
+#         ),
+#         (
+#             "INSERT INTO domain_user ( domain_id, user_id ) VALUES"
+#             " ( @chappsid, @userid );"
+#         ),
+#         (
+#             "INSERT INTO email_user ( email_id, user_id ) VALUES"
+#             " ( @emailid, @userid );"
+#         ),
+#         "INSERT INTO users (name) VALUES ('somebody@chapps.io');",
+#         "SELECT LAST_INSERT_ID() INTO @userid;",
+#         (
+#             "INSERT INTO quota_user ( quota_id, user_id ) VALUES"
+#             " ( (SELECT id FROM quotas WHERE name = '50eph'), @userid );"
+#         ),
+#         (
+#             "INSERT INTO domain_user ( domain_id, user_id ) VALUES"
+#             " ( @chappsid, @userid );"
+#         ),
+#         "INSERT INTO users (name) VALUES ('bigsender@chapps.io');",
+#         "SELECT LAST_INSERT_ID() INTO @userid;",
+#         (
+#             "INSERT INTO quota_user ( quota_id, user_id ) VALUES"
+#             " ( (SELECT id FROM quotas WHERE name = '200eph'), @userid );"
+#         ),
+#         (
+#             "INSERT INTO domain_user ( domain_id, user_id ) VALUES"
+#             " ( @chappsid, @userid );"
+#         ),
+#         "COMMIT;",
+#     ]
+#     count_users = "SELECT COUNT(name) FROM users;"
+#     cur = database_fixture
+#     for policy in [MariaDBQuotaAdapter, MariaDBSenderDomainAuthAdapter]:
+#         _adapter_fixture(policy)._initialize_tables()
+#     cur.execute(count_users)
+#     usercount = cur.fetchone()[0]
+#     if usercount == 0:
+#         cur.execute(basic_quotas)
+#         for stmt in test_users:
+#             cur.execute(stmt)
+#     return cur
+#     # yield cur
+#     # could drop and re-create the DB here, but we do that elsewhere
 
 
-def _populated_database_fixture_with_extras(database_fixture):
-    cur = _populated_database_fixture(database_fixture)
-    extra_domains = (
-        "INSERT INTO domains (name, greylist, check_spf) VALUES"
-        " ('easydns.com', 0, 1),"
-        " ('easydns.net', 1, 0),"
-        " ('easydns.org', 0, 0);"
-    )
-    extra_users = (
-        "INSERT INTO users (name) VALUES "
-        "('schmo1@chapps.io'), ('schmo2@chapps.io');"
-    )
-    extra_emails = (
-        "INSERT INTO emails (name) VALUES ('roleaccount@chapps.com'),"
-        " ('admin@chapps.com'), ('abuse@chapps.com'), ('info@chapps.com');"
-    )
+# def _populated_database_fixture_with_extras(database_fixture):
+#     cur = _populated_database_fixture(database_fixture)
+#     extra_domains = (
+#         "INSERT INTO domains (name, greylist, check_spf) VALUES"
+#         " ('easydns.com', 0, 1),"
+#         " ('easydns.net', 1, 0),"
+#         " ('easydns.org', 0, 0);"
+#     )
+#     extra_users = (
+#         "INSERT INTO users (name) VALUES "
+#         "('schmo1@chapps.io'), ('schmo2@chapps.io');"
+#     )
+#     extra_emails = (
+#         "INSERT INTO emails (name) VALUES ('roleaccount@chapps.com'),"
+#         " ('admin@chapps.com'), ('abuse@chapps.com'), ('info@chapps.com');"
+#     )
 
-    extra_assoc = [
-        (
-            "INSERT INTO domain_user (domain_id, user_id) VALUES"
-            " (2, 3), (1, 5), (2, 5), (3, 5), (4, 5);"
-        ),
-        ("INSERT INTO quota_user (quota_id, user_id) VALUES (1, 5);"),
-        (
-            "INSERT INTO email_user (email_id, user_id) VALUES"
-            " (2, 2), (2, 3), (2, 4), (2, 5),"
-            " (3, 3), (4, 3), (5, 3);"
-        ),
-    ]
-    cur.execute(extra_domains)
-    cur.execute(extra_users)
-    cur.execute(extra_emails)
-    for q in extra_assoc:
-        cur.execute(q)
-    return cur
+#     extra_assoc = [
+#         (
+#             "INSERT INTO domain_user (domain_id, user_id) VALUES"
+#             " (2, 3), (1, 5), (2, 5), (3, 5), (4, 5);"
+#         ),
+#         ("INSERT INTO quota_user (quota_id, user_id) VALUES (1, 5);"),
+#         (
+#             "INSERT INTO email_user (email_id, user_id) VALUES"
+#             " (2, 2), (2, 3), (2, 4), (2, 5),"
+#             " (3, 3), (4, 3), (5, 3);"
+#         ),
+#     ]
+#     cur.execute(extra_domains)
+#     cur.execute(extra_users)
+#     cur.execute(extra_emails)
+#     for q in extra_assoc:
+#         cur.execute(q)
+#     return cur
 
 
-def _populated_database_fixture_with_breakage(database_fixture):
-    cur = _populated_database_fixture_with_extras(database_fixture)
-    breakage = (
-        "DELETE FROM quota_user WHERE user_id = 1;"
-        "DELETE FROM users WHERE id = 2;"
-    )
-    cur.execute(breakage)
-    return cur
+# def _populated_database_fixture_with_breakage(database_fixture):
+#     cur = _populated_database_fixture_with_extras(database_fixture)
+#     breakage = (
+#         "DELETE FROM quota_user WHERE user_id = 1;"
+#         "DELETE FROM users WHERE id = 2;"
+#     )
+#     cur.execute(breakage)
+#     return cur
 
 
 @fixture

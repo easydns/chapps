@@ -2,12 +2,7 @@
 import pytest
 from smtplib import SMTP, SMTPRecipientsRefused
 import logging
-
-from chapps.tests.test_policy.conftest import (
-    clear_redis_grl,
-    populate_redis_grl,
-)
-from services.tests.conftest import known_sender
+import time
 
 
 class Test_IBM_Greylisting:
@@ -115,6 +110,7 @@ class Test_IBM_SPF:
         passing_spf_sender,
         spf_test_recipients,
         ibm_test_message_factory,
+        mail_echo_file,
     ):
         caplog.set_level(logging.DEBUG)
         recip = spf_test_recipients
@@ -124,6 +120,11 @@ class Test_IBM_SPF:
             with SMTP("127.0.0.1") as smtp:
                 result = smtp.sendmail(sender, recip, message)
         assert True
+        time.sleep(0.01)  # allow mail delivery to finish, to see the mail
+        mail_lines = list(mail_echo_file)
+        assert mail_lines[0][0:18] == "Received-SPF: Pass"
+        assert "identity=" in mail_lines[0]
+        assert "mechanism=" in mail_lines[0]
 
     def test_enforcement_skipped(
         self,
@@ -181,6 +182,7 @@ class Test_IBM_SPF_and_Greylisting:
         passing_spf_sender,
         spf_and_grl_recipients,
         ibm_test_message_factory,
+        mail_echo_file,
     ):
         """
         :GIVEN: an email is being retried after deferral (the tuple has been seen)
@@ -195,6 +197,40 @@ class Test_IBM_SPF_and_Greylisting:
         with SMTP("127.0.0.1") as smtp:
             result = smtp.sendmail(sender, recip, message)
         assert True  # email was accepted
+        time.sleep(0.01)  # allow mail delivery to finish, to see the mail
+        mail_lines = list(mail_echo_file)
+        assert mail_lines[0][0:18] == "Received-SPF: Pass"
+        assert "identity=" in mail_lines[0]
+        assert "mechanism=" in mail_lines[0]
+
+    def test_softfail_after_deferral(
+        self,
+        caplog,
+        clear_redis_grl,
+        chapps_ibm_service_with_tuples_factory,
+        softfail_spf_sender,
+        spf_and_grl_recipients,
+        ibm_test_message_factory,
+        mail_echo_file,
+    ):
+        """
+        :GIVEN: an email is being retried after deferral (the tuple has been seen)
+        :WHEN:  presented for delivery and SPF still passes
+        :THEN:  it should be accepted
+        """
+        caplog.set_level(logging.DEBUG)
+        sender = softfail_spf_sender
+        recip = spf_and_grl_recipients
+        message = ibm_test_message_factory(sender, recip)
+        chapps_ibm_service_with_tuples_factory([(sender, recip)])
+        with SMTP("127.0.0.1") as smtp:
+            result = smtp.sendmail(sender, recip, message)
+        assert True  # email was accepted
+        time.sleep(0.01)  # allow mail delivery to finish, to see the mail
+        mail_lines = list(mail_echo_file)
+        assert mail_lines[0][0:22] == "Received-SPF: SoftFail"
+        assert "identity=" in mail_lines[0]
+        assert "mechanism=" in mail_lines[0]
 
     def test_spf_failure_enforcement(
         self,

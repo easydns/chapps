@@ -13,6 +13,14 @@ from chapps.tests.test_adapter.conftest import (
     _populated_database_fixture,
     _mdbqadapter_fixture,
 )
+from functools import cached_property
+from pathlib import Path
+from typing import Union
+import collections.abc
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def test_message_factory(sn, ln=None, *, subject="{sn} Testing"):
@@ -120,3 +128,42 @@ def mail_sink(request, run_services, watcher_getter):
             request=request,
         )
         return mail_sink_watcher
+
+
+class FileReaderFactory(collections.abc.Iterable):
+    class IncompleteMessageException(Exception):
+        """The last message in the echo file is not complete"""
+
+    def __init__(self, pathname: Union[Path, str] = None):
+        self.path = Path(pathname or "/tmp/smtp-echo.txt")
+
+    def __iter__(self):
+        yield from self.data_lines
+
+    @property
+    def data_lines(self):
+        lines = self.path.read_text().split("\n")
+        # if (
+        #     lines[-1] != "------------ END MESSAGE ------------"
+        #     or lines[0] != "---------- MESSAGE FOLLOWS ----------"
+        # ):
+        if len(lines) == 0:
+            raise self.IncompleteMessageException
+        return lines
+
+
+@fixture(scope="session")
+def mail_echo_file(request, run_services, watcher_getter):
+    """
+    Set up a mail UDS echo, so that once Postfix forwards email,
+    it may be inspected by the test method
+    """
+    if run_services:
+        watcher_getter(
+            "./services/mail-echo-file.py",
+            checker=lambda: os.path.exists("/tmp/mail-echo-file.pid"),
+            request=request,
+        )
+        return FileReaderFactory(
+            "/tmp/smtp-echo.txt"
+        )  # the file created by the sink

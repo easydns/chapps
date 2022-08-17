@@ -11,11 +11,16 @@ from services.tests.conftest import (
     test_recipients,
     known_sender,
     mail_sink,
+    mail_echo_file,
 )
 from chapps.tests.conftest import (
     _redis_args_grl,
     _populate_redis_grl,
     _clear_redis,
+)
+from chapps.tests.test_policy.conftest import (
+    clear_redis_grl,
+    populate_redis_grl,
 )
 from services.tests.test_greylisting.conftest import (
     _source_ip,
@@ -31,7 +36,7 @@ logger = logging.getLogger(__name__)
 def chapps_ibm_service(
     request,
     run_services,
-    mail_sink,
+    mail_echo_file,
     chapps_mock_session,
     chapps_mock_config_file,
     watcher_getter,
@@ -118,6 +123,11 @@ def _no_enforcement_recipients():
 @pytest.fixture
 def passing_spf_sender():
     return "caleb@chapps.io"
+
+
+@pytest.fixture
+def softfail_spf_sender():
+    return "caleb@moretestingdomainsforever.com"
 
 
 @pytest.fixture

@@ -6,8 +6,6 @@
 
 """
 import pytest
-import pudb
-import chapps.config
 import time
 from urllib.parse import quote as urlencode
 from chapps._version import __version__
@@ -1301,7 +1299,11 @@ class Test_Live_API:
 
     # CONFIG oriented
     def test_write_config(
-        self, fixed_time, testing_api_client, chapps_mock_cfg_path
+        self,
+        fixed_time,
+        testing_api_client,
+        chapps_mock_cfg_path,
+        chapps_mock_env,  # doesn't work
     ):
         response = testing_api_client.post(
             "/live/config/write/", json="screwy%pass${word}"

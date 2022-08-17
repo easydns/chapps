@@ -8,7 +8,7 @@ SQLAlchemy.
 
 """
 import logging
-from chapps.config import config, CHAPPSConfig
+from chapps.config import CHAPPSConfig
 from chapps.dbsession import (
     create_db_url,
     create_engine,
@@ -49,7 +49,7 @@ class SQLAPolicyConfigAdapter:
 
 
         """
-        self.config = cfg or config
+        self.config = cfg or CHAPPSConfig.get_config()
         self.params = self.config.adapter
         # specifically: use the global engine unless we were passed a config
         # logger.debug("Using config file: " + config.chapps.config_file)
@@ -151,3 +151,29 @@ class SQLASenderDomainAuthAdapter(SQLAPolicyConfigAdapter):
             )
             res = sess.execute(stmt)
             return len(list(res.scalars()))
+
+
+class SQLAInboundFlagsAdapter(SQLAPolicyConfigAdapter):
+    def do_greylisting_on(self, domain: str):
+        """Returns true if the domain enforces greylisting, otherwise False
+
+        :param domain: full domain part
+
+        """
+        Session = sessionmaker(self.sql_engine)
+        with Session() as sess:
+            domain_select = Domain.select_by_name(domain)
+            domain = sess.execute(domain_select).scalar()
+            return domain.greylist
+
+    def check_spf_on(self, domain: str):
+        """Returns true if the domain enforces SPF policies, else False
+
+        :param domain: full domain part
+
+        """
+        Session = sessionmaker(self.sql_engine)
+        with Session() as sess:
+            domain_select = Domain.select_by_name(domain)
+            domain = sess.execute(domain_select).scalar()
+            return domain.check_spf

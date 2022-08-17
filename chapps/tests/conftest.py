@@ -96,3 +96,19 @@ def _populate_redis_grl(tuple_key, entries={}):
                 pipe.zadd(k, v)
         pipe.execute()
     return ts
+
+
+def _greylisting_domain():
+    return "easydns.net"
+
+
+def _no_options_domain():
+    return "easydns.org"
+
+
+def _spf_domain():
+    return "easydns.com"
+
+
+def _enforcing_both_domain():
+    return "chapps.io"

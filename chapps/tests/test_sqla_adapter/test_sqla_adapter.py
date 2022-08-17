@@ -1,8 +1,6 @@
 """Tests of CHAPPS SQLAlchemy adapters module"""
-from unittest.mock import call
+
 import pytest
-import MySQLdb as dbmodule  # for some error symbols, etc
-from chapps.sqla_adapter import SQLAPolicyConfigAdapter
 
 
 class Test_SQLAPolicyConfigAdapter:
@@ -107,3 +105,61 @@ class Test_SQLASenderDomainAuthAdapter:
         assert not sqla_sda_adapter_fixture.check_domain_for_user(
             "nonexistent@example.com", "chapps.io"
         )
+
+
+class Test_SQLAInboundFlagsAdapter:
+    def test_greylisting_flag_set(
+        self,
+        sqla_if_adapter_fixture,
+        populated_database_fixture_with_extras,
+        greylisting_domain,
+    ):
+        """
+        :GIVEN: a domain has the greylisting option set
+        :WHEN:  asked whether the domain enforces greylisting
+        :THEN:  the adapter should return True
+        """
+        domain = greylisting_domain
+        assert sqla_if_adapter_fixture.do_greylisting_on(domain)
+
+    def test_greylisting_flag_unset(
+        self,
+        sqla_if_adapter_fixture,
+        populated_database_fixture_with_extras,
+        no_options_domain,
+    ):
+        """
+        :GIVEN: a domain does not have greylisting enabled
+        :WHEN:  asked whether the domain enforces greylisting
+        :THEN:  the adapter should return False
+        """
+        domain = no_options_domain
+        assert not sqla_if_adapter_fixture.do_greylisting_on(domain)
+
+    def test_check_spf_flag_set(
+        self,
+        sqla_if_adapter_fixture,
+        populated_database_fixture_with_extras,
+        spf_domain,
+    ):
+        """
+        :GIVEN: a domain has SPF checking enabled
+        :WHEN:  asked whether the domain enforces SPF policies
+        :THEN:  the adapter should return True
+        """
+        domain = spf_domain
+        assert sqla_if_adapter_fixture.check_spf_on(domain)
+
+    def test_check_spf_flag_unset(
+        self,
+        sqla_if_adapter_fixture,
+        populated_database_fixture_with_extras,
+        no_options_domain,
+    ):
+        """
+        :GIVEN: a domain does not have SPF checking enabled
+        :WHEN:  asked whether a domain enforces SPF policies
+        :THEN:  the adapter should return False
+        """
+        domain = no_options_domain
+        assert not sqla_if_adapter_fixture.check_spf_on(domain)

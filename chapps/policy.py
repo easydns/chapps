@@ -17,7 +17,7 @@ import functools
 import redis
 import logging
 from expiring_dict import ExpiringDict
-from chapps.config import config, CHAPPSConfig
+from chapps.config import CHAPPSConfig
 from chapps.adapter import (
     MariaDBQuotaAdapter,
     MariaDBSenderDomainAuthAdapter,
@@ -124,7 +124,7 @@ class EmailPolicy:
         :class:`expiring_dict.ExpiringDict`)
 
         """
-        self.config = cfg if cfg else config
+        self.config = cfg or CHAPPSConfig.get_config()
         self.params = self.config.get_block(self.__class__.__name__)
         self.sentinel = None
         self.redis = self._redis()  # pass True to get read-only
@@ -329,7 +329,7 @@ class PostfixActions:
         Optionally supply a :py:class:`chapps.config.CHAPPSConfig` instance as
         the first argument.
         """
-        self.config = cfg or config
+        self.config = cfg or CHAPPSConfig.get_config()
         self.params = self.config  # later this is overridden, in subclasses
 
     def _get_closure_for(

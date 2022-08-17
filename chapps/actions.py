@@ -61,14 +61,14 @@ class PostfixActions:
         Optionally supply a :py:class:`chapps.config.CHAPPSConfig` instance as
         the first argument.
         """
-        self.cfg = cfg or config
-        self.config = self.cfg  # later this is overridden, in subclasses
+        self.config = cfg or CHAPPSConfig.get_config()
+        self.params = self.config  # later this is overridden, in subclasses
 
     def _get_closure_for(
         self, decision: str, wrapper: Optional[callable] = None
     ):
         """Setup the prescribed closure for generating SMTP action directives"""
-        action_config = getattr(self.config, decision, None)
+        action_config = getattr(self.params, decision, None)
         if not action_config:
             raise ValueError(
                 f"Action config for {self.__class__.__name__} does not contain a key named {decision}"
@@ -160,7 +160,7 @@ class PostfixPassfailActions(PostfixActions):
         self.<decision>, and also return it
         """
         msg_key = msg_key or decision
-        msg = getattr(self.config, msg_key, None)
+        msg = getattr(self.params, msg_key, None)
         if not msg:
             raise ValueError(
                 f"The key {msg_key} is not defined in the config for"
@@ -241,11 +241,11 @@ class PostfixOQPActions(PostfixPassfailActions):
         """
         Optionally provide an instance of :py::class`chapps.config.CHAPPSConfig`.
 
-        All this class does is wire up `self.config` to
+        All this class does is wire up `self.params` to
         point at the :py:class:`chapps.policy.OutboundQuotaPolicy` config block.
         """
         super().__init__(cfg)
-        self.config = self.config.policy_oqp
+        self.params = self.config.policy_oqp
 
 
 class PostfixGRLActions(PostfixPassfailActions):
@@ -255,34 +255,16 @@ class PostfixGRLActions(PostfixPassfailActions):
         """
         Optionally provide an instance of :py:class:`chapps.config.CHAPPSConfig`.
 
-        All this class does is wire up `self.config` to
+        All this class does is wire up `self.params` to
         point at the :py:class:`chapps.policy.GreylistingPolicy` config block.
         """
         super().__init__(cfg)
-        self.config = self.config.policy_grl
+        self.params = self.config.policy_grl
 
 
 class PostfixSPFActions(PostfixActions):
     """
     Postfix Action translator for :py:class:`chapps.policy.SPFEnforcementPolicy`
-
-    .. caution::
-
-        The SPF functionality of CHAPPS is not considered complete.  YMMV
-
-    """
-
-    greylisting_policy = GreylistingPolicy()
-    """
-    Reference to a class-global :py:class:`chapps.policy.GreylistingPolicy`
-    instance.
-
-    This implementation is poor and will change in future revisions.
-
-    .. todo::
-
-      Implement `greylisting_policy` as a class-level pseudo-property,
-      using a class-attribute dict for memoization storage.
 
     """
 
@@ -312,6 +294,7 @@ class PostfixSPFActions(PostfixActions):
                 "PostfixSPFActions.greylist() expects a ppr= kwarg "
                 "providing the PPR for greylisting."
             )
+        greylisting_policy = GreylistingPolicy()
         if PostfixSPFActions.greylisting_policy.approve_policy_request(
             ppr, force=True
         ):
@@ -329,7 +312,7 @@ class PostfixSPFActions(PostfixActions):
 
         """
         super().__init__(cfg)
-        self.config = self.config.actions_spf
+        self.params = self.config.actions_spf
 
     def _mangle_action(self, action):
         """
