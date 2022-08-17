@@ -9,7 +9,7 @@ in order to access the database according to the configured credentials.
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
-from chapps.config import config, CHAPPSConfig
+from chapps.config import CHAPPSConfig
 import logging
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ def create_db_url(cfg: CHAPPSConfig = None) -> URL:
     :returns: `URL <https://docs.sqlalchemy.org/en/14/core/engines.html#sqlalchemy.engine.URL>`_ instance for use in accessing the database
 
     """
-    cfg = cfg or config
+    cfg = cfg or CHAPPSConfig.get_config()
     logger.debug("Using config file: " + cfg.chapps.config_file)
     adapter = cfg.adapter
     if adapter.adapter not in DIALECT_MAP:

@@ -81,7 +81,7 @@ so there are some response models to use in such cases.
 
 """
 
-from chapps.config import config
+from chapps._version import __version__
 from chapps import dbmodels
 from typing import Optional, List, Dict, Union, Tuple
 from pydantic import BaseModel, constr, Field, validator
@@ -90,7 +90,7 @@ from enum import Enum
 import validators
 import time
 
-VERSTR = config.chapps.version
+VERSTR = f"CHAPPS v{__version__}"  # avoiding dependency on config
 
 
 class AssocOperation(str, Enum):
@@ -548,7 +548,7 @@ class InstanceTimesResp(CHAPPSResponse):
                     ["instance002", time.time() - 6000.0],
                 ],
                 "timestamp": time.time(),
-                "version": config.chapps.version,
+                "version": VERSTR,
             }
         }
 

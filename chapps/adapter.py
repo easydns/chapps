@@ -10,7 +10,7 @@ A change is planned to convert all of this to use SQLAlchemy.
 """
 import MySQLdb as dbmodule
 import logging
-from chapps.config import config, CHAPPSConfig
+from chapps.config import CHAPPSConfig
 
 # from chapps.dbsession import sql_engine, sessionmaker
 from chapps.models import User, Domain, Email, Quota
@@ -82,7 +82,7 @@ class PolicyConfigAdapter:
 
 
         """
-        self.config = cfg or config
+        self.config = cfg or CHAPPSConfig.get_config()
         self.params = self.config.adapter
         self.host = db_host or self.params.db_host or "127.0.0.1"
         self.port = db_port or self.params.db_port or 3306

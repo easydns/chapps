@@ -33,12 +33,13 @@ from chapps.policy import (
     SenderDomainAuthPolicy,
     GreylistingPolicy,
 )
-from chapps.config import config
+from chapps.config import CHAPPSConfig
 from chapps.util import hash_password
 import logging
 import ipaddress
 
 logger = logging.getLogger(__name__)
+config = CHAPPSConfig.get_config()
 Session = sessionmaker(sql_engine)
 
 api = APIRouter(

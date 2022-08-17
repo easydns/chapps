@@ -8,7 +8,7 @@ SQLAlchemy.
 
 """
 import logging
-from chapps.config import config, CHAPPSConfig
+from chapps.config import CHAPPSConfig
 from chapps.dbsession import (
     create_db_url,
     create_engine,
@@ -49,7 +49,7 @@ class SQLAPolicyConfigAdapter:
 
 
         """
-        self.config = cfg or config
+        self.config = cfg or CHAPPSConfig.get_config()
         self.params = self.config.adapter
         # specifically: use the global engine unless we were passed a config
         # logger.debug("Using config file: " + config.chapps.config_file)

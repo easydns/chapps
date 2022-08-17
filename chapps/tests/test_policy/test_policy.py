@@ -84,7 +84,7 @@ class Test_EmailPolicy:
         WHEN  asked for a Redis handle
         THEN  use Sentinel server and dataset information to get a read-write Redis handle
         """
-        sentinel_config = CHAPPSConfig()
+        sentinel_config = CHAPPSConfig.get_config()
         policy = EmailPolicy(cfg=sentinel_config)
         assert policy.redis.ping()
         assert policy.sentinel is not None

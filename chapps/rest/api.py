@@ -11,7 +11,7 @@ making its absolute symbol path :const:`chapps.rest.api.api`
 # itself is designed to be executed by uvicorn, probably a uvicorn worker
 # coordinated by gunicorn (see FastAPI deployment docs)
 
-from chapps.config import config
+from chapps.config import CHAPPSConfig
 from chapps._version import __version__
 from chapps.rest.routers import users, domains, quotas, emails, live
 from fastapi import FastAPI, Request, status
@@ -23,6 +23,8 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 logger.setLevel(chapps.logging.DEFAULT_LEVEL)
+
+config = CHAPPSConfig.get_config()
 
 rest_readme = Path(config.chapps.docpath) / "README-API.md"
 # Use the VenvDetector-derived docpath to locate the API readme
@@ -101,7 +103,7 @@ api = FastAPI(
 )
 # The top-level :class:`fastapi.FastAPI` object
 
-verstr = config.chapps.version
+# verstr = config.chapps.version
 api.include_router(users.api)
 api.include_router(domains.api)
 api.include_router(quotas.api)

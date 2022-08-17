@@ -6,8 +6,6 @@
 
 """
 import pytest
-import pudb
-import chapps.config
 import time
 from urllib.parse import quote as urlencode
 from chapps._version import __version__
@@ -1312,13 +1310,10 @@ class Test_Live_API:
         )
         assert response.status_code == 200
         assert response.json() == {
-            "response": "/home/ccullen/Projects/chapps/etc/chapps/chapps.ini",
+            "response": chapps_mock_cfg_path,
             "timestamp": fixed_time,
             "version": verstr,
         }
-        # for some reason I cannot get this test to run with a virtualized
-        # environment -- probably poor design of the config system
-        # this test will obviously break for anyone but me
 
     # SDA oriented
     def test_sda_cache_peek_single(

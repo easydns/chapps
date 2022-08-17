@@ -57,6 +57,17 @@ class CHAPPSConfig:
 
     """
 
+    configs = dict()
+
+    @classmethod
+    def get_config(cls):
+        cfg_fname = str(cls.what_config_file(VenvDetector().confpath))
+        if len(cls.configs) and cfg_fname in cls.configs:
+            return cls.configs[cfg_fname]
+        new_config = CHAPPSConfig()
+        cls.configs[cfg_fname] = new_config
+        return new_config
+
     # ultimately, we may need also to allow for a command-line option
     @staticmethod
     def what_config_file(
@@ -276,4 +287,4 @@ class CHAPPSConfig:
         return result
 
 
-config = CHAPPSConfig()
+# config = CHAPPSConfig()

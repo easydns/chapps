@@ -9,7 +9,7 @@ only one, which is an outbound-only subclass of
 """
 from typing import List
 from chapps.util import PostfixPolicyRequest
-from chapps.config import config, CHAPPSConfig
+from chapps.config import CHAPPSConfig
 from chapps.signals import ConfigurationError, AuthenticationFailureException
 import logging
 
@@ -50,7 +50,7 @@ class OutboundPPR(PostfixPolicyRequest):
     def __init__(self, payload: List[str], *, cfg: CHAPPSConfig = None):
         """Create a new outbound policy request"""
         super().__init__(payload)
-        self._config = cfg or config
+        self._config = cfg or CHAPPSConfig.get_config()
         self._params = self._config.chapps
         if cfg:
             logger.debug(
