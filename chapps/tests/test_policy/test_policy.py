@@ -248,7 +248,12 @@ class Test_GreylistingPolicy_Base:
 
 class Test_GreylistingPolicyEvaluation:
     def test_first_encounter_false(
-        self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
+        self,
+        caplog,
+        monkeypatch,
+        allowable_inbound_ppr,
+        testing_policy_grl,
+        populated_database_fixture,
     ):
         """
         GIVEN a new tuple
@@ -265,7 +270,12 @@ class Test_GreylistingPolicyEvaluation:
         assert not response  # .passing is False
 
     def test_pass_if_option_false(
-        self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
+        self,
+        caplog,
+        monkeypatch,
+        allowable_inbound_ppr,
+        testing_policy_grl,
+        populated_database_fixture,
     ):
         """
         GIVEN that the option is set to False

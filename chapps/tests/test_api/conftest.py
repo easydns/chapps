@@ -7,13 +7,14 @@ from chapps.tests.test_config.conftest import (
     chapps_mock_config_file,
     chapps_mock_env,
 )
-from chapps.tests.test_adapter.conftest import (
+from chapps.tests.test_sqla_adapter.conftest import (
     finalizing_pcadapter,
     base_adapter_fixture,
     database_fixture,
     populated_database_fixture,
     populated_database_fixture_with_extras,
     populated_database_fixture_with_breakage,
+    sqla_pc_adapter_fixture,
 )
 from chapps.tests.test_util.conftest import (
     postfix_policy_request_message,

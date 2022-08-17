@@ -11,14 +11,34 @@ from chapps.sqla_adapter import (
     SQLASenderDomainAuthAdapter,
     SQLAInboundFlagsAdapter,
 )
-from chapps.tests.test_adapter.conftest import (
-    greylisting_domain,
-    no_options_domain,
-    spf_domain,
-    enforcing_both_domain,
+from chapps.tests.conftest import (
+    _no_options_domain,
+    _greylisting_domain,
+    _spf_domain,
+    _enforcing_both_domain,
 )
 
 # from chapps.config import CHAPPSConfig
+
+
+@fixture
+def no_options_domain():
+    return _no_options_domain()
+
+
+@fixture
+def greylisting_domain():
+    return _greylisting_domain()
+
+
+@fixture
+def spf_domain():
+    return _spf_domain()
+
+
+@fixture
+def enforcing_both_domain():
+    return _enforcing_both_domain()
 
 
 @fixture
@@ -114,7 +134,7 @@ def test_emails():
     ]
 
 
-def _populated_database_fixture(database_fixture, sqla_pc_adapter):
+def _populated_database_fixture(database_fixture, sqla_pc_adapter=None):
     # user_table = (
     #     "CREATE TABLE IF NOT EXISTS users ("  # pragma: no cover
     #     "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
@@ -232,6 +252,9 @@ def _populated_database_fixture(database_fixture, sqla_pc_adapter):
         ),
         "COMMIT;",
     ]
+    sqla_pc_adapter = sqla_pc_adapter or _sqla_adapter_fixture(
+        SQLAPolicyConfigAdapter
+    )
     cur = database_fixture
     # cur.execute(user_table)
     # cur.execute(quota_table)
@@ -253,7 +276,9 @@ def _populated_database_fixture(database_fixture, sqla_pc_adapter):
     # could drop and re-create the DB here, but we do that elsewhere
 
 
-def _populated_database_fixture_with_extras(database_fixture, sqla_pc_adapter):
+def _populated_database_fixture_with_extras(
+    database_fixture, sqla_pc_adapter=None
+):
     cur = _populated_database_fixture(database_fixture, sqla_pc_adapter)
     extra_domains = (
         "INSERT INTO domains (name, greylist, check_spf) VALUES"
@@ -305,7 +330,7 @@ def _populated_database_fixture_with_breakage(
 
 
 @fixture
-def populated_database_fixture(database_fixture, sqla_pc_adapter_fixture):
+def populated_database_fixture(database_fixture, sqla_pc_adapter_fixture=None):
     return _populated_database_fixture(
         database_fixture, sqla_pc_adapter_fixture
     )
