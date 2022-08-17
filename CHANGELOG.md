@@ -11,6 +11,10 @@
 	  sink the email but instead reflects it back to the test via a UDS,
 	  enabling integration tests to inspect the contents of the emails
 	  they send.
+	- Add inbound-flags-adapter code to SQLA adapters.
+	- Add tests for all inbound-flags-adapter classes.
+	- Sort out conflicts between SQLA tests; all can once again run at once.
+	- Refactor configuration stategy to avoid package-global config object.
 
 ###v0.4.16:
 	- Added basic admin functions in CLI: initialize/update database schema,
