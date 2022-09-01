@@ -194,9 +194,6 @@ class SPFEnforcementPolicy(InboundPolicy):
           its result used as the result.
 
         """
-        if not self.enabled(ppr):
-            return self.actions.dunno()
-
         # First, check the HELO name
         helo_sender = "postmaster@" + ppr.helo_name
         query = spf.query(ppr.client_address, helo_sender, ppr.helo_name)
@@ -210,6 +207,8 @@ class SPFEnforcementPolicy(InboundPolicy):
             query = spf.query(ppr.client_address, ppr.sender, ppr.helo_name)
             result, _, message = query.check()
             action = self.actions.action_for(result)
+        if not self.enabled(ppr):
+            action = self.actions.prepend
         return action(
             message,
             ppr=ppr,
