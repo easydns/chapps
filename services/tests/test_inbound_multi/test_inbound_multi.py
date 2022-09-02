@@ -133,6 +133,7 @@ class Test_IBM_SPF:
         known_sender,
         no_enforcement_recipients,
         ibm_test_message_factory,
+        mail_echo_file,
     ):
         caplog.set_level(logging.DEBUG)
         recip = no_enforcement_recipients
@@ -141,6 +142,9 @@ class Test_IBM_SPF:
         with SMTP("127.0.0.1") as smtp:
             result = smtp.sendmail(sender, recip, message)
         assert True  # note that SPF should fail this sender
+        time.sleep(0.01)
+        mail_lines = list(mail_echo_file)
+        assert mail_lines[0][0:18] == "Received-SPF: Fail"
 
 
 class Test_IBM_SPF_and_Greylisting:
@@ -265,6 +269,7 @@ class Test_IBM_No_Enforcement:
         known_sender,  # fails SPF check
         no_enforcement_recipients,
         ibm_test_message_factory,
+        mail_echo_file,
     ):
         """
         :GIVEN: the recipient domain enforces neither SPF or Greylisting
@@ -278,3 +283,6 @@ class Test_IBM_No_Enforcement:
         with SMTP("127.0.0.1") as smtp:
             result = smtp.sendmail(sender, recip, message)
         assert True
+        time.sleep(0.01)
+        mail_lines = list(mail_echo_file)
+        assert mail_lines[0][0:13] == "Received-SPF:"
