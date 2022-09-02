@@ -57,10 +57,11 @@ class Test_SPFEnforcementHandler:
         clear_redis_grl,
     ):
         """
-        GIVEN a particular result from the SPF checker
-        WHEN  communicating with Postfix
-        THEN  send the appropriate result
-        This test will be parameterized to go through all possible responses
+        :GIVEN: a particular result from the SPF checker
+        :WHEN:  communicating with Postfix
+        :THEN:  send the appropriate result
+
+        This test is parameterized to go through all possible responses
         """
         caplog.set_level(logging.DEBUG)
         handle_spf_request = SPFEnforcementHandler(
@@ -101,8 +102,9 @@ class Test_SPFEnforcementHandler:
             with pytest.raises(CallableExhausted):
                 await handle_spf_request(mock_reader, mock_writer)
         mock_reader.readuntil.assert_called_with(b"\n\n")
-        mock_writer.write.assert_called_with(
-            f"action=DUNNO\n\n".encode("utf-8")
+        assert (
+            "PREPEND Received-SPF:".encode("utf-8")
+            in mock_writer.write.call_args.args[0]
         )
 
     async def test_handle_request_on_nonenforcing_domain(
@@ -129,8 +131,9 @@ class Test_SPFEnforcementHandler:
             with pytest.raises(CallableExhausted):
                 await handle_spf_request(mock_reader, mock_writer)
         mock_reader.readuntil.assert_called_with(b"\n\n")
-        mock_writer.write.assert_called_with(
-            f"action=DUNNO\n\n".encode("utf-8")
+        assert (
+            "PREPEND Received-SPF:".encode("utf-8")
+            in mock_writer.write.call_args.args[0]
         )
 
 
@@ -237,7 +240,7 @@ class Test_InboundMultipolicyHandler:
         """
         :GIVEN: an email delivery attempt has occured and been greylisted
         :WHEN:  the tuple is seen again
-        :THEN:  the policy handler should pass the email and prepend an SPF header
+        :THEN:  PREPEND the SPF header
         """
         caplog.set_level(logging.DEBUG)
         handle_spf_request = InboundMultipolicyHandler(
@@ -274,8 +277,8 @@ class Test_InboundMultipolicyHandler:
 
         .. note:
 
-          This test is necessary to exercise `spf_policy.py:59` where greylisting
-          is used internally by SPF.
+          This test is necessary to exercise `spf_policy.py:59` where
+          greylisting is used internally by SPF.
 
         """
         caplog.set_level(logging.DEBUG)
@@ -307,7 +310,12 @@ class Test_InboundMultipolicyHandler:
         """
         :GIVEN: a recipient within an unrecognized domain
         :WHEN:  policy evaluation takes place
-        :THEN:  return DUNNO rather than enforcing the policy
+        :THEN:  PREPEND the SPF header rather than enforcing the policy
+
+        Incoming mail destined for domains which are not configured within
+        CHAPPS could either be rejected or forwarded.  We choose the
+        less-disruptive approach, forwarding emails which match no policy.
+        But we do attach the SPF header.
         """
         caplog.set_level(logging.DEBUG)
         handle_spf_request = InboundMultipolicyHandler(
@@ -319,8 +327,9 @@ class Test_InboundMultipolicyHandler:
             with pytest.raises(CallableExhausted):
                 await handle_spf_request(mock_reader, mock_writer)
         mock_reader.readuntil.assert_called_with(b"\n\n")
-        mock_writer.write.assert_called_with(
-            f"action=DUNNO\n\n".encode("utf-8")
+        assert (
+            "PREPEND Received-SPF:".encode("utf-8")
+            in mock_writer.write.call_args.args[0]
         )
 
     async def test_handle_request_on_nonenforcing_domain(
@@ -336,7 +345,11 @@ class Test_InboundMultipolicyHandler:
         """
         :GIVEN: a recipient within an unrecognized domain
         :WHEN:  policy evaluation takes place
-        :THEN:  return DUNNO rather than enforcing the policy
+        :THEN:  return the PREPEND rather than enforcing the policy
+
+        Whatever email flows in should have SPF headers attached to it,
+        so that DMARC or other email utilities in the pipeline might be
+        able to use them.
         """
         caplog.set_level(logging.DEBUG)
         handle_spf_request = InboundMultipolicyHandler(
@@ -348,8 +361,9 @@ class Test_InboundMultipolicyHandler:
             with pytest.raises(CallableExhausted):
                 await handle_spf_request(mock_reader, mock_writer)
         mock_reader.readuntil.assert_called_with(b"\n\n")
-        mock_writer.write.assert_called_with(
-            f"action=DUNNO\n\n".encode("utf-8")
+        assert (
+            "PREPEND Received-SPF:".encode("utf-8")
+            in mock_writer.write.call_args.args[0]
         )
 
 
@@ -365,9 +379,9 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         mock_writer,
     ):
         """
-        GIVEN an email attempt from a new tuple
-        WHEN  the client isn't auto-allowed
-        THEN  reject the email
+        :GIVEN: an email attempt from a new tuple
+        :WHEN:  the client isn't auto-allowed
+        :THEN:  reject the email
         """
         handle_greylist_request = InboundMultipolicyHandler(
             [testing_policy_spf, testing_policy_grl]
@@ -392,9 +406,9 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         mock_writer,
     ):
         """
-        GIVEN two back-to-back attempts with the same tuple
-        WHEN  the two attempts are two close together
-        THEN  reject the email
+        :GIVEN: two back-to-back attempts with the same tuple
+        :WHEN:  the two attempts are two close together
+        :THEN:  reject the email
         """
         handle_greylist_request = InboundMultipolicyHandler(
             [testing_policy_spf, testing_policy_grl]
@@ -416,9 +430,10 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         mock_writer,
     ):
         """
-        GIVEN an email delivery attempt
-        WHEN  the tuple is recognized
-        THEN  return DUNNO to allow other filters to block it; it will be accepted by default
+        :GIVEN: an email delivery attempt
+        :WHEN:  the tuple is recognized
+        :THEN:  PREPEND the SPF header to allow other filters to block it;
+                it will be accepted by default
         """
         handle_greylist_request = InboundMultipolicyHandler(
             [testing_policy_spf, testing_policy_grl]
@@ -427,7 +442,10 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         with pytest.raises(CallableExhausted):
             await handle_greylist_request(grl_reader, mock_writer)
         grl_reader.readuntil.assert_called_with(b"\n\n")
-        mock_writer.write.assert_called_with(b"action=DUNNO\n\n")
+        assert (
+            "PREPEND Received-SPF:".encode("utf-8")
+            in mock_writer.write.call_args.args[0]
+        )
 
     async def test_handle_allowed_client(
         self,
@@ -438,9 +456,10 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         mock_writer,
     ):
         """
-        GIVEN an email delivery attempt
-        WHEN  the client is recognized as a reliable sender
-        THEN  return DUNNO to allow other filters to block it; it will be accepted by default
+        :GIVEN: an email delivery attempt
+        :WHEN:  the client is recognized as a reliable sender
+        :THEN:  PREPEND the SPF header to allow other filters to block it;
+                it will be accepted by default
         """
         handle_greylist_request = InboundMultipolicyHandler(
             [testing_policy_spf, testing_policy_grl]
@@ -449,4 +468,7 @@ class Test_InboundMultipolicyHandler_GreylistingOnly:
         with pytest.raises(CallableExhausted):
             await handle_greylist_request(grl_reader, mock_writer)
         grl_reader.readuntil.assert_called_with(b"\n\n")
-        mock_writer.write.assert_called_with(b"action=DUNNO\n\n")
+        assert (
+            "PREPEND Received-SPF:".encode("utf-8")
+            in mock_writer.write.call_args.args[0]
+        )
