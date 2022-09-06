@@ -12,6 +12,7 @@ os.environ["CHAPPS_CONFIG"] = str(
 )
 from chapps.policy import GreylistingPolicy
 
+REDIS_DB = 0
 seconds_per_day = 3600 * 24
 
 
@@ -26,6 +27,11 @@ class ErrorAfter(object):
         if self.calls > self.limit:
             raise CallableExhausted
         self.calls += 1
+
+
+def _redis_handle(db_number: int = None):
+    rh = redis.Redis(db=(db_number or REDIS_DB))
+    return rh
 
 
 def _unique_instance(deadbeef="deadbeef"):
@@ -63,7 +69,7 @@ def _mock_client_tally(unique_instance):
 
 def _clear_redis(prefix):
     def __cr():
-        rh = redis.Redis()
+        rh = _redis_handle()
         keys = rh.keys(f"{prefix}:*")
         if len(keys) > 0:
             rh.delete(*keys)
@@ -87,7 +93,7 @@ def _redis_args_grl(src_ip, sender, recipient, tally_count=0):
 def _populate_redis_grl(tuple_key, entries={}):
     if len(tuple_key) < 7:
         raise ValueError("Tuple key is too short to be legal.")
-    rh = redis.Redis()
+    rh = _redis_handle()
     ts = time.time() - 305
     with rh.pipeline() as pipe:
         pipe.set(tuple_key, ts)  # seen 5 min ago

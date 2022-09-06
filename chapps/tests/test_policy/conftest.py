@@ -24,6 +24,7 @@ from chapps.tests.test_adapter.conftest import (
 from chapps.tests.conftest import (
     _unique_instance,
     _mock_client_tally,
+    _redis_handle,
     _clear_redis,
     _populate_redis_grl,
 )
@@ -244,7 +245,7 @@ def populate_redis(clear_redis):
     fmtkey = OutboundQuotaPolicy._fmtkey
 
     def _popredis(email, limit, timestamps=[], margin=0):
-        rh = redis.Redis()
+        rh = _redis_handle()
         with rh.pipeline() as pipe:
             pipe.delete(
                 fmtkey(email, "limit"),
@@ -257,7 +258,7 @@ def populate_redis(clear_redis):
             pipe.execute()
 
     yield _popredis
-    rh = redis.Redis()
+    rh = _redis_handle()
     keys = rh.keys("oqp:*")
     if len(keys) > 0:
         rh.delete(*keys)
@@ -268,7 +269,7 @@ def populate_redis_multi(clear_redis):
     fmtkey = OutboundQuotaPolicy._fmtkey
 
     def _popredis(email, limit, timestamps=[], margin=0):
-        rh = redis.Redis()
+        rh = _redis_handle()
         with rh.pipeline() as pipe:
             pipe.delete(
                 fmtkey(email, "limit"),
@@ -284,7 +285,7 @@ def populate_redis_multi(clear_redis):
             pipe.execute()
 
     yield _popredis
-    rh = redis.Redis()
+    rh = _redis_handle()
     keys = rh.keys("oqp:*")
     if len(keys) > 0:
         rh.delete(*keys)

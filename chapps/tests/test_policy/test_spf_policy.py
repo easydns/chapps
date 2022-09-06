@@ -110,7 +110,7 @@ class Test_SPFEnforcementPolicy:
         """
         :GIVEN: the domain has the SPF-checking flag set to false
         :WHEN:  policy approval is requested
-        :THEN:  return DUNNO instead of performing policy enforcement
+        :THEN:  PREPEND the SPF result header and forward the email
         """
         caplog.set_level(logging.DEBUG)
         with monkeypatch.context() as m:
@@ -121,7 +121,7 @@ class Test_SPFEnforcementPolicy:
             result = testing_policy_spf.approve_policy_request(
                 allowable_inbound_ppr
             )
-        assert result == "DUNNO"
+        assert "PREPEND Received-SPF:" in result
 
     def test_failing_emails_get_reject(
         self,

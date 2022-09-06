@@ -95,7 +95,6 @@ def _chapps_mock_config():
         "sentinel_master": "",
         "server": "127.0.0.1",
         "port": "6379",
-        "db": "1",
     }
     return cp
 
@@ -137,7 +136,6 @@ def chapps_null_user_config():
         "sentinel_master": "",
         "server": "127.0.0.1",
         "port": "6379",
-        "db": "1",
     }
     return cp
 
@@ -171,7 +169,6 @@ def chapps_sentinel_config():
         "sentinel_dataset": "redis-easymail",
         "server": "127.0.0.1",
         "port": "6379",
-        "db": "1",
     }
     return cp
 

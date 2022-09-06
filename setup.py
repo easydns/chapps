@@ -212,6 +212,7 @@ setup(
                 "install/chapps-api-gunicorn.socket",
                 "install/chapps-api-nginx.conf",
                 "install/chapps-rsyslog.conf",
+                "install/chapps-config-example.ini",
             ],
         ),
         (
