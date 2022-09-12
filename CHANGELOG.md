@@ -2,6 +2,11 @@
 
 ## Alpha Releases
 
+###v0.5.1:
+	- The recent (major) adjustment to how the config object works was not
+	  reflected in the CLI script, and so in the last two revisions it was
+	  broken.  It is repaired in this release.
+
 ###v0.5.0:
 	- The v0.5.x version milestone represents the completion of the first
 	  major iteration of feature development for CHAPPS.  It can now limit
