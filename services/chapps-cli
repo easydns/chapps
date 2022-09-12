@@ -11,12 +11,8 @@ from chapps.models import (
     user_emails_assoc,
     user_domains_assoc,
 )
-from chapps.policy import (
-    EmailPolicy,
-    OutboundQuotaPolicy,
-    GreylistingPolicy,
-    config,
-)
+from chapps.policy import EmailPolicy, OutboundQuotaPolicy, GreylistingPolicy
+from chapps.config import CHAPPSConfig
 from chapps.dbsession import sql_engine, sessionmaker
 from chapps.alembic.apply import main as apply_migrations
 from chapps.util import hash_password
@@ -410,7 +406,7 @@ def flush_config(to_file: str = None):
     be supplied in order to have the new config file written out to some other
     location.
     """
-    config.write(to_file)
+    CHAPPSConfig.get_config().write(to_file)
 
 
 @admin_app.command()
@@ -418,7 +414,7 @@ def active_config():
     """Show what config file chapps-cli is using.
 
     """
-    _print("Using config from " + config.chapps.config_file)
+    _print("Using config from " + CHAPPSConfig.get_config.chapps.config_file)
 
 
 @admin_app.command()
@@ -436,6 +432,7 @@ def api_password(
     changed.  Provide the `--to-file` option to write to an alternate location.
 
     """
+    config = CHAPPSConfig.get_config()
     config.configparser["CHAPPS"]["password"] = hash_password(
         password, config.chapps.payload_encoding
     )
