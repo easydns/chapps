@@ -5,21 +5,24 @@
 ###v0.5.1:
 	- The recent (major) adjustment to how the config object works was not
 	  reflected in the CLI script, and so in the last two revisions it was
-	  broken.  It is repaired in this release.
+	  broken (since v0.4.17).  It is repaired in this release.
+	- Similarly broken were all of the outbound policy service
+      scripts, and the standalone greylisting service script.  These
+      have also been corrected now.
 
 ###v0.5.0:
-	- The v0.5.x version milestone represents the completion of the first
-	  major iteration of feature development for CHAPPS.  It can now limit
-	  outbound transmissions based on quota and authorization, and it can
-	  apply greylisting and SPF enforcement to inbound email.
-	- SPF headers are now prepended to all email flowing through an inbound
-	  policy service which includes the SPF handler.  This is to increase
-	  co-operation with downstream tools such as DMARC enforcement and spam
-	  filtering tools.
-	- An annotated version of the default CHAPPS configuration file
-	  has been included in the install directory, in order to serve as
+    - The v0.5.x version milestone represents the completion of the first
+      major iteration of feature development for CHAPPS.  It can now limit
+      outbound transmissions based on quota and authorization, and it can
+      apply greylisting and SPF enforcement to inbound email.
+    - SPF headers are now prepended to all email flowing through an inbound
+      policy service which includes the SPF handler.  This is to increase
+      co-operation with downstream tools such as DMARC enforcement and spam
+      filtering tools.
+    - An annotated version of the default CHAPPS configuration file
+      has been included in the install directory, in order to serve as
       a form of documentation about config options.
-	- Consolidated how Redis handles are created for testing
+    - Consolidated how Redis handles are created for testing
 
 ###v0.4.17:
 	- Fix bug in Greylisting-via-SPF which caused errors when
