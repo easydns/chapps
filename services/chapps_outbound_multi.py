@@ -2,14 +2,16 @@
 """Caching, Highly-Available Postfix Policy Service: Outbound Multi-filter"""
 
 ### requires the python-pidfile library from https://github.com/mosquito/python-pidfile
-import asyncio, pidfile, signal, functools
+import pidfile
+import asyncio
+import signal
+import functools
 from chapps.switchboard import OutboundMultipolicyHandler
-from chapps.config import config
 from chapps.signals import SignalHandlerFactory
 from pathlib import Path
 import logging
 
-logger = logging.getLogger("chapps."+__name__)
+logger = logging.getLogger("chapps." + __name__)
 APPNAME = "CHAPPS Outbound Multi"
 
 
@@ -17,7 +19,8 @@ def install_asyncio_signal_handlers(loop):
     for signame in {"SIGTERM", "SIGINT"}:
         sig = getattr(signal, signame)
         loop.add_signal_handler(
-            sig, functools.partial(SignalHandlerFactory.signal_handler(loop), sig)
+            sig,
+            functools.partial(SignalHandlerFactory.signal_handler(loop), sig),
         )
 
 
@@ -48,6 +51,8 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except RuntimeError:
-        logger.exception("This error occurs if the application dies ungracefully.")
+        logger.exception(
+            "This error occurs if the application dies ungracefully."
+        )
     except Exception:
         logger.exception("CHAPPS exiting due to UNEXPECTED exception.")
