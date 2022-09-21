@@ -168,9 +168,10 @@ class DB_Customizations(DeclarativeMeta):
         :rtype: sqlalchemy.sql.expression.Update
 
         """
-        print(f"Got item:{item!r}")
         args = {
-            k: getattr(item, k) for k in item.schema()["properties"].keys()
+            k: getattr(item, k)
+            for k in item.schema()["properties"].keys()
+            if getattr(item, k, None) is not None
         }
         id = args.pop("id")
         return update(cls).where(cls.id == id).values(**args)
