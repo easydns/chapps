@@ -15,7 +15,7 @@ In order to provide basic documentation and some examples how to use those
 below, as part of the `.api` docstring.
 
 """
-from typing import List
+from typing import List, Optional
 from starlette import status
 from fastapi import APIRouter  # , Body, Path, HTTPException
 from chapps.models import (
@@ -149,7 +149,9 @@ api.post(
     create_item(
         Domain,
         response_model=DomainResp,
-        params=dict(name=str, greylist=bool, check_spf=bool),
+        params=dict(
+            name=str, greylist=Optional[bool], check_spf=Optional[bool]
+        ),
         assoc=domain_join_assoc,
     )
 )

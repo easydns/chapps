@@ -880,7 +880,9 @@ def create_item(
         inspect.Parameter(
             name=param,
             kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            default=Body(...),
+            default=Body(False)
+            if bool in getattr(type_, "__args__", [])
+            else Body(...),
             annotation=type_,
         )
         for param, type_ in params.items()
