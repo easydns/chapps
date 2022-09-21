@@ -635,12 +635,7 @@ class Test_Domains_API:
         # pudb.set_trace()
         response = testing_api_client.post(
             "/domains/",
-            json={
-                "name": "easydns.com",
-                "users": [],
-                "greylist": True,
-                "check_spf": True,
-            },
+            json={"name": "easydns.com", "greylist": True, "check_spf": True},
         )
         assert response.status_code == 201
         assert response.json() == {
@@ -649,6 +644,27 @@ class Test_Domains_API:
                 "name": "easydns.com",
                 "greylist": True,
                 "check_spf": True,
+            },
+            "users": None,
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_create_domain_with_no_flags(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        # pudb.set_trace()
+        response = testing_api_client.post(
+            "/domains/", json={"name": "easydns.com"}
+        )
+        assert response.status_code == 201
+        assert response.json() == {
+            "response": {
+                "id": 2,
+                "name": "easydns.com",
+                "greylist": False,
+                "check_spf": False,
             },
             "users": None,
             "timestamp": fixed_time,
