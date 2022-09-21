@@ -2,7 +2,26 @@
 
 ## Alpha Releases
 
-###v0.5.1:
+### v0.5.2:
+    - Adding in hardcoded "False" defaults for boolean values on
+	  models during record creation.  This is specifically in order to
+	  provide backward compatibility during upgrade of CHAPPS from
+	  versions v0.4.11-17 wherein there were no domain flags.  Now
+	  that there are flags on domains, the old domain-creation code on
+	  clients will break utterly if the API cannot provide defaults,
+	  which in v0.5.1 it was not doing.  Now, defaults of False are provided
+	  if the specified parameter type is Optional[bool] or any
+	  Union[bool|...].  This is a stopgap, which provides a hint as to
+	  how a wider change would allow for arbitrary defaults to be
+	  provided for any specified parameter.
+
+	  **TL;DR** There is a hacky kludge which fixes a
+      reverse-compatibility issue which will be improved into a
+      flexible way to provide defaults for any specified parameter to
+      the `create_item` and probably also `update_item` factory
+      functions.
+
+### v0.5.1:
 	- The recent (major) adjustment to how the config object works was not
 	  reflected in the CLI script, and so in the last two revisions it was
 	  broken (since v0.4.17).  It is repaired in this release.
@@ -10,7 +29,7 @@
       scripts, and the standalone greylisting service script.  These
       have also been corrected now.
 
-###v0.5.0:
+### v0.5.0:
     - The v0.5.x version milestone represents the completion of the first
       major iteration of feature development for CHAPPS.  It can now limit
       outbound transmissions based on quota and authorization, and it can
@@ -24,7 +43,7 @@
       a form of documentation about config options.
     - Consolidated how Redis handles are created for testing
 
-###v0.4.17:
+### v0.4.17:
 	- Fix bug in Greylisting-via-SPF which caused errors when
       softfailing emails passed greylisting.
 	- Add some tests to ensure that the code referenced above is
@@ -38,7 +57,7 @@
 	- Sort out conflicts between SQLA tests; all can once again run at once.
 	- Refactor configuration stategy to avoid package-global config object.
 
-###v0.4.16:
+### v0.4.16:
 	- Added basic admin functions in CLI: initialize/update database schema,
 	  change API config-flush password, perform config-flush (with option to
 	  write to an alternate location).
@@ -47,15 +66,15 @@
       including routes to set a domain's enforcement preference, and
       others to clear a domain's enforcement option cache in Redis.
 
-###v0.4.15:
+### v0.4.15:
 	- added chapps.alembic.versions subpackage, because of course Alembic
 	  cannot work without the version files
 
-###v0.4.14:
+### v0.4.14:
 	- added missing package data which prevented Alembic migrations
       from functioning as expected
 
-###v0.4.13:
+### v0.4.13:
     - Refactored elements of the adapter classes to reduce code duplication.
 	- Added Alembic to project to manage database migrations.
 	- Created as-of-0.4.12 base migration, and an update migration to
@@ -69,7 +88,7 @@
 	- NB: pre-existing databases need special care during upgrade, see
       [README](README.md#db-initialization)
 
-###v0.4.12:
+### v0.4.12:
     - Adding missing documentation to new bulk user-domain and
       user-email auth policy routes.
 	- Completed overhaul of database adapter layer.  There is now an
@@ -82,7 +101,7 @@
 	- Refactored instance-caching code (based on Postfix instance ID)
 	  into the policy parent class in order to reduce code duplication.
 
-###v0.4.11:
+### v0.4.11:
 	- Adding bulk policy access for user-domains and user-emails along
       the same lines as the bulk quota policy query.  Lists of
       **Domain** or **Email** ids are returned, tagged with the name
@@ -97,7 +116,7 @@
       interaction wrappers; this has been resolved so that 409s are
       returned properly in such cases.
 
-###v0.4.10:
+### v0.4.10:
 	- Correcting some internal server errors raised under certain
       circumstances by the new API routines for bulk Quota queries.
       This fix may also address some other situations which were less
@@ -110,7 +129,7 @@
       lists and ensure that arbitrary associations are loaded on the
       returned models.
 
-###v0.4.9:
+### v0.4.9:
 	- The beginnings of a CLI, in order to allow direct, command-line
 	  level control of permissions, creating **Email** and **Domain**
 	  records, quota assignment, file-based permissions and quota
@@ -127,14 +146,14 @@
 	  The live route also generates some human-oriented remarks about unusual
 	  situations encountered while running.
 
-###v0.4.8:
+### v0.4.8:
     - Urgent fixes release: some PPR field values may contain `=`
 	  which will cause parsing to fail spectacularly.  A fix is
 	  included in this version.
 	- A missing software dependency which impeded operation of the
       previous version has also been added (`email-validator`).
 
-###v0.4.7:
+### v0.4.7:
 	- Fixed uncaught error on nonexistent user-identifier when the
       user-key is required.  The application now sends the expected
       auth-failure rejection action to Postfix.
@@ -156,7 +175,7 @@
 	  yet tests are not complete, and so there is no way to actually
 	  use it currently.
 
-###v0.4.6:
+### v0.4.6:
 	- Correcting dependency misalignments in setup.cfg which were preventing
       CHAPPS from launching after installation from PyPI
     - Massive documentation update, using rST and Sphinx
@@ -167,13 +186,13 @@
 	  one is being used. (`<venv>/etc/chapps.ini`)
 	- CHAPPS does not attempt to write a config file when invoked by Sphinx
 
-###v0.4.5:
+### v0.4.5:
     - Corrected missing statements which caused new email tables not to be
 	  created by `chapps_database_init.py`
 	- added more acknowledgements to INSTALLATION
 	- added whole-email matching related docs to README.md
 
-###v0.4.4:
+### v0.4.4:
     - Corrected incorrect homepage URL in setup.py
     - Polish documentation.
     - Added full-email auth to SDA module.
@@ -185,13 +204,13 @@
       accept lists of both domain IDs and email IDs, and if both are
       provided, will provide all the output combined in a single dict.
 
-###v0.4.3:
+### v0.4.3:
     - Correct error preventing automatic table building by provided
       setup script.
     - Provide better documentation about setting up the database.
     - Minor adjustments to API README
 
-###v0.4.2:
+### v0.4.2:
 	- Paginate associated objects
 	  (paginate domains for users, and users for domains)
 	- Adjusting location of API README to correct bug preventing API launch
@@ -199,12 +218,12 @@
 	- Adding CHANGELOG to PyPI package
 	- Add a little extra documentation about **syslog** message configuration
 
-###v0.4.1:
+### v0.4.1:
 	- Improved Swagger/OpenAPI documentation.  Handling assignment of
 	  path closure docstrings explicitly fixes the problem.  Various
 	  formatting improvements have also been included.
 
-###v0.4:
+### v0.4:
 	- introducing the first version of the REST API; INSTALLATION
 	  instructions will be modified to discuss and provide references
 	  for proper, highly-available deployment of the REST API, which
@@ -222,24 +241,24 @@
       install API prerequisites (which are not otherwise needed)
 	- CHANGELOG adapted to be Markdown-compatible
 
-###v0.3.13
+### v0.3.13
 	- fixing a problem with logging, wherein library logs were suppressed
 	- generally tidying logging
 	- updated documentation to discuss logging
 	- refined installation instructions
 
-###v0.3.12
+### v0.3.12
 	- making OQP throttling disabled by default; it needs some work
 	- adding log handler to send messages to the mail log
 
-###v0.3.11
+### v0.3.11
 	- modifying logic around user-key extraction, and adding new
 	  settings: require_user_key (boolean), and no_user_key_response
 	  (Postfix response string).  See README for more information.
 	- adding some logic to guard against IndexError conditions when
 	  calculating time-delta from the attempts list
 
-###v0.3.10
+### v0.3.10
 	- adding default config value for `min_delta` to
 	  OutboundQuotaPolicy, which defaults to 5.  It represents the
 	  minimum number of seconds between attempts; faster attempts will
@@ -248,15 +267,15 @@
       recipients memoizing routine ran afoul of __getattr__()
 	- correcting problem with recognizing at signs in email addresses
 
-###v0.3.9:
+### v0.3.9:
 	- correcting import of test library feature into main codebase
 	- adding more comprehensive CHAPPSException handling
 
-###v0.3.8:
+### v0.3.8:
 	- correcting packaging error which prevented installation of
       dependencies
 
-###v0.3.7:
+### v0.3.7:
 	- removing static SystemD service profiles from pip package; they
       remain in the repo, for use via git clone.
 	- correcting fatal bug wherein receiving email with a null sender
@@ -264,7 +283,7 @@
 	  specify for each policy whether null senders are "ok"; the
 	  default is False.
 
-###v0.3.6:
+### v0.3.6:
 	- bug fixes: due to poor design choice, all policies in a
 	  multipolicy handler will end up with the same config, that being
 	  the config for the last configured policy.  As such, earlier
@@ -276,20 +295,20 @@
 	- handlers now provide property methods to obtain the appropriate
       listener address and port numbers
 
-###v0.3.3-5:
+### v0.3.3-5:
 	- improvements to setuptools install process (pip / setup.py)
 	  which should make it possible to format correct SystemD service
 	  description files to run the installed CHAPPS services, even
 	  from within their venv
 
-###v0.3.2:
+### v0.3.2:
 	- putting extra artifacts in a chapps dir, w/i venv or /usr/local
       depending on whether a venv is used
 
-###v0.3.1:
+### v0.3.1:
 	- Updating documentation
 
-###v0.3:
+### v0.3:
 	- Sender-domain authorization policy allows an RDBMS to indicate
 	  which domains a particular user is authorized to emit mail on
 	  behalf of.
@@ -297,7 +316,7 @@
 	- There are additions to the database schema which should be
       compatible with v0.2
 
-###v0.2.1:
+### v0.2.1:
 	- Now supports connecting to Redis via Sentinel; provide a
 	  space-separated list of host:port info for `sentinel_servers` in
 	  the config, and specify the name of the dataset in
@@ -305,14 +324,14 @@
 	- Some minor changes to the config file have occured; the
 	  `sentinel_master` param and the `db` param have been removed
 
-###v0.2:
+### v0.2:
 	- PLEASE NOTE: the database schema has changed with this update
 	- DB access encapsulation and outbound-traffic user identification
       is now independent of any policy or handler
 	- some symbol names have been updated for greater clarity
 	- the documentation has been improved somewhat; more to come
 
-###v0.1:
+### v0.1:
 	- Outbound Quota and Greylisting policies function, but their
       feature sets may be incomplete.
 	- Installation procedure just a bit wonky.
