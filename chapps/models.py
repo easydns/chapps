@@ -372,9 +372,9 @@ class Domain(CHAPPSModel):
         strip_whitespace=True, to_lower=True, min_length=5, max_length=63
     ) = Field(title="domain name")
     """domain names may be up to 63 chars long"""
-    greylist: bool = Field(title="perform greylisting")
+    greylist: Optional[bool] = Field(title="perform greylisting", default=None)
     """flag indicating whether to greylist all domain's inbound email"""
-    check_spf: bool = Field(title="enforce SPF")
+    check_spf: Optional[bool] = Field(title="enforce SPF", default=None)
     """flag indicating whether to check SPF for domain's inbound email"""
 
     class Config:

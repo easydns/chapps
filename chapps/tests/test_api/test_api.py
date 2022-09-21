@@ -747,6 +747,26 @@ class Test_Domains_API:
         }
 
     @pytest.mark.timeout(2)
+    def test_update_domain_without_flags(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.put(
+            "/domains/", json=dict(domain=dict(id=1, name="crapps.io"))
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {
+                "id": 1,
+                "name": "crapps.io",
+                "greylist": True,
+                "check_spf": True,
+            },
+            "timestamp": fixed_time,
+            "users": None,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
     def test_update_domain_with_users(
         self, fixed_time, testing_api_client, populated_database_fixture
     ):
