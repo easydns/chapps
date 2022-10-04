@@ -767,6 +767,26 @@ class Test_Domains_API:
         }
 
     @pytest.mark.timeout(2)
+    def test_update_domain_without_name(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.put(
+            "/domains/", json=dict(domain=dict(id=1, greylist=False))
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {
+                "id": 1,
+                "name": "chapps.io",
+                "greylist": False,
+                "check_spf": True,
+            },
+            "timestamp": fixed_time,
+            "users": None,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
     def test_update_domain_with_users(
         self, fixed_time, testing_api_client, populated_database_fixture
     ):
@@ -946,6 +966,20 @@ class Test_Quotas_API:
         assert response.status_code == 200
         assert response.json() == {
             "response": {"id": 1, "name": "newname", "quota": 220},
+            "timestamp": fixed_time,
+            "version": verstr,
+        }
+
+    @pytest.mark.timeout(2)
+    def test_update_quota_without_name(
+        self, fixed_time, testing_api_client, populated_database_fixture
+    ):
+        response = testing_api_client.put(
+            "/quotas/", json=dict(id=1, quota=220)
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "response": {"id": 1, "name": "10eph", "quota": 220},
             "timestamp": fixed_time,
             "version": verstr,
         }

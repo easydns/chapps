@@ -20,7 +20,7 @@ These route factories are used to create all the routes for
 """
 from typing import Optional, List
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from fastapi import status, Depends, Body, HTTPException
 from functools import wraps
 import inspect
@@ -789,7 +789,7 @@ def update_item(
     update_i.__name__ = fname
     update_i.__doc__ = f"""
         Update a **{mname}** record by ID.<br/>
-        All **{mname}** attributes are required.<br/>
+        Only the **id** and the adjusted attribute(s) are required.<br/>
         Associations are not required, but if provided (by ID), will
         completely replace any existing association relationships
         of the same type.
@@ -798,7 +798,13 @@ def update_item(
 
 
 def create_item(
-    cls, *, response_model, params=None, assoc=None, engine=sql_engine
+    cls,
+    *,
+    response_model,
+    params=None,
+    defaults=None,
+    assoc=None,
+    engine=sql_engine,
 ):
     """Build a route coroutine to create new item records
 
@@ -827,6 +833,7 @@ def create_item(
 
     """
     params = params or dict(name=str)
+    defaults = defaults or dict()
     mname = model_name(cls)
     fname = f"create_{mname}"
 
@@ -848,6 +855,10 @@ def create_item(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Unique key conflict creating {mname}.",
+            )
+        except OperationalError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
             )
         except Exception:
             logger.exception(f"{fname}: {args!r}")
@@ -880,9 +891,7 @@ def create_item(
         inspect.Parameter(
             name=param,
             kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            default=Body(False)
-            if bool in getattr(type_, "__args__", [])
-            else Body(...),
+            default=Body(defaults.get(param, ...)),
             annotation=type_,
         )
         for param, type_ in params.items()
@@ -899,14 +908,25 @@ def create_item(
                 for a in assoc
             ]
         )
+    defaulted_attrs = [a for a, d in defaults.items() if d != ...]
+    if len(defaulted_attrs):
+        dfl_attr_doc = (
+            "The `name` attribute is required, along with any others"
+            + " not described below as optional.<br/>"
+            + "The following attributes are <b>optional</b>:<br/>"
+            + f"<ul>{' '.join(['<li>`'+e+'`</li>' for e in defaulted_attrs])}"
+            + "</ul>"
+        )
+    else:
+        dfl_attr_doc = "All attributes are required."
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
     create_i.__name__ = fname
-    create_i.__doc__ = f"""
-        Create a new **{mname}** record in the database.<br/>
-        All attributes are required.<br/>
-        The new object will be returned, including its ID.<br/>
-        Raises descriptive errors on 409; checking the detail
-          of the error may aid in debugging.
-        """
+    create_i.__doc__ = (
+        f"Create a new **{mname}** record in the database.<br/>"
+        + "The new object will be returned, including its ID.  "
+        + "Raises descriptive errors on 409; checking the detail "
+        + "of the error may aid in debugging.<br/>"
+        + dfl_attr_doc
+    )
     return create_i
