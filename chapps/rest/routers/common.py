@@ -20,7 +20,7 @@ These route factories are used to create all the routes for
 """
 from typing import Optional, List
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from fastapi import status, Depends, Body, HTTPException
 from functools import wraps
 import inspect
@@ -798,7 +798,13 @@ def update_item(
 
 
 def create_item(
-    cls, *, response_model, params=None, assoc=None, engine=sql_engine
+    cls,
+    *,
+    response_model,
+    params=None,
+    defaults=None,
+    assoc=None,
+    engine=sql_engine,
 ):
     """Build a route coroutine to create new item records
 
@@ -827,6 +833,7 @@ def create_item(
 
     """
     params = params or dict(name=str)
+    defaults = defaults or dict(name=...)  # would be the default anyhow
     mname = model_name(cls)
     fname = f"create_{mname}"
 
@@ -848,6 +855,10 @@ def create_item(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Unique key conflict creating {mname}.",
+            )
+        except OperationalError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
             )
         except Exception:
             logger.exception(f"{fname}: {args!r}")
@@ -880,9 +891,7 @@ def create_item(
         inspect.Parameter(
             name=param,
             kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            default=Body(False)
-            if bool in getattr(type_, "__args__", [])
-            else Body(...),
+            default=Body(defaults.get(param, ...)),
             annotation=type_,
         )
         for param, type_ in params.items()

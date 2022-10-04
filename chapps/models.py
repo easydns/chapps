@@ -348,11 +348,13 @@ class Quota(CHAPPSModel):
 
     # **Quota** objects also have `id` and `name` fields, like all models.
 
-    name: constr(strip_whitespace=True, min_length=3, max_length=31) = Field(
-        title="quota label", description="a descriptive tag"
+    name: Optional[
+        constr(strip_whitespace=True, min_length=3, max_length=31)
+    ] = Field(
+        title="quota label", description="a descriptive tag", default=None
     )
     """quota labels may be up to 31 chars long"""
-    quota: int
+    quota: Optional[int]
     """unique integer outbound transmission limit"""
 
     class Config:
@@ -368,9 +370,11 @@ class Quota(CHAPPSModel):
 class Domain(CHAPPSModel):
     """Domain objects have a name and ID; the name never contains an `@`"""
 
-    name: constr(
-        strip_whitespace=True, to_lower=True, min_length=5, max_length=63
-    ) = Field(title="domain name")
+    name: Optional[
+        constr(
+            strip_whitespace=True, to_lower=True, min_length=5, max_length=63
+        )
+    ] = Field(default=None, title="domain name")
     """domain names may be up to 63 chars long"""
     greylist: Optional[bool] = Field(title="perform greylisting", default=None)
     """flag indicating whether to greylist all domain's inbound email"""

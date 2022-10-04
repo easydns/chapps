@@ -152,6 +152,7 @@ api.post(
         params=dict(
             name=str, greylist=Optional[bool], check_spf=Optional[bool]
         ),
+        defaults=dict(greylist=False, check_spf=False),
         assoc=domain_join_assoc,
     )
 )
