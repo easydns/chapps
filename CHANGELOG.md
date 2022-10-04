@@ -1,5 +1,47 @@
 # Change Log
 
+## Beta Releases
+
+### v0.5.3:
+	- All major features of the software have now been in use in a
+      large-scale production email context for a week or more.  The
+      outbound features have been in production for a few months.  The
+      software can no longer be considered to be in an "alpha" stage
+      of development.
+	- Some improvements are made in this release to requirements of
+	  CREATE and UPDATE operations.  Variously, attributes of models
+	  have been made optional, and some routines which automate the
+	  database interactions have been modified to allow for certain
+	  attributes to be missing (defaulted or left alone) from either
+	  CREATE or UPDATE operations.  For instance, the greylisting and
+	  SPF flag attributes on Domain objects are optional during
+	  creation and will both default to False.  For updates on Domain
+	  or Quota objects, only the attribute(s) being adjusted need be
+	  included, apart from the ID.
+	    As promised in the notes for v0.5.2, this release provides a
+	  mechanism for providing arbitrary defaults for model attributes,
+	  in order to allow some settings to be defaulted during CREATE
+	  operations.  By default, there are no defaults.  When an
+	  attribute has no default, `Ellipsis` is used in order to signal
+	  via FastAPI/Starlette `Field` objects that the attribute is
+	  required.  Otherwise, the default value is provided when the
+	  closure is constructed by the `create_item` factory.
+	    It is perhaps worth noting that the solution to the problem of
+	  updates initially requiring all attributes to be included is not
+	  entirely satisfactory, as it consists mainly of making all but
+	  the `id` attribute optional on the Pydantic data model.  In
+	  practice this seems to work "okay" as the database refuses to
+	  create objects without fields which don't have defaults, like
+	  `name`.  However, due to some as-yet-unsolved intricacy of
+	  FastAPI and/or Starlette, the API simply locks up and eventually
+	  times out when it receives a request with malformed data -- such
+	  as a request to CREATE an entity with no `name` field.  It would
+	  of course be preferrable to send a code 400 with a reasonable
+	  explanation.  However, something earlier is hanging up, so that
+	  it seems the route closure itself never gets to execute.
+	- API documentation has been adjusted to reflect changes since the
+      last time API documentation was updated, including the above.
+
 ## Alpha Releases
 
 ### v0.5.2:
