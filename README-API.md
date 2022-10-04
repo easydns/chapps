@@ -30,6 +30,18 @@ email.  Settings on Domain records indicate whether to perform SPF
 enforcement and/or Greylisting upon inbound emails destined for the
 named domain.
 
+**Please note:** Our best current recommendation is to use greylisting
+as a component of SPF enforcement, but not to turn it on as a general
+blanket policy for a domain.  That is to say, set domains to enforce
+SPF but not to greylist.  The SPF enforcement routine uses greylisting
+when an incoming SPF soft-fails its SPF check.
+
+For better control of unwanted email, considering enforcing DMARC as
+well.  The SPF module included in CHAPPS attaches the SPF-check header
+to all emails it encounters, in order to ensure that it is present for
+DMARC.  We have no immediate plans to incorporate DMARC enforcement
+into CHAPPS, but the future is large.
+
 ### The Rules
 
 A **user** object may only have one **quota** object associated to it.
@@ -45,12 +57,35 @@ If a **user** has no matching **domain** associations, and the entire
 MAIL FROM address exactly matches an associated **email** record, then
 CHAPPS will permit that email.
 
+If a **domain** has the `check_spf` flag (attribute) set to True, then
+when email arrives which is destined for that exact domain, it will be
+processed according to the SPF enforcement policy, the interesting
+part of which is that if it receives `SoftFail` it will be greylisted.
+
+If a **domain** has the `greylist` flag set to True, then when email
+arrives for that exact domain, it will be processed according to the
+greylisting policy.
+
+If a **domain** had both flags set, SPF checking is performed first,
+and if the email receives "Pass" from the SPF check, it gets
+greylisted anyway.  This configuration is not recommended.
+
+Any email handled by a service incorporating an SPF policy handler
+will be marked with the SPF check header, regardless of whether SPF is
+being enforced.  This is for downstream compatibility with DMARC and
+other services/milters which might like to look at a `Received-SPF:`
+header.
+
 ### Implementation notes
 
 An email quota as implemented here is a count of outbound messages per
 24hr.  All objects have auto-incrementing integer `id` attributes and
-string `name` attributes.  The **quota** object has an additional
-integer `quota` attribute.
+string `name` attributes.
+
+The **quota** object has an additional integer `quota` attribute,
+while the **domain** object has two optional flags: `check_spf` and
+`greylist`, which control how the inbound service handles emails for a
+given domain.
 
 ## Conventions
 
@@ -94,9 +129,10 @@ should actually be included in any names.
 ## Categories
 
 API routes fall under a few different categories:
-- user manipulation
-- domain manipulation
-- quota manipulation
+- **user** manipulation
+- **email** manipulation
+- **domain** manipulation
+- **quota** manipulation
 - live interaction with CHAPPS Redis environment
 - system commands like rewriting CHAPPS config file, etc. (lumped in
-  with live for now)
+  with live routes for now)

@@ -789,7 +789,7 @@ def update_item(
     update_i.__name__ = fname
     update_i.__doc__ = f"""
         Update a **{mname}** record by ID.<br/>
-        All **{mname}** attributes are required.<br/>
+        Only the **id** and the adjusted attribute(s) are required.<br/>
         Associations are not required, but if provided (by ID), will
         completely replace any existing association relationships
         of the same type.
@@ -833,7 +833,7 @@ def create_item(
 
     """
     params = params or dict(name=str)
-    defaults = defaults or dict(name=...)  # would be the default anyhow
+    defaults = defaults or dict()
     mname = model_name(cls)
     fname = f"create_{mname}"
 
@@ -908,14 +908,25 @@ def create_item(
                 for a in assoc
             ]
         )
+    defaulted_attrs = [a for a, d in defaults.items() if d != ...]
+    if len(defaulted_attrs):
+        dfl_attr_doc = (
+            "The `name` attribute is required, along with any others"
+            + " not described below as optional.<br/>"
+            + "The following attributes are <b>optional</b>:<br/>"
+            + f"<ul>{' '.join(['<li>`'+e+'`</li>' for e in defaulted_attrs])}"
+            + "</ul>"
+        )
+    else:
+        dfl_attr_doc = "All attributes are required."
     create_i.__signature__ = inspect.Signature(routeparams)
     create_i.__annotations__ = params
     create_i.__name__ = fname
-    create_i.__doc__ = f"""
-        Create a new **{mname}** record in the database.<br/>
-        All attributes are required.<br/>
-        The new object will be returned, including its ID.<br/>
-        Raises descriptive errors on 409; checking the detail
-          of the error may aid in debugging.
-        """
+    create_i.__doc__ = (
+        f"Create a new **{mname}** record in the database.<br/>"
+        + "The new object will be returned, including its ID.  "
+        + "Raises descriptive errors on 409; checking the detail "
+        + "of the error may aid in debugging.<br/>"
+        + dfl_attr_doc
+    )
     return create_i
