@@ -33,10 +33,10 @@ from chapps.policy import (
     SenderDomainAuthPolicy,
     GreylistingPolicy,
 )
+from chapps.spf_policy import SPFEnforcementPolicy
 from chapps.config import CHAPPSConfig
 from chapps.util import hash_password
 import logging
-import ipaddress
 
 logger = logging.getLogger(__name__)
 config = CHAPPSConfig.get_config()
@@ -355,4 +355,16 @@ async def grl_clear_option_cache(recipient_domain: str):
     """
     grl = GreylistingPolicy()
     grl.redis.delete(grl._domain_option_key(recipient_domain))
+    return DeleteResp.send()
+
+
+@api.delete("/spf/option_cache/{recipient_domain}", response_model=DeleteResp)
+async def spf_clear_option_cache(recipient_domain: str):
+    """
+    Accepts a domain name as the path argument.
+
+    Returns 'deleted' on success.
+    """
+    spf = SPFEnforcementPolicy()
+    spf.redis.delete(spf._domain_option_key(recipient_domain))
     return DeleteResp.send()

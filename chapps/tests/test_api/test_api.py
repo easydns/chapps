@@ -1810,7 +1810,7 @@ class Test_Live_API:
     ):
         grl = testing_policy_grl
         ppr = allowable_inbound_ppr
-        result = grl.approve_policy_request(ppr)  # loads the option cache
+        _ = grl.approve_policy_request(ppr)  # loads the option cache
         cache = grl.redis.get(grl._domain_option_key(ppr.recipient_domain))
         assert cache
         response = testing_api_client.delete(
@@ -1823,4 +1823,27 @@ class Test_Live_API:
             "version": verstr,
         }
         cache = grl.redis.get(grl._domain_option_key(ppr.recipient_domain))
+        assert cache is None
+
+    def test_spf_clear_option_cache(
+        self,
+        fixed_time,
+        testing_api_client,
+        testing_policy_spf,
+        allowable_inbound_ppr,
+        populated_database_fixture_with_extras,
+    ):
+        spf = testing_policy_spf
+        ppr = allowable_inbound_ppr
+        _ = spf.approve_policy_request(ppr)  # loads option cache
+        cache = spf.redis.get(spf._domain_option_key(ppr.recipient_domain))
+        assert cache
+        response = testing_api_client.delete(
+            "/live/spf/option_cache/" + ppr.recipient_domain
+        )
+        assert response.status_code == 200
+        assert response.json() == dict(
+            response="deleted", timestamp=fixed_time, version=verstr
+        )
+        cache = spf.redis.get(spf._domain_option_key(ppr.recipient_domain))
         assert cache is None
