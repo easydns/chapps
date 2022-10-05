@@ -35,6 +35,7 @@ from chapps.tests.test_policy.conftest import (
     sda_unauth_email_ppr,
     testing_policy_sda,
     testing_policy_grl,
+    testing_policy_spf,
 )
 from chapps.tests.conftest import _redis_args_grl
 from chapps.tests.test_sqla_adapter.conftest import mock_chapps_config
