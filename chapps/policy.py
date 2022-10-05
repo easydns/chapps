@@ -19,9 +19,9 @@ import logging
 from expiring_dict import ExpiringDict
 from chapps.config import CHAPPSConfig
 from chapps.adapter import (
-    MariaDBQuotaAdapter,
-    MariaDBSenderDomainAuthAdapter,
-    MariaDBInboundFlagsAdapter,
+    MariaDBQuotaAdapter as OBQAdapter,  # outbound quota
+    MariaDBSenderDomainAuthAdapter as SDAAdapter,
+    MariaDBInboundFlagsAdapter as IBFAdapter,
 )
 from chapps.signals import NullSenderException, NoRecipientsException
 from chapps.models import Quota, SDAStatus, PolicyResponse
@@ -538,7 +538,7 @@ class PostfixGRLActions(PostfixPassfailActions):
 
 
 class InboundPolicy(EmailPolicy):
-    adapter_class = MariaDBInboundFlagsAdapter
+    adapter_class = IBFAdapter
 
     def domain_option_key(self, ppr: InboundPPR):
         """Return the Redis key for the domain's Greylisting option
@@ -793,7 +793,7 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     """
 
-    adapter_class = MariaDBQuotaAdapter
+    adapter_class = OBQAdapter
     redis_key_prefix = "oqp"
     """OutboundQuotaPolicy Redis prefix"""
 
@@ -1235,7 +1235,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     """
 
-    adapter_class = MariaDBSenderDomainAuthAdapter
+    adapter_class = SDAAdapter
     redis_key_prefix = "sda"
     """Sender domain auth Redis key prefix"""
     # initialization is when we plug in the config
