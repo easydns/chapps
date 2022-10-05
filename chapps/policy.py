@@ -18,16 +18,22 @@ import redis
 import logging
 from expiring_dict import ExpiringDict
 from chapps.config import CHAPPSConfig
-from chapps.adapter import (
-    MariaDBQuotaAdapter as OBQAdapter,  # outbound quota
-    MariaDBSenderDomainAuthAdapter as SDAAdapter,
-    MariaDBInboundFlagsAdapter as IBFAdapter,
-)
 from chapps.signals import NullSenderException, NoRecipientsException
 from chapps.models import Quota, SDAStatus, PolicyResponse
 from chapps.util import PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
 from chapps.inbound import InboundPPR
+from chapps.sqla_adapter import (
+    SQLAQuotaAdapter as OBQAdapter,
+    SQLASenderDomainAuthAdapter as SDAAdapter,
+    SQLAInboundFlagsAdapter as IBFAdapter,
+)
+
+# from chapps.adapter import (
+#     MariaDBQuotaAdapter as OBQAdapter,  # outbound quota
+#     MariaDBSenderDomainAuthAdapter as SDAAdapter,
+#     MariaDBInboundFlagsAdapter as IBFAdapter,
+# )
 
 policy_response = PolicyResponse.policy_response  # a parameterized decorator
 logger = logging.getLogger(__name__)
@@ -121,6 +127,7 @@ class EmailPolicy:
         """
         self.config = cfg or CHAPPSConfig.get_config()
         self.params = self.config.get_block(self.__class__.__name__)
+        self._adapter = None
         self.sentinel = None
         self.redis = self._redis()  # pass True to get read-only
         self.instance_cache = ExpiringDict(3)  # entries expire after 3 seconds
@@ -145,11 +152,14 @@ class EmailPolicy:
 
         :meta public:
         """
-        adapter = self.adapter_class(cfg=self.config)
+        if not self._adapter:
+            self._adapter = self.adapter_class(cfg=self.config)
         try:
-            yield adapter
+            yield self._adapter
         finally:
-            adapter.conn.close()
+            if getattr(self._adapter, "conn", None):
+                self._adapter.conn.close()
+                self._adapter = None
 
     @contextmanager
     def _control_data_storage_context(self):
