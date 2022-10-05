@@ -2,6 +2,13 @@
 
 ## Beta Releases
 
+### v0.5.4:
+	- Correcting major oversight -- until this release, the live API
+      lacked a route to clear the SPF option flag for domains.  This
+      is really necessary in order for updates to options to take
+      effect immediately.  SPF software requirements are now also
+      added to the API software requirements.
+
 ### v0.5.3:
 	- All major features of the software have now been in use in a
       large-scale production email context for a week or more.  The
