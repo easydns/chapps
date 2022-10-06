@@ -2,6 +2,12 @@
 
 ## Beta Releases
 
+### v0.5.5:
+    - Now using SQLA-based adapters throughout.
+    - The environment variable `CHAPPS_DB_MODULE` may be set to `mysql`
+	  in order to cause the policy layer to use the older, previous
+	  adapter module based on `mysqlclient`.
+
 ### v0.5.4:
 	- Correcting major oversight -- until this release, the live API
       lacked a route to clear the SPF option flag for domains.  This

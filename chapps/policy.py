@@ -17,23 +17,32 @@ import functools
 import redis
 import logging
 from expiring_dict import ExpiringDict
-from chapps.config import CHAPPSConfig
-from chapps.adapter import (
-    MariaDBQuotaAdapter,
-    MariaDBSenderDomainAuthAdapter,
-    MariaDBInboundFlagsAdapter,
-)
+from chapps.config import CHAPPSConfig, env
 from chapps.signals import NullSenderException, NoRecipientsException
 from chapps.models import Quota, SDAStatus, PolicyResponse
 from chapps.util import PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
 from chapps.inbound import InboundPPR
 
+if env.get("CHAPPS_DB_MODULE", None) == "mysql":
+    from chapps.adapter import (
+        MariaDBQuotaAdapter as OBQAdapter,  # outbound quota
+        MariaDBSenderDomainAuthAdapter as SDAAdapter,
+        MariaDBInboundFlagsAdapter as IBFAdapter,
+    )
+else:
+    from chapps.sqla_adapter import (
+        SQLAQuotaAdapter as OBQAdapter,
+        SQLASenderDomainAuthAdapter as SDAAdapter,
+        SQLAInboundFlagsAdapter as IBFAdapter,
+    )
+
 policy_response = PolicyResponse.policy_response  # a parameterized decorator
 logger = logging.getLogger(__name__)
 seconds_per_day = 3600 * 24
 SENTINEL_TIMEOUT = 0.1
 TIME_FORMAT = "%d %b %Y %H:%M:%S %z"
+
 
 # There are a number of commented debug statements in this module
 # This is for convenience, because in production these routines need
@@ -121,6 +130,7 @@ class EmailPolicy:
         """
         self.config = cfg or CHAPPSConfig.get_config()
         self.params = self.config.get_block(self.__class__.__name__)
+        self._adapter = None
         self.sentinel = None
         self.redis = self._redis()  # pass True to get read-only
         self.instance_cache = ExpiringDict(3)  # entries expire after 3 seconds
@@ -145,11 +155,14 @@ class EmailPolicy:
 
         :meta public:
         """
-        adapter = self.adapter_class(cfg=self.config)
+        if not self._adapter:
+            self._adapter = self.adapter_class(cfg=self.config)
         try:
-            yield adapter
+            yield self._adapter
         finally:
-            adapter.conn.close()
+            if getattr(self._adapter, "conn", None):
+                self._adapter.conn.close()
+                self._adapter = None
 
     @contextmanager
     def _control_data_storage_context(self):
@@ -538,7 +551,7 @@ class PostfixGRLActions(PostfixPassfailActions):
 
 
 class InboundPolicy(EmailPolicy):
-    adapter_class = MariaDBInboundFlagsAdapter
+    adapter_class = IBFAdapter
 
     def domain_option_key(self, ppr: InboundPPR):
         """Return the Redis key for the domain's Greylisting option
@@ -793,7 +806,7 @@ class OutboundQuotaPolicy(EmailPolicy):
 
     """
 
-    adapter_class = MariaDBQuotaAdapter
+    adapter_class = OBQAdapter
     redis_key_prefix = "oqp"
     """OutboundQuotaPolicy Redis prefix"""
 
@@ -1235,7 +1248,7 @@ class SenderDomainAuthPolicy(EmailPolicy):
 
     """
 
-    adapter_class = MariaDBSenderDomainAuthAdapter
+    adapter_class = SDAAdapter
     redis_key_prefix = "sda"
     """Sender domain auth Redis key prefix"""
     # initialization is when we plug in the config
