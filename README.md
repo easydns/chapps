@@ -85,7 +85,7 @@ python3 -m pip install chapps
 ### DB Initialization
 
 As of this writing, it should be possible to run `apply-migrations` or
-`chapps-cli admin db-setup` once the venv is started, and that should
+`chapps-cli admin db-setup` once the venv is activated, and that should
 apply all of the necessary Alembic migrations to bring the database up
 to date from zero, based on the database access configuration in the
 CHAPPS config file.
@@ -115,6 +115,32 @@ the schema into it.
 	the tables, and to use "complete" INSERT statements, which ensures that the
 	target columns are listed in the INSERT statement, in case the native column
 	order changes between dump and restore.
+
+#### Database Adapters
+
+In order to obtain control data from the database, CHAPPS policy
+objects use a database adapter object tailored for their specific
+needs.  This allows all database logic to be factored completely out
+of the policy layer.
+
+As of CHAPPS v0.5.5, the database adapter layer is now based on
+SQLAlchemy throughout.  However, it is still possible to switch to
+using the MariaDB adapter instead, for the actual services.  The API
+is built on SQLAlchemy and requires it.
+
+**To set CHAPPS to use MySQL/MariaDB** directly, instead of
+SQLAlchemy, set the environment variable `CHAPPS_DB_MODULE` to
+`mysql`.  Doing so will cause the policy layer to use the adapter
+module based on `mysqlclient`, which also works just fine with
+MariaDB.  If it is not set or is set to something else, SQLAlchemy
+will be used.  This will need to be specified in the service
+description file to take effect, unless some other method is being
+used to launch CHAPPS.
+
+The ability to switch database adapter modules may be eliminated in a
+future release.  However, since the application has not been tested in
+production using SQLAlchemy, it seems prudent to provide a mechanism
+for switching between them.
 
 ### Starting and Auto-launching Services
 
@@ -615,6 +641,8 @@ its record.
 
 ## Inbound Multi-policy Service (SPF + Greylisting)
 
+**Please note that blanket use of Greylisting is not recommended.**
+
 What does it mean to use both greylisting and SPF?  The trivial answer
 is to pass one filter, and then pass the next filter.  But which comes
 first?
@@ -667,13 +695,11 @@ A mini-roadmap of upcoming changes:
 
 minor:
 
-  - add database initialization / migration to CLI
   - SDA (and other) Redis keys will have tunable expiry times
   - Look into specifying log facility and level in the config file
 
 major:
 
-  - Switch adapter layer to one based on SQLAlchemy
   - Possibly support multiple enforcement intervals
   - It seems inevitable that other features will also be added.  There
     is some skeletal code in the repo for building email content

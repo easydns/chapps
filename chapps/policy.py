@@ -17,29 +17,32 @@ import functools
 import redis
 import logging
 from expiring_dict import ExpiringDict
-from chapps.config import CHAPPSConfig
+from chapps.config import CHAPPSConfig, env
 from chapps.signals import NullSenderException, NoRecipientsException
 from chapps.models import Quota, SDAStatus, PolicyResponse
 from chapps.util import PostfixPolicyRequest
 from chapps.outbound import OutboundPPR
 from chapps.inbound import InboundPPR
-from chapps.sqla_adapter import (
-    SQLAQuotaAdapter as OBQAdapter,
-    SQLASenderDomainAuthAdapter as SDAAdapter,
-    SQLAInboundFlagsAdapter as IBFAdapter,
-)
 
-# from chapps.adapter import (
-#     MariaDBQuotaAdapter as OBQAdapter,  # outbound quota
-#     MariaDBSenderDomainAuthAdapter as SDAAdapter,
-#     MariaDBInboundFlagsAdapter as IBFAdapter,
-# )
+if env.get("CHAPPS_DB_MODULE", None) == "mysql":
+    from chapps.adapter import (
+        MariaDBQuotaAdapter as OBQAdapter,  # outbound quota
+        MariaDBSenderDomainAuthAdapter as SDAAdapter,
+        MariaDBInboundFlagsAdapter as IBFAdapter,
+    )
+else:
+    from chapps.sqla_adapter import (
+        SQLAQuotaAdapter as OBQAdapter,
+        SQLASenderDomainAuthAdapter as SDAAdapter,
+        SQLAInboundFlagsAdapter as IBFAdapter,
+    )
 
 policy_response = PolicyResponse.policy_response  # a parameterized decorator
 logger = logging.getLogger(__name__)
 seconds_per_day = 3600 * 24
 SENTINEL_TIMEOUT = 0.1
 TIME_FORMAT = "%d %b %Y %H:%M:%S %z"
+
 
 # There are a number of commented debug statements in this module
 # This is for convenience, because in production these routines need
