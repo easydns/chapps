@@ -1,5 +1,6 @@
-"""Policy Configuration Adapters based on SQLAlchemy
------------------------------
+"""
+Policy Configuration Adapters based on SQLAlchemy
+-------------------------------------------------
 
 Policy-configuration source data adapters.
 

@@ -6,11 +6,12 @@
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 AUTODOC       ?= sphinx-apidoc
-AUTODOCOPTS   ?= -Mef -o "$(SOURCEDIR)" "$(CODEROOT)"
+AUTODOCOPTS   ?= -Mef -o "$(SOURCEDIR)" "$(CODEROOT)" $(EXCL_PATTERN)
 WORKSTATIONOPTS = -b html -t workstation
 TODOLIST      = build/doctrees/todolist.doctree
 CODEROOT      = ../chapps
 SOURCEDIR     = source
+EXCL_PATTERN  = ../chapps/alembic/
 BUILDDIR      = build
 
 # Put it first so that "make" without argument is like "make help".
