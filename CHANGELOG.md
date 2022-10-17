@@ -2,6 +2,17 @@
 
 ## Beta Releases
 
+### v0.5.6:
+	- Correct issues with handling unrecognized domains when checking
+	  inbound policy option settings.
+	- Protect config-module debug-logging with conditionals to prevent
+	  running during a doc-build in order to get readthedocs.io
+	  autobuild to function properly.
+	- Advance the metadata Development Stage identifier to Beta.  We
+	  continue to use the software in a production environment.  Feel
+	  free to reach out and let us know about your own deployment so
+	  we can collect more data about how it is functioning for others.
+
 ### v0.5.5:
     - Now using SQLA-based adapters throughout.
     - The environment variable `CHAPPS_DB_MODULE` may be set to `mysql`

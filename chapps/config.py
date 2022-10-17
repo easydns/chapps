@@ -81,7 +81,6 @@ class CHAPPSConfig:
 
         """
         config_file = Path(env.get("CHAPPS_CONFIG", default_pathname))
-        logger.debug("Configurator choosing file " + str(config_file))
         return config_file
 
     @staticmethod
@@ -215,19 +214,21 @@ class CHAPPSConfig:
         introduced since the software was last configured.
 
         """
-        ### Create and initialize the config
+        # Create and initialize the config
         self.venvdetector = VenvDetector()
         config_file = CHAPPSConfig.what_config_file(self.venvdetector.confpath)
         self.configparser = configparser.ConfigParser(interpolation=None)
         CHAPPSConfig.setup_config(self.configparser)
 
-        ### Initialize a config file if none
-        if not config_file.exists() and not self.venvdetector.sb:
-            logger.debug("Writing new config file " + str(config_file))
-            CHAPPSConfig.write_config(self.configparser, config_file)
-        else:
-            logger.debug("Reading from config file " + str(config_file))
-            self.configparser.read(str(config_file))
+        # if this is a real run and not a doc build...
+        if not self.venvdetector.sb:
+            # Initialize a config file if none
+            if not config_file.exists():
+                logger.debug("Writing new config file " + str(config_file))
+                CHAPPSConfig.write_config(self.configparser, config_file)
+            else:
+                logger.debug("Reading from config file " + str(config_file))
+                self.configparser.read(str(config_file))
         self.configparser["CHAPPS"]["config_file"] = str(config_file)
         self.configparser["CHAPPS"]["version"] = f"CHAPPS v{__version__}"
         self.configparser["CHAPPS"]["docpath"] = str(self.venvdetector.docpath)
@@ -235,12 +236,13 @@ class CHAPPSConfig:
         self.adapter = AttrDict(self.configparser["PolicyConfigAdapter"])
         self.actions_spf = AttrDict(self.configparser["PostfixSPFActions"])
         self.redis = AttrDict(self.configparser["Redis"])
-        ### these are somewhat obsolete now
+        # these are somewhat obsolete now
         self.policy_oqp = AttrDict(self.configparser["OutboundQuotaPolicy"])
         self.policy_sda = AttrDict(self.configparser["SenderDomainAuthPolicy"])
         self.policy_grl = AttrDict(self.configparser["GreylistingPolicy"])
         self.policy_spf = AttrDict(self.configparser["SPFEnforcementPolicy"])
-        logger.debug("Returning config built from " + str(config_file))
+        if not self.venvdetector.sb:
+            logger.debug("Returning config built from " + str(config_file))
 
     def get_block(self, blockname) -> AttrDict:
         """Attempt to get a top-level block of the config as an AttrDict.

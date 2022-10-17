@@ -86,3 +86,7 @@ class InboundPolicyException(CHAPPSException):
 
 class NoRecipientsException(InboundPolicyException):
     """This is raised if the recipient field is somehow empty"""
+
+
+class NoSuchDomainException(CHAPPSException):
+    """A domain operation was attempted against a nonexistent Domain"""

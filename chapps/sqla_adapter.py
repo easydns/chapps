@@ -17,6 +17,7 @@ from chapps.dbsession import (
     func,
     select,
 )
+from chapps.signals import NoSuchDomainException
 from chapps.models import User, Domain, Email, Quota
 from chapps import dbmodels
 from contextlib import contextmanager
@@ -159,21 +160,29 @@ class SQLAInboundFlagsAdapter(SQLAPolicyConfigAdapter):
 
         :param domain: full domain part
 
+        :raises NoSuchDomainException: if the domain doesn't exist
+
         """
         Session = sessionmaker(self.sql_engine)
         with Session() as sess:
             domain_select = Domain.select_by_name(domain)
-            domain = sess.execute(domain_select).scalar()
-            return domain.greylist
+            domain_record = sess.execute(domain_select).scalar()
+            if not domain_record:
+                raise NoSuchDomainException(domain)
+            return domain_record.greylist
 
     def check_spf_on(self, domain: str):
         """Returns true if the domain enforces SPF policies, else False
 
         :param domain: full domain part
 
+        :raises NoSuchDomainException: if the domain doesn't exist
+
         """
         Session = sessionmaker(self.sql_engine)
         with Session() as sess:
             domain_select = Domain.select_by_name(domain)
-            domain = sess.execute(domain_select).scalar()
-            return domain.check_spf
+            domain_record = sess.execute(domain_select).scalar()
+            if not domain_record:
+                raise NoSuchDomainException(domain)
+            return domain_record.check_spf
