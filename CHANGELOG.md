@@ -2,6 +2,14 @@
 
 ## Beta Releases
 
+### v0.5.8:
+	- Implement exclusion pattern in Makefile to cause sphinx-apidoc
+      to skip Alembic subhierarchy, because part of it throws an error
+      when loaded during the doc-build and there seems to be no reason
+      to embed its docs in these.
+	- Update CHAPPS modules list in its main `__init__.py` to reflect
+      recent architectural changes.
+
 ### v0.5.7:
 	- Ongoing efforts to get the documentation to compile
       automatically at readthedocs.io.  Another debug log instance at
