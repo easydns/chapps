@@ -497,7 +497,7 @@ class PostfixPassfailActions(PostfixActions):
         attached to keys named `acceptance_message` or `rejection_message`
         instead of `passing` and `fail` respectively.  This is only true
         of policies with action factories inheriting from
-        :py:class:`chapps.actions.PostfixPassfailActions`
+        :py:class:`.PostfixPassfailActions`
 
         """
         if pf_result:  # True / pass
