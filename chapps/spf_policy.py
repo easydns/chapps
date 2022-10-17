@@ -7,7 +7,7 @@ libraries.
 
 """
 import spf
-from chapps.signals import NoRecipientsException
+from chapps.signals import NoRecipientsException, NoSuchDomainException
 from chapps.policy import InboundPolicy, PostfixActions, GreylistingPolicy
 from chapps.util import PostfixPolicyRequest
 from chapps.inbound import InboundPPR
@@ -170,7 +170,11 @@ class SPFEnforcementPolicy(InboundPolicy):
             logger.exception("UNEXPECTED")
             return False
         if option_set is None:
-            option_set = self.acquire_policy_for(ppr)
+            try:
+                option_set = self.acquire_policy_for(ppr)
+            except NoSuchDomainException:
+                logger.exception(f"No domain matched {ppr.recipient}")
+                return False
         option_set = int(option_set)
         return option_set == 1
 
