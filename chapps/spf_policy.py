@@ -37,7 +37,7 @@ class PostfixSPFActions(PostfixActions):
 
             This method is meant to share the same signature as the other
             action methods, mainly defined on
-            :py:class:`chapps.actions.PostfixActions`
+            :py:class:`chapps.policy.PostfixActions`
 
             The `greylist` action causes the email in question to be
             greylisted, according to the policy.  The `msg` is used as the
@@ -108,7 +108,7 @@ class PostfixSPFActions(PostfixActions):
         """
 
         Override
-        :py:meth:`chapps.actions.PostfixActions.action_for()` to provide
+        :py:meth:`chapps.policy.PostfixActions.action_for()` to provide
         action closures for the different SPF results.  The closures are
         memoized, so that they only need be constructed once per runtime.
 
@@ -126,7 +126,7 @@ class SPFEnforcementPolicy(InboundPolicy):
     Instance attributes (in addition to those
     of :class:`~chapps.policy.EmailPolicy`):
 
-      :actions: a :class:`~chapps.actions.PostfixSPFActions` instance
+      :actions: a :class:`~.PostfixSPFActions` instance
 
     Behavior of the SPF enforcer is configured under the
     `[PostfixSPFActions]` heading in the config file.
@@ -185,7 +185,7 @@ class SPFEnforcementPolicy(InboundPolicy):
 
         :returns: a string which contains a Postfix instruction
 
-        The :class:`~chapps.actions.PostfixSPFActions` class translates
+        The :class:`~.PostfixSPFActions` class translates
         between the outcome of the SPF check and the configured response
         thus indicated, which gets sent back to Postfix.
 

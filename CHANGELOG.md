@@ -2,6 +2,18 @@
 
 ## Beta Releases
 
+### v0.5.7:
+	- Ongoing efforts to get the documentation to compile
+      automatically at readthedocs.io.  Another debug log instance at
+      module scope needed protection.  I think this is the last one
+      based on some bogussy codebase searches.
+	- Corrected some old documentation which referred to an obsolete
+      module called `actions` which became disused several revisions
+      back.
+	- Removed `actions` module source file from repo, as it was no
+      longer used and its old, deprecated code was breaking
+      documentation auto-building.
+
 ### v0.5.6:
 	- Correct issues with handling unrecognized domains when checking
 	  inbound policy option settings.
