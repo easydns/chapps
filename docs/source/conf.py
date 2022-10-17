@@ -69,6 +69,7 @@ rst_prolog = """
 .. _pydantic: https://pydantic-docs.helpmanual.io/
 .. _readme: https://github.com/easydns/chapps
 .. _installation: https://github.com/easydns/chapps/blob/main/INSTALLATION.md
+.. _changelog: https://github.com/easydns/chapps/blob/main/CHANGELOG.md
 """
 
 # -- Options for HTML output -------------------------------------------------
