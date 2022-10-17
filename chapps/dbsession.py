@@ -27,7 +27,8 @@ def create_db_url(cfg: CHAPPSConfig = None) -> URL:
 
     """
     cfg = cfg or CHAPPSConfig.get_config()
-    logger.debug("Using config file: " + cfg.chapps.config_file)
+    if not cfg.venvdetector.sb:
+        logger.debug("Using config file: " + cfg.chapps.config_file)
     adapter = cfg.adapter
     if adapter.adapter not in DIALECT_MAP:
         raise ValueError(
