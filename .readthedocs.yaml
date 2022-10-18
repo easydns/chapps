@@ -9,7 +9,7 @@ build:
     - "libmariadb-dev"
   jobs:
     pre_build:
-      - "CHAPPS_CONFIG=etc/chapps.ini sphinx-apidoc -Mef -o docs/source/ chapps"
+      - "CHAPPS_CONFIG=etc/chapps.ini sphinx-apidoc -Mef -o docs/source/ chapps chapps/alembic"
 
 sphinx:
   fail_on_warning: True

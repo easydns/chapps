@@ -2,6 +2,13 @@
 
 ## Beta Releases
 
+### v0.5.9:
+	- Update the .readthedocs.yaml config file which I had completely
+      forgotten about.  This file contains among other things the
+      command line for `sphinx-apidoc`, and so it is the proper place
+      for the exclusion pattern in order to ensure that builds on
+      readthedocs.io function.
+
 ### v0.5.8:
 	- Implement exclusion pattern in Makefile to cause sphinx-apidoc
       to skip Alembic subhierarchy, because part of it throws an error
