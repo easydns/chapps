@@ -29,6 +29,23 @@ class Test_AttrDict:
         ad = AttrDict(mock_config_dict)
         assert ad.boolean == bool(mock_config_dict["boolean"])
 
+    def test_contains(self, mock_config_dict):
+        ad = AttrDict(mock_config_dict)
+        assert "intval" in ad
+
+    def test_len(self, mock_config_dict):
+        ad = AttrDict(mock_config_dict)
+        assert len(ad) == 4
+
+    def test_getitem(self, mock_config_dict):
+        ad = AttrDict(mock_config_dict)
+        assert ad.get("intval") == int(mock_config_dict["intval"])
+
+    def test_keys(self, mock_config_dict):
+        ad = AttrDict(mock_config_dict)
+        keys = sorted(ad.keys())
+        assert keys == sorted(mock_config_dict.keys())
+
 
 class Test_PostfixPolicyRequest:
     def test_instantiate_ppr(self, postfix_policy_request_message):
