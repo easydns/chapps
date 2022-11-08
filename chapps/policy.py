@@ -568,6 +568,12 @@ class InboundPolicy(EmailPolicy):
         with self._control_data_storage_context() as dsc:
             dsc(domain, 1 if flag else 0)
 
+    @functools.cached_property
+    def _whitelist(self, ppr: InboundPPR) -> bool:
+        if "helo_whitelist" not in self.config.chapps:
+            return False
+        return ppr.helo_match(self.config.helo_whitelist)
+
 
 class GreylistingPolicy(InboundPolicy):
     """Policy manager which implements greylisting

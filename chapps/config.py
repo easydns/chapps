@@ -32,10 +32,18 @@ simultaneously on the same server.
 """
 import collections.abc
 import configparser
+import dns.resolver
+import dns.exception
+from functools import cached_property
 from pathlib import Path
 from os import environ as env
 from chapps.util import AttrDict, VenvDetector
 from chapps._version import __version__
+from chapps.signals import (
+    HELOWLException,
+    AddressDoesNotMatchDNS,
+    NameDoesNotMatchPTR,
+)
 import logging
 from typing import Union
 
@@ -288,5 +296,41 @@ class CHAPPSConfig:
         self.configparser["CHAPPS"]["docpath"] = docpath
         return result
 
+    @cached_property
+    def helo_whitelist(self):
+        if "helo_whitelist" not in self.chapps:
+            return {}
+        return {
+            k: v for k, v in self._parse_whitelist(self.chapps.helo_whitelist)
+        }
 
-# config = CHAPPSConfig()
+    @staticmethod
+    def _parse_whitelist(speclist):
+        for spec in speclist.split(";"):
+            name, src_ip = spec, None
+            if ":" in spec:
+                name, src_ip = spec.split(":", 1)
+            try:
+                lookup = dns.resolver.resolve(name)
+                dns_ip = str(lookup[0])
+                if src_ip:
+                    if src_ip != dns_ip:
+                        raise AddressDoesNotMatchDNS(
+                            f"source {src_ip} != {dns_ip} from DNS for {name}"
+                        )
+                else:
+                    src_ip = dns_ip
+                ptr = dns.resolver.resolve_address(src_ip)
+                ptr_name = str(ptr[0])
+                if name + "." != ptr_name:
+                    raise NameDoesNotMatchPTR(
+                        f"name {name}. != {ptr_name} "
+                        f"from DNS (PTR for {src_ip})"
+                    )
+                yield (name, src_ip)
+            except HELOWLException as e:
+                logger.exception(e)
+                pass
+            except dns.exception.DNSException as e:
+                logger.exception(e)
+                pass

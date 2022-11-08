@@ -90,3 +90,16 @@ class NoRecipientsException(InboundPolicyException):
 
 class NoSuchDomainException(CHAPPSException):
     """A domain operation was attempted against a nonexistent Domain"""
+
+
+class HELOWLException(CHAPPSException):
+    """HELO Whitelisting exceptions"""
+
+
+class AddressDoesNotMatchDNS(HELOWLException):
+    """A supplied IP address in the HELO Whitelist doesn't match the A record"""
+
+
+class NameDoesNotMatchPTR(HELOWLException):
+    """The IP address obtained for the HELO name has a PTR record which does
+    not match the name supplied"""

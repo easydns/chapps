@@ -152,3 +152,13 @@ class Test_Config:
         assert (
             policy_grl.rejection_message == config.policy_grl.rejection_message
         )
+
+    def test_helo_whitelist(
+        self,
+        chapps_helo_env,
+        chapps_helo_config_file,
+        chapps_helo_config,
+        chapps_helo_cfg_path,
+    ):
+        config = CHAPPSConfig()
+        assert config.helo_whitelist == {"pmg.easydns.com": "64.68.203.46"}

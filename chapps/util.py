@@ -538,3 +538,18 @@ class PostfixPolicyRequest(Mapping):
             )
             raise NotAnEmailAddressException
         return parts[-1]
+
+    def helo_match(self, candidates: Dict[str, str]) -> bool:
+        """HELO Whitelisting indicator
+
+        Given a mapping of HELO name to expected IP address,
+        indicate whether this PPR represents traffic from a
+        whitelisted server.
+
+        """
+        name = self.helo_name or self.client_name
+        if not (candidates and name in candidates):
+            return False
+        if candidates[name] == self.client_address:
+            return True
+        return False

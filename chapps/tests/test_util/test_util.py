@@ -131,3 +131,21 @@ class Test_PostfixPolicyRequest:
         assert type(r) == list
         assert len(r) == 3
         assert r[0] == "one@recipient.com"
+
+    def test_helo_match(self, postfix_policy_request_message):
+        """
+        :GIVEN: a PPR w/ particular HELO name and IP
+        :WHEN: asked to match against a name->IP map of candidates
+        :THEN: return True if the HELO name is in the map and the IP matches
+
+        """
+        new_ppr = PostfixPolicyRequest(
+            postfix_policy_request_message(
+                None,
+                None,
+                None,
+                helo_name="mail.chapps.io",
+                client_address="10.10.10.10",
+            )
+        )
+        assert new_ppr.helo_match({"mail.chapps.io": "10.10.10.10"})
