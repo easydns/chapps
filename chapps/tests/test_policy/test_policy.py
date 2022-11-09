@@ -288,7 +288,32 @@ class Test_GreylistingPolicyEvaluation:
             policy, "_get_control_data", lambda x: (0, None, None)
         )
         response = policy._approve_policy_request(allowable_inbound_ppr)
-        assert response == "DUNNO"
+        assert response == "DUNNO" or response() == "DUNNO"
+
+    def test_pass_if_whitelisted(
+        self,
+        caplog,
+        monkeypatch,
+        helo_ppr_factory,
+        testing_policy_grl,
+        populated_database_fixture,
+    ):
+        """
+        :GIVEN: that the PPR's client (HELO) is whitelisted
+        :WHEN:  evaluating an approval request
+        :THEN:  issue a passing response
+        """
+        caplog.set_level(logging.DEBUG)
+        policy = testing_policy_grl
+        ppr = helo_ppr_factory("mail.chapps.io", "10.10.10.10")
+        with monkeypatch.context() as m:
+            m.setattr(
+                policy.config,
+                "helo_whitelist",
+                {"mail.chapps.io": "10.10.10.10"},
+            )
+            response = policy._approve_policy_request(ppr)
+        assert response == "DUNNO" or response() == "DUNNO"
 
     def test_first_encounter_updates_tuple(
         self, caplog, monkeypatch, allowable_inbound_ppr, testing_policy_grl
@@ -905,3 +930,25 @@ class Test_SenderDomainAuthPolicy:
             )
             result = testing_policy_sda.approve_policy_request(sda_unauth_ppr)
         mock_acq_pol_data.assert_not_called()
+
+
+class Test_InboundPolicy:
+    def test_whitelist(self, testing_policy_inbound, helo_ppr_factory):
+        """
+        :GIVEN: a helo whitelist and an inbound policy
+        :WHEN:  the PPR reflects a connection from the whitelisted server
+        :THEN:  the policy's _whitelisted() method should return True
+        """
+        policy = testing_policy_inbound
+        ppr = helo_ppr_factory("mail.chapps.io", "10.10.10.10")
+        assert ppr.helo_match({"mail.chapps.io": "10.10.10.10"})
+
+    def test_not_whitelisted(self, testing_policy_inbound, helo_ppr_factory):
+        """
+        :GIVEN: a helo whitelist and an inbound policy
+        :WHEN:  the PPR reflects a connection from an unlisted server
+        :THEN:  the policy's _whitelisted() method should return False
+        """
+        policy = testing_policy_inbound
+        ppr = helo_ppr_factory("spammity.spam.com", "1.2.3.4")
+        assert not ppr.helo_match({"mail.chapps.io": "10.10.10.10"})
