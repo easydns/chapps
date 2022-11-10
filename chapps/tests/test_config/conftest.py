@@ -159,7 +159,7 @@ def chapps_helo_config():
     cp["CHAPPS"] = {
         "require_user_key": True,
         "user_key": "sasl_username",
-        "helo_whitelist": "pmg.easydns.com:64.68.203.46",
+        "helo_whitelist": "[127.0.1.1]:127.0.0.1",
     }
     cp["PolicyConfigAdapter"] = {
         "adapter": "mysql",
