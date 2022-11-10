@@ -696,9 +696,9 @@ class GreylistingPolicy(InboundPolicy):
 
         :meta public:
         """
-        if self._whitelisted(ppr):
+        if self._whitelisted(ppr):  # forward without SPF header
             logger.info(f"Whitelisting traffic from {ppr.helo_name}.")
-            return self.actions.dunno
+            return self.actions.dunno  # needs to be the action-proxy
         option_set, tuple_seen, client_tally = None, None, None
         try:
             option_set, tuple_seen, client_tally = self._get_control_data(ppr)
@@ -719,7 +719,7 @@ class GreylistingPolicy(InboundPolicy):
                 "Not enforcing greylisting for domain "
                 f"{ppr.recipient_domain or 'N/A'}"
             )
-            return self.actions.dunno  # not enforcing this policy
+            return "DUNNO"  # needs to be a string
         # if not whitelisting, client_tally will be None
         if client_tally is not None and client_tally >= self.allow_after:
             self._update_client_tally(ppr)
