@@ -215,7 +215,7 @@ class SPFEnforcementPolicy(InboundPolicy):
         """
         # Bypass if whitelisted -- we don't even want a header
         if self._whitelisted(ppr):
-            return self.actions.dunno
+            return "DUNNO"
         # First, check the HELO name
         helo_sender = "postmaster@" + ppr.helo_name
         query = spf.query(ppr.client_address, helo_sender, ppr.helo_name)

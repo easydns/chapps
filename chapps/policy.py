@@ -698,7 +698,7 @@ class GreylistingPolicy(InboundPolicy):
         """
         if self._whitelisted(ppr):  # forward without SPF header
             logger.info(f"Whitelisting traffic from {ppr.helo_name}.")
-            return self.actions.dunno  # needs to be the action-proxy
+            return "DUNNO"  # needs to be the string
         option_set, tuple_seen, client_tally = None, None, None
         try:
             option_set, tuple_seen, client_tally = self._get_control_data(ppr)

@@ -79,7 +79,7 @@ class CHAPPSConfig:
     # ultimately, we may need also to allow for a command-line option
     @staticmethod
     def what_config_file(
-        default_pathname: str = "/etc/chapps/chapps.ini"
+        default_pathname: str = "/etc/chapps/chapps.ini",
     ) -> Path:
         """Determine what config file to read.
 
@@ -93,7 +93,7 @@ class CHAPPSConfig:
 
     @staticmethod
     def setup_config(
-        cp: configparser.ConfigParser
+        cp: configparser.ConfigParser,
     ) -> configparser.ConfigParser:
         """Setup default config pattern on the parser passed in
 
@@ -306,10 +306,14 @@ class CHAPPSConfig:
 
     @staticmethod
     def _parse_whitelist(speclist):
+        loopback = "127.0.0.1"
         for spec in speclist.split(";"):
             name, src_ip = spec, None
             if ":" in spec:
                 name, src_ip = spec.split(":", 1)
+            if src_ip and src_ip == loopback:
+                yield (name, src_ip)
+                continue
             try:
                 lookup = dns.resolver.resolve(name)
                 dns_ip = str(lookup[0])
