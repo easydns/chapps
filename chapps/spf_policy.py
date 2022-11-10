@@ -146,6 +146,14 @@ class SPFEnforcementPolicy(InboundPolicy):
         self.actions = PostfixSPFActions(self)
 
     def acquire_policy_for(self, ppr: InboundPPR) -> bool:
+        """Determine whether this PPR's recipient wants SPF enforcement
+
+        :param ppr: A PPR representing the email
+
+        :raises: :class:`~chapps.signals.NoSuchDomainException` if the
+          recipient domain is not present in the configuration RDBMS
+
+        """
         with self._adapter_handle() as adapter:
             result = adapter.check_spf_on(ppr.recipient_domain)
         self._store_control_data(ppr.recipient_domain, result)
@@ -160,23 +168,30 @@ class SPFEnforcementPolicy(InboundPolicy):
             return int(option_bits)
 
     def enabled(self, ppr: InboundPPR) -> bool:
-        option_set = None
+        """Main entry point to determining whether to enforce SPF
+
+        :param ppr: A PPR representing the email
+
+        Returns a boolean indicating whether to enforce SPF for this
+        recipient.
+        """
+        option_flag = None
         try:
-            option_set = self._get_control_data(ppr)
+            option_flag = self._get_control_data(ppr)
         except NoRecipientsException:
             logger.exception(f"No recipient in PPR {ppr.instance}")
             return False
         except Exception:
             logger.exception("UNEXPECTED")
             return False
-        if option_set is None:
+        if option_flag is None:
             try:
-                option_set = self.acquire_policy_for(ppr)
+                option_flag = self.acquire_policy_for(ppr)
             except NoSuchDomainException:
                 logger.exception(f"No domain matched {ppr.recipient}")
                 return False
-        option_set = int(option_set)
-        return option_set == 1
+        option_flag = int(option_flag)
+        return option_flag == 1
 
     def _approve_policy_request(self, ppr: PostfixPolicyRequest) -> str:
         """Perform SPF enforcement decision-making
