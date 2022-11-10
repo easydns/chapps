@@ -8,6 +8,7 @@ from chapps.tests.test_config.conftest import (
     _chapps_mock_config_file,
     chapps_helo_config,
     chapps_helo_cfg_path,
+    chapps_helo_config_file,
 )
 from chapps.tests.test_adapter.conftest import (
     _adapter_fixture,

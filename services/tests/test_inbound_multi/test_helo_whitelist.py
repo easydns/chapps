@@ -1,7 +1,8 @@
 """Tests for inbound multi service"""
-import pytest
-from smtplib import SMTP, SMTPRecipientsRefused
 import logging
+from smtplib import SMTP  # , SMTPRecipientsRefused
+
+# import pytest
 import time
 
 
@@ -24,7 +25,10 @@ class Test_IBM_Greylisting_HELOWL:
         caplog.set_level(logging.DEBUG)
         message = grl_test_message_factory(known_sender, grl_test_recipients)
         with SMTP("127.0.0.1") as smtp:
-            assert smtp.sendmail(known_sender, grl_test_recipients, message)
+            result = smtp.sendmail(known_sender, grl_test_recipients, message)
+        time.sleep(0.01)
+        mail_lines = list(mail_echo_file)
+        assert "Received-SPF" not in mail_lines
 
 
 # class Test_IBM_SPF:
