@@ -161,4 +161,6 @@ class Test_Config:
         chapps_helo_cfg_path,
     ):
         config = CHAPPSConfig()
-        assert config.helo_whitelist == {"pmg.easydns.com": "64.68.203.46"}
+        # these settings are weird, but they are for integration testing
+        # all that matters here is that they come through properly
+        assert config.helo_whitelist == {"[127.0.1.1]": "127.0.0.1"}
