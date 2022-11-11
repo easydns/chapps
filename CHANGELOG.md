@@ -4,10 +4,14 @@
 
 ### v0.5.10:
 	- Correcting a couple of bugs in the CLI script, wherein:
-	  - trying to show a nonexistent domain would cause an un-trapped error
-	  - trying to show a domain's option flags caused an un-trapped error if
-	    the SPF libraries are not installed
-	- Adding HELO whitelisting option to inbound features configuration.E
+	  - trying to show a nonexistent domain would cause an un-trapped
+        error
+	  - trying to show a domain's option flags caused an un-trapped
+	    error if the SPF libraries are not installed
+	- Adding HELO whitelisting option to global CHAPPS config.  Right
+	  now, it is only implemented for inbound policies.  It would not
+	  be hard to add to outbound ones as well.  In such a case, one
+	  might want distinct lists.
 
 ### v0.5.9:
 	- Update the .readthedocs.yaml config file which I had completely
