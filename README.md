@@ -571,8 +571,8 @@ effect.
 
 In order to whitelist by **HELO**, specify the `helo_whitelist` option in
 the `[CHAPPS]` section of the config file, with data about the server
-to whitelist.  Due to some limitations with ConfigParser, the data
-needs to be packed into a list onto a single line.  The format is as
+to whitelist.  Due to some limitations of ConfigParser, the data
+needs to be packed into a list on a single line.  The format is as
 follows:
 ```
 helo_whitelist=mx.example.com[:1.2.3.4][;mx2.example.com[:5.6.7.8][;...]]
@@ -589,6 +589,12 @@ matches the IP provided.  The PTR of the IP, whether provided or
 obtained by a lookup, will be obtained as well, and checked to make
 sure the provided name matches.  If all the elements do not match,
 CHAPPS will log an error and will not perform any whitelisting.
+
+Currently, if the address provided is the loopback address
+"127.0.0.1", then no DNS lookups will be performed, and both name and
+address values will be used without any checking or cross-checking.
+In future versions this logic could be expanded to include all
+"private" IPv4 address ranges, v6 ranges, etc.
 
 ## Greylisting Policy Service
 
