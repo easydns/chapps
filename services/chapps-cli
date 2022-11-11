@@ -23,7 +23,8 @@ import typer
 import validators
 import json as JSON
 import time
-from pprint import pformat
+
+# from pprint import pformat
 
 
 try:
@@ -192,7 +193,8 @@ def showDomain(domainname: str, live: bool = True, users: bool = False):
         if users:
             domain_users = User.wrap(domain.users)
     grl = GreylistingPolicy()
-    spf = SPFEnforcementPolicy()
+    if HAVE_SPF:
+        spf = SPFEnforcementPolicy()
     grl_cache, spf_cache = ["--"] * 2
     _print(domain)
     if live:
@@ -200,9 +202,10 @@ def showDomain(domainname: str, live: bool = True, users: bool = False):
             grl_cache = grl.redis.get(
                 grl._domain_option_key(domainname)
             ).decode(grl.config.chapps.payload_encoding)
-            spf_cache = spf.redis.get(
-                spf._domain_option_key(domainname)
-            ).decode(spf.config.chapps.payload_encoding)
+            if HAVE_SPF:
+                spf_cache = spf.redis.get(
+                    spf._domain_option_key(domainname)
+                ).decode(spf.config.chapps.payload_encoding)
         except AttributeError:
             pass
         _print(
@@ -234,7 +237,8 @@ def domain_show(domainname: str, live: bool = True, users: bool = False):
     with the `--no-live` option.
 
     """
-    showDomain(domainname, live, users)
+    with handle_cli_exceptions():
+        showDomain(domainname, live, users)
 
 
 def domain_flush_factory(policyclass: EmailPolicy):

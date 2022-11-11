@@ -29,6 +29,23 @@ class Test_AttrDict:
         ad = AttrDict(mock_config_dict)
         assert ad.boolean == bool(mock_config_dict["boolean"])
 
+    def test_contains(self, mock_config_dict):
+        ad = AttrDict(mock_config_dict)
+        assert "intval" in ad
+
+    def test_len(self, mock_config_dict):
+        ad = AttrDict(mock_config_dict)
+        assert len(ad) == 4
+
+    def test_getitem(self, mock_config_dict):
+        ad = AttrDict(mock_config_dict)
+        assert ad.get("intval") == int(mock_config_dict["intval"])
+
+    def test_keys(self, mock_config_dict):
+        ad = AttrDict(mock_config_dict)
+        keys = sorted(ad.keys())
+        assert keys == sorted(mock_config_dict.keys())
+
 
 class Test_PostfixPolicyRequest:
     def test_instantiate_ppr(self, postfix_policy_request_message):
@@ -114,3 +131,21 @@ class Test_PostfixPolicyRequest:
         assert type(r) == list
         assert len(r) == 3
         assert r[0] == "one@recipient.com"
+
+    def test_helo_match(self, postfix_policy_request_message):
+        """
+        :GIVEN: a PPR w/ particular HELO name and IP
+        :WHEN: asked to match against a name->IP map of candidates
+        :THEN: return True if the HELO name is in the map and the IP matches
+
+        """
+        new_ppr = PostfixPolicyRequest(
+            postfix_policy_request_message(
+                None,
+                None,
+                None,
+                helo_name="mail.chapps.io",
+                client_address="10.10.10.10",
+            )
+        )
+        assert new_ppr.helo_match({"mail.chapps.io": "10.10.10.10"})

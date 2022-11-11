@@ -555,6 +555,41 @@ Redis servers ends up devoted to SDA caching.  6 or 8 hours seems like
 a reasonable trade-off between Redis-RAM bloat and RDBMS latency, but
 different sites are different.
 
+## Inbound Services
+
+For inbound services, it is possible to enable either policy on a
+per-domain basis.  This may be accomplished via the CLI or API.
+
+### HELO Whitelisting
+
+Sometimes CHAPPS may not be the first line of defense for all email;
+it is possible that most email needs policy enforcement, but that some
+particular relay(s) already do the same job as CHAPPS, and so whatever
+they relay should be whitelisted.  In such a case, the relay will
+probably always fail SPF anyway, and result in a header to that
+effect.
+
+In order to whitelist by **HELO**, specify the `helo_whitelist` option in
+the `[CHAPPS]` section of the config file, with data about the server
+to whitelist.  Due to some limitations with ConfigParser, the data
+needs to be packed into a list onto a single line.  The format is as
+follows:
+```
+helo_whitelist=mx.example.com[:1.2.3.4][;mx2.example.com[:5.6.7.8][;...]]
+```
+To break this down in English, provide at a minimum the HELO name used
+by the server to whitelist.  In such a case, the IP will be obtained
+from DNS and used as if it had also been supplied.  In order to supply
+the IP address of the server, use a colon (`:`) after the name.  In
+order to list more than one name (optionally with IP address), use
+semi-colons (`;`) to separate entries.
+
+At configuration time, the A record will be evaluated to see if it
+matches the IP provided.  The PTR of the IP, whether provided or
+obtained by a lookup, will be obtained as well, and checked to make
+sure the provided name matches.  If all the elements do not match,
+CHAPPS will log an error and will not perform any whitelisting.
+
 ## Greylisting Policy Service
 
 Greylisting is an [approach to spam

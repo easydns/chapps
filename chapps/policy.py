@@ -281,8 +281,7 @@ class EmailPolicy:
     def _approve_policy_request(
         self, ppr: PostfixPolicyRequest, **opts
     ) -> Union[str, bool]:
-        """Placeholder method which must be implemented by subclasses.
-        """
+        """Placeholder method which must be implemented by subclasses."""
         raise NotImplementedError(
             "Subclasses of EmailPolicy must implement this function."
         )
@@ -369,8 +368,10 @@ class PostfixActions:
                 )
         else:
             # construct closure from configured message string
-            action_func = lambda reason, ppr, *args, **kwargs: action_config.format(
-                reason=reason
+            action_func = (
+                lambda reason, ppr, *args, **kwargs: action_config.format(
+                    reason=reason
+                )
             )
         passing = (
             (action_func in [self.reject, self.defer_if_permit])
@@ -551,7 +552,7 @@ class PostfixGRLActions(PostfixPassfailActions):
 
 
 class InboundPolicy(EmailPolicy):
-    adapter_class = IBFAdapter
+    adapter_class = IBFAdapter  # inbound flags adapter indirection
 
     def domain_option_key(self, ppr: InboundPPR):
         """Return the Redis key for the domain's Greylisting option
@@ -567,6 +568,9 @@ class InboundPolicy(EmailPolicy):
     def _store_control_data(self, domain: str, flag: bool):
         with self._control_data_storage_context() as dsc:
             dsc(domain, 1 if flag else 0)
+
+    def _whitelisted(self, ppr: InboundPPR) -> bool:
+        return ppr.helo_match(self.config.helo_whitelist)
 
 
 class GreylistingPolicy(InboundPolicy):
@@ -692,6 +696,9 @@ class GreylistingPolicy(InboundPolicy):
 
         :meta public:
         """
+        if self._whitelisted(ppr):  # forward without SPF header
+            logger.info(f"Whitelisting traffic from {ppr.helo_name}.")
+            return "DUNNO"  # needs to be the string
         option_set, tuple_seen, client_tally = None, None, None
         try:
             option_set, tuple_seen, client_tally = self._get_control_data(ppr)
@@ -699,7 +706,7 @@ class GreylistingPolicy(InboundPolicy):
                 option_set = self.acquire_policy_for(ppr)
         except NoRecipientsException:
             logger.exception(f"No recipient in PPR {ppr.instance}.")
-            return False
+            return self.actions.action_for(False)("", ppr=ppr)
         except Exception:  # pragma: no cover
             logger.exception("UNEXPECTED")
             logger.debug(
@@ -712,7 +719,7 @@ class GreylistingPolicy(InboundPolicy):
                 "Not enforcing greylisting for domain "
                 f"{ppr.recipient_domain or 'N/A'}"
             )
-            return "DUNNO"  # not enforcing this policy
+            return "DUNNO"  # needs to be a string
         # if not whitelisting, client_tally will be None
         if client_tally is not None and client_tally >= self.allow_after:
             self._update_client_tally(ppr)

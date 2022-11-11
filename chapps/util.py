@@ -180,7 +180,7 @@ class VenvDetector:
             return Path(sys.prefix)
 
 
-class AttrDict:
+class AttrDict(Mapping):
     """Attribute Dictionary
 
     This simple class allows accessing the keys of a hash as attributes on an
@@ -278,6 +278,21 @@ class AttrDict:
                 except TypeError:
                     pass
                 setattr(self, k, val)
+
+    def __iter__(self):
+        return self.keys()
+
+    def __len__(self) -> int:
+        return len(self.keys())
+
+    def __getitem__(self, item) -> Optional[str]:
+        return getattr(self, item)
+
+    def __contains__(self, item):
+        return item in self.__dict__
+
+    def keys(self):
+        return self.__dict__.keys()
 
 
 class PostfixPolicyRequest(Mapping):
@@ -523,3 +538,18 @@ class PostfixPolicyRequest(Mapping):
             )
             raise NotAnEmailAddressException
         return parts[-1]
+
+    def helo_match(self, candidates: Dict[str, str]) -> bool:
+        """HELO Whitelisting indicator
+
+        Given a mapping of HELO name to expected IP address,
+        indicate whether this PPR represents traffic from a
+        whitelisted server.
+
+        """
+        name = self.helo_name or self.client_name
+        if not (candidates and name in candidates):
+            return False
+        if candidates[name] == self.client_address:
+            return True
+        return False

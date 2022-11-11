@@ -6,6 +6,9 @@ from chapps.tests.test_config.conftest import (
     chapps_mock_config,
     chapps_mock_cfg_path,
     _chapps_mock_config_file,
+    chapps_helo_config,
+    chapps_helo_cfg_path,
+    chapps_helo_config_file,
 )
 from chapps.tests.test_adapter.conftest import (
     _adapter_fixture,
@@ -101,10 +104,19 @@ def chapps_mock_config_file(chapps_mock_config, chapps_mock_cfg_path):
     )
 
 
+def _chapps_mock_session(monkeypatch_session, cfg_path):
+    monkeypatch_session.setenv("CHAPPS_CONFIG", cfg_path)
+    return chapps_mock_cfg_path
+
+
 @fixture(scope="session")
 def chapps_mock_session(monkeypatch_session, chapps_mock_cfg_path):
-    monkeypatch_session.setenv("CHAPPS_CONFIG", chapps_mock_cfg_path)
-    return chapps_mock_cfg_path
+    return _chapps_mock_session(monkeypatch_session, chapps_mock_cfg_path)
+
+
+@fixture(scope="session")
+def chapps_helo_session(monkeypatch_session, chapps_helo_cfg_path):
+    return _chapps_mock_session(monkeypatch_session, chapps_helo_cfg_path)
 
 
 @fixture(scope="session")

@@ -59,14 +59,14 @@ def _postfix_policy_request_payload():
         payload = """request=smtpd_access_policy
 protocol_state=RCPT
 protocol_name=SMTP
-helo_name=helo.chapps.io
-queue_id=8045F2AB23
+helo_name={helo_name}
+queue_id={queue_id}
 sender={sender}
 recipient={recipient}
-recipient_count=0
-client_address=10.10.10.10
-client_name=mail.chapps.io
-reverse_client_name=mail.chapps.io
+recipient_count={recipient_count}
+client_address={client_address}
+client_name={client_name}
+reverse_client_name={reverse_client_name}
 instance={instance}
 sasl_method=plain
 sasl_username={sasl_username}

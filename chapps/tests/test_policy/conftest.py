@@ -34,6 +34,7 @@ import random
 import string
 from chapps.config import CHAPPSConfig
 from chapps.policy import (
+    InboundPolicy,
     OutboundQuotaPolicy,
     GreylistingPolicy,
     SenderDomainAuthPolicy,
@@ -75,6 +76,11 @@ def null_sender_policy_sda(
     apr = Mock(name="approve_policy_request", side_effect=NullSenderException)
     monkeypatch.setattr(policy, "approve_policy_request", apr)
     return policy
+
+
+@fixture
+def testing_policy_inbound(chapps_mock_env, chapps_mock_config_file):
+    return testing_policy_factory(InboundPolicy)
 
 
 @fixture
@@ -167,6 +173,22 @@ def groupsend_ppr(postfix_policy_request_message):
             ],
         )
     )
+
+
+@fixture
+def helo_ppr_factory(postfix_policy_request_message):
+    def _ppr_factory(helo_name, source_ip):
+        return InboundPPR(
+            postfix_policy_request_message(
+                None,
+                None,
+                None,
+                helo_name=helo_name,
+                client_address=source_ip,
+            )
+        )
+
+    return _ppr_factory
 
 
 @fixture

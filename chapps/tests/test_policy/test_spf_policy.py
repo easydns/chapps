@@ -25,21 +25,21 @@ auto_query_param_list = _auto_query_param_list()
 class Test_PostfixSPFActions:
     """Tests for Postfix action strings corresponding to particular SPF results
 
-       The possible results are:
+    The possible results are:
 
-         - pass*
-         - fail*
-         - softfail
-         - temperror*
-         - permerror*
-         - none/neutral (two which must be treated the same)
+      - pass*
+      - fail*
+      - softfail
+      - temperror*
+      - permerror*
+      - none/neutral (two which must be treated the same)
 
-       Starred items are ones for which RFC 7208 provides recommended SMTP
-       result codes.  For now, configuration will be able to override how the
-       non-starred results are mapped onto actions taken for other classes of
-       message.  Eventually a response which implements greylisting (say, for
-       softfails) will be provided, which could be applied also to none/neutral
-       situations as well.
+    Starred items are ones for which RFC 7208 provides recommended SMTP
+    result codes.  For now, configuration will be able to override how the
+    non-starred results are mapped onto actions taken for other classes of
+    message.  Eventually a response which implements greylisting (say, for
+    softfails) will be provided, which could be applied also to none/neutral
+    situations as well.
 
     """
 
@@ -97,6 +97,31 @@ class Test_SPFEnforcementPolicy:
                 allowable_inbound_ppr
             )
         assert result == "PREPEND Received-SPF: SPF prepend"
+
+    def test_whitelisted_clients_get_dunno(
+        self,
+        caplog,
+        monkeypatch,
+        helo_ppr_factory,
+        testing_policy_spf,
+        populated_database_fixture,
+    ):
+        """
+        :GIVEN: a HELO whitelist
+        :WHEN:  email arrives from a whitelisted server
+        :THEN:  forward the email with DUNNO (no prepends)
+        """
+        caplog.set_level(logging.DEBUG)
+        policy = testing_policy_spf
+        ppr = helo_ppr_factory("mail.chapps.io", "10.10.10.10")
+        with monkeypatch.context() as m:
+            m.setattr(
+                policy.config,
+                "helo_whitelist",
+                {"mail.chapps.io": "10.10.10.10"},
+            )
+            result = policy.approve_policy_request(ppr)
+        assert result == "DUNNO" or result() == "DUNNO"
 
     def test_domain_spf_flag_false(
         self,

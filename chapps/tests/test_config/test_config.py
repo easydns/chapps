@@ -152,3 +152,15 @@ class Test_Config:
         assert (
             policy_grl.rejection_message == config.policy_grl.rejection_message
         )
+
+    def test_helo_whitelist(
+        self,
+        chapps_helo_env,
+        chapps_helo_config_file,
+        chapps_helo_config,
+        chapps_helo_cfg_path,
+    ):
+        config = CHAPPSConfig()
+        # these settings are weird, but they are for integration testing
+        # all that matters here is that they come through properly
+        assert config.helo_whitelist == {"[127.0.1.1]": "127.0.0.1"}

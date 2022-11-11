@@ -7,6 +7,7 @@ import pytest
 DEFAULT_CHAPPS_TEST_CONFIG = "etc/chapps/chapps_test.ini"
 DEFAULT_CHAPPS_MOCK_CONFIG = "etc/chapps/chapps_mock.ini"
 DEFAULT_CHAPPS_NULL_CONFIG = "etc/chapps/chapps_null.ini"  # null-user
+DEFAULT_CHAPPS_HELO_CONFIG = "etc/chapps/chapps_helo.ini"
 DEFAULT_CHAPPS_SENTINEL_CONFIG = "etc/chapps/chapps_sentinel.ini"
 DEFAULT_CHAPPS_TEST_DB_HOST = "localhost"
 DEFAULT_CHAPPS_TEST_DB_NAME = "chapps_test"
@@ -40,6 +41,11 @@ def chapps_null_cfg_path():
 
 
 @pytest.fixture(scope="session")
+def chapps_helo_cfg_path():
+    return DEFAULT_CHAPPS_HELO_CONFIG
+
+
+@pytest.fixture(scope="session")
 def chapps_sentinel_cfg_path():
     return DEFAULT_CHAPPS_SENTINEL_CONFIG
 
@@ -60,6 +66,12 @@ def chapps_mock_env(monkeypatch, chapps_mock_cfg_path):
 def chapps_null_env(monkeypatch, chapps_null_cfg_path):
     monkeypatch.setenv("CHAPPS_CONFIG", chapps_null_cfg_path)
     return chapps_null_cfg_path
+
+
+@pytest.fixture
+def chapps_helo_env(monkeypatch, chapps_helo_cfg_path):
+    monkeypatch.setenv("CHAPPS_CONFIG", chapps_helo_cfg_path)
+    return chapps_helo_cfg_path
 
 
 @pytest.fixture
@@ -141,6 +153,24 @@ def chapps_null_user_config():
 
 
 @pytest.fixture(scope="session")
+def chapps_helo_config():
+    """Setting for testing HELO whitelisting"""
+    cp = configparser.ConfigParser(interpolation=None)
+    cp["CHAPPS"] = {
+        "require_user_key": True,
+        "user_key": "sasl_username",
+        "helo_whitelist": "[127.0.1.1]:127.0.0.1",
+    }
+    cp["PolicyConfigAdapter"] = {
+        "adapter": "mysql",
+        "db_name": "chapps_test",
+        "db_user": "chapps_test",
+        "db_pass": "screwy%pass${word}",
+    }
+    return cp
+
+
+@pytest.fixture(scope="session")
 def chapps_sentinel_config():
     """Some settings are intentionally left out; their defaults shall prevail"""
     cp = configparser.ConfigParser(interpolation=None)
@@ -177,6 +207,13 @@ def chapps_sentinel_config():
 def chapps_mock_config_file(chapps_mock_config, chapps_mock_cfg_path):
     yield from _chapps_mock_config_file(
         chapps_mock_config, chapps_mock_cfg_path
+    )
+
+
+@pytest.fixture(scope="session")
+def chapps_helo_config_file(chapps_helo_config, chapps_helo_cfg_path):
+    yield from _chapps_mock_config_file(
+        chapps_helo_config, chapps_helo_cfg_path
     )
 
 

@@ -51,6 +51,24 @@ def chapps_ibm_service(
 
 
 @pytest.fixture(scope="session")
+def helo_ibm_service(
+    request,
+    run_services,
+    mail_echo_file,
+    chapps_helo_session,
+    chapps_helo_config_file,
+    watcher_getter,
+):
+    if run_services:
+        chapps_watcher = watcher_getter(
+            "./services/chapps_inbound_multi.py",
+            checker=lambda: os.path.exists("/tmp/chapps_inbound_multi.pid"),
+            request=request,
+        )
+        return chapps_watcher
+
+
+@pytest.fixture(scope="session")
 def chapps_ibm_service_with_tuples_factory(chapps_ibm_service, known_sender):
     return _chapps_ibm_service_with_tuples_factory(known_sender)
 
