@@ -2,6 +2,14 @@
 
 ## Beta Releases
 
+### v0.5.11:
+	- Correcting/completing `domain flush` functionality in `chapps-cli`
+	- Ensuring that SDA `allow`/`deny` functionality causes the relevant
+	  cache entry to be deleted in order to ensure it is repopulated when
+	  next accessed.
+	- Adjusting production syslog message format to preface it with
+      the processName and PID as with the postfix logs.
+
 ### v0.5.10:
 	- Correcting a couple of bugs in the CLI script, wherein:
 	  - trying to show a nonexistent domain would cause an un-trapped
