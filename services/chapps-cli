@@ -11,7 +11,12 @@ from chapps.models import (
     user_emails_assoc,
     user_domains_assoc,
 )
-from chapps.policy import EmailPolicy, OutboundQuotaPolicy, GreylistingPolicy
+from chapps.policy import (
+    EmailPolicy,
+    OutboundQuotaPolicy,
+    GreylistingPolicy,
+    SenderDomainAuthPolicy,
+)
 from chapps.config import CHAPPSConfig
 from chapps.dbsession import sql_engine, sessionmaker
 from chapps.alembic.apply import main as apply_migrations
@@ -461,17 +466,35 @@ def db_setup():
 
 
 @app.command()
-def allow(username: str, email_or_domain: str, create: bool = False):
+def allow(
+    username: str,
+    email_or_domain: str,
+    create: bool = False,
+    flush: bool = True,
+):
     """Permit a user to send email from a domain or as a whole email address
 
     Pass the --create flag to this command in order to allow creation of
     nonexistent Email or Domain entries.
+
+    Using this command also clears the Redis policy cache of its flag for
+    the user and email-or-domain combination specified.
     """
     with handle_cli_exceptions():
-        return _allow(username, email_or_domain, create)
+        return _allow(username, email_or_domain, create, flush)
 
 
-def _allow(username: str, email_or_domain: str, create: bool = False):
+def _sda_flush(username, email_or_domain):
+    sda = SenderDomainAuthPolicy()
+    sda.redis.delete(sda._sender_domain_key(username, email_or_domain))
+
+
+def _allow(
+    username: str,
+    email_or_domain: str,
+    create: bool = False,
+    flush: bool = True,
+):
     assoc_type = assocType(email_or_domain)
     with Session() as sess:
         try:
@@ -515,21 +538,26 @@ def _allow(username: str, email_or_domain: str, create: bool = False):
             sess.commit()
         except Exception as e:
             raise e
+    if flush:
+        _sda_flush(username, email_or_domain)
     showUser(username)
 
 
 @app.command()
-def deny(username: str, email_or_domain: str):
+def deny(username: str, email_or_domain: str, flush: bool = True):
     """Prevent a user sending email appearing to come from a domain or email
 
     Both entities must already exist; not having any record for a domain
     or email means no one has permission.
+
+    Using this command also clears the Redis policy cache of its flag for
+    the user and email-or-domain combination specified.
     """
     with handle_cli_exceptions():
-        return _deny(username, email_or_domain)
+        return _deny(username, email_or_domain, flush)
 
 
-def _deny(username: str, email_or_domain: str, *args):
+def _deny(username: str, email_or_domain: str, flush: bool = True, *args):
     assoc_type = assocType(email_or_domain)
     with Session() as sess:
         user = user_or_die(sess, username)
@@ -552,6 +580,8 @@ def _deny(username: str, email_or_domain: str, *args):
             f"{assoc_type.__name__.lower()} '{assoc.name}'"
         )
         sess.commit()
+    if flush:
+        _sda_flush(username, email_or_domain)
     showUser(username)
 
 
