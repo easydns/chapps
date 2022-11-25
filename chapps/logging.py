@@ -65,7 +65,9 @@ class LogSetup:  # pragma: no cover
     )
     """A formatter helpful for debugging."""
 
-    maillog_formatter = logging.Formatter("CHAPPS:%(levelname)s %(message)s")
+    maillog_formatter = logging.Formatter(
+        "%(processName)s[%(process)d]: CHAPPS %(levelname)s %(message)s"
+    )
     """The default formatter, anticipated to go to the mail log"""
 
     syslog_handler = SysLogHandler(
