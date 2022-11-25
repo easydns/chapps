@@ -257,9 +257,11 @@ if HAVE_SPF:
 @domain_app.command()
 def flush(domainname: str):
     """Flush all enforcement option flags for a Domain"""
-    flush_greylisting()
-    if HAVE_SPF:
-        flush_spf()
+    with handle_cli_exceptions():
+        flush_greylisting(domainname)
+        if HAVE_SPF:
+            flush_spf(domainname)
+        showDomain(domainname)
 
 
 @app.command()
