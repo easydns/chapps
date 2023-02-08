@@ -5,6 +5,8 @@ from smtplib import SMTP  # , SMTPRecipientsRefused
 # import pytest
 import time
 
+SLEEPTIME = 0.5
+
 
 class Test_IBM_Greylisting_HELOWL:
     def test_whitelist(
@@ -26,7 +28,7 @@ class Test_IBM_Greylisting_HELOWL:
         message = grl_test_message_factory(known_sender, grl_test_recipients)
         with SMTP("127.0.0.1") as smtp:
             result = smtp.sendmail(known_sender, grl_test_recipients, message)
-        time.sleep(0.01)
+        time.sleep(SLEEPTIME)
         mail_lines = list(mail_echo_file)
         assert "Received-SPF" not in mail_lines
 

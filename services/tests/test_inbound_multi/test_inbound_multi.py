@@ -4,6 +4,8 @@ from smtplib import SMTP, SMTPRecipientsRefused
 import logging
 import time
 
+SLEEPTIME = 0.5
+
 
 class Test_IBM_Greylisting:
     def test_first_attempt_denied(
@@ -21,6 +23,7 @@ class Test_IBM_Greylisting:
         THEN  it should be denied
         """
         caplog.set_level(logging.DEBUG)
+        clear_redis_grl()
         message = grl_test_message_factory(known_sender, grl_test_recipients)
         with SMTP("127.0.0.1") as smtp:
             with pytest.raises(
@@ -120,7 +123,7 @@ class Test_IBM_SPF:
             with SMTP("127.0.0.1") as smtp:
                 result = smtp.sendmail(sender, recip, message)
         assert True
-        time.sleep(0.01)  # allow mail delivery to finish, to see the mail
+        time.sleep(SLEEPTIME)  # allow mail delivery to finish, to see the mail
         mail_lines = list(mail_echo_file)
         assert mail_lines[0][0:18] == "Received-SPF: Pass"
         assert "identity=" in mail_lines[0]
@@ -142,7 +145,7 @@ class Test_IBM_SPF:
         with SMTP("127.0.0.1") as smtp:
             result = smtp.sendmail(sender, recip, message)
         assert True  # note that SPF should fail this sender
-        time.sleep(0.01)
+        time.sleep(SLEEPTIME)
         mail_lines = list(mail_echo_file)
         assert mail_lines[0][0:18] == "Received-SPF: Fail"
 
@@ -201,7 +204,7 @@ class Test_IBM_SPF_and_Greylisting:
         with SMTP("127.0.0.1") as smtp:
             result = smtp.sendmail(sender, recip, message)
         assert True  # email was accepted
-        time.sleep(0.01)  # allow mail delivery to finish, to see the mail
+        time.sleep(SLEEPTIME)  # allow mail delivery to finish, to see the mail
         mail_lines = list(mail_echo_file)
         assert mail_lines[0][0:18] == "Received-SPF: Pass"
         assert "identity=" in mail_lines[0]
@@ -230,7 +233,7 @@ class Test_IBM_SPF_and_Greylisting:
         with SMTP("127.0.0.1") as smtp:
             result = smtp.sendmail(sender, recip, message)
         assert True  # email was accepted
-        time.sleep(0.01)  # allow mail delivery to finish, to see the mail
+        time.sleep(SLEEPTIME)  # allow mail delivery to finish, to see the mail
         mail_lines = list(mail_echo_file)
         assert mail_lines[0][0:22] == "Received-SPF: SoftFail"
         assert "identity=" in mail_lines[0]
@@ -283,6 +286,6 @@ class Test_IBM_No_Enforcement:
         with SMTP("127.0.0.1") as smtp:
             result = smtp.sendmail(sender, recip, message)
         assert True
-        time.sleep(0.01)
+        time.sleep(SLEEPTIME)
         mail_lines = list(mail_echo_file)
         assert mail_lines[0][0:13] == "Received-SPF:"
