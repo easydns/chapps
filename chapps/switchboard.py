@@ -137,7 +137,7 @@ class CascadingPolicyHandler:
             while True:
                 try:
                     policy_payload = await reader.readuntil(b"\n\n")
-                except ConnectionResetError:
+                except ConnectionError:
                     logger.debug(
                         "Postfix said goodbye. Terminating this thread."
                     )
@@ -157,7 +157,7 @@ class CascadingPolicyHandler:
                         return
                     else:
                         logger.exception("UNEXPECTED ")
-                    continue
+                    return
                 logger.debug(
                     f"Payload received: {policy_payload.decode( 'utf-8' )}"
                 )
