@@ -2,6 +2,14 @@
 
 ## Beta Releases
 
+### v0.5.12:
+	- Correcting serious error-handling bug which would cause an
+      endless, log-filling loop when encountering unexpected
+      connection errors.  All users are recommended to update their
+      software immediately.  This one was a bit sneaky for us; we've
+      run this software in an intense production environment for
+      months before finding this defect.
+
 ### v0.5.11:
 	- Correcting/completing `domain flush` functionality in `chapps-cli`
 	- Ensuring that SDA `allow`/`deny` functionality causes the relevant
