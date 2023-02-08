@@ -419,7 +419,7 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
             while True:
                 try:
                     policy_payload = await reader.readuntil(b"\n\n")
-                except ConnectionResetError:
+                except ConnectionError:
                     logger.debug(
                         "Postfix said goodbye. Terminating this thread."
                     )
@@ -430,7 +430,7 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                         " Terminating this thread."
                     )
                     return
-                except CallableExhausted as e:
+                except (CallableExhausted, InterruptedError) as e:
                     raise e
                 except Exception:
                     if reader.at_eof():
@@ -441,7 +441,7 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                         return
                     else:
                         logger.exception("UNEXPECTED ")
-                    continue
+                    return  # prev: continue
                 logger.debug(
                     f"Payload received: {policy_payload.decode(encoding)}"
                 )
