@@ -6,6 +6,10 @@ import time
 
 SLEEPTIME = 0.5
 
+# Note that this test file and the HELO whitelisting test
+# cannot be run at the same time since they both launch
+# CHAPPS but with different configurations.
+
 
 class Test_IBM_Greylisting:
     def test_first_attempt_denied(

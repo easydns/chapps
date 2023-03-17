@@ -1,11 +1,13 @@
 """Tests for inbound multi service"""
 import logging
 from smtplib import SMTP  # , SMTPRecipientsRefused
-
-# import pytest
 import time
 
 SLEEPTIME = 0.5
+
+# Note that this test file and the HELO whitelisting test
+# cannot be run at the same time since they both launch
+# CHAPPS but with different configurations.
 
 
 class Test_IBM_Greylisting_HELOWL:
