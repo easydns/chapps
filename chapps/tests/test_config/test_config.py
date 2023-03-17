@@ -96,6 +96,16 @@ class Test_Config:
             == "DEFER_IF_PERMIT Service temporarily unavailable - greylisted"
         )
 
+    def test_inbound_policy_defaults(self, chapps_test_env):
+        """Ensure certain inbound defaults are present"""
+        config = CHAPPSConfig()
+        spf_config = config.policy_spf
+        grl_config = config.policy_grl
+        assert grl_config.acceptance_message == "DUNNO"
+        assert grl_config.null_sender_ok is False
+        assert spf_config.spf_query_timeout == 20
+        assert spf_config.null_sender_ok is False
+
     def test_redis_config_defaults(self, chapps_test_env):
         """Ensure that all Redis setting defaults are present"""
         config = CHAPPSConfig()
