@@ -2,6 +2,21 @@
 
 ## Beta Releases
 
+### v0.5.13:
+	- Adding an option for ``SPFEnforcementPolicy`` which allows the
+	  operator of a site to set the total-duration timeout for DNS
+	  checks against a single message.  Sometimes these can add up,
+	  and the RFC(s) on the subject call for allowing 20s to perform
+	  DNS lookups.  Sites which would rather limit their SPF-related
+	  DNS overhead may set this to a lower value.  Checks which time
+	  out are considered to have failed.
+	- Adjusted setuptools metadata a bit.  Added an ``[all]`` extras
+	  category to simplify the process of installing all the
+	  dependencies.  Right now API testing fails after a fresh ``pip
+	  install -e`` due to a missing file, which would appear if the
+	  module were installed normally.  I am not sure how to correct
+	  this problem; locally I just use a symlink.
+
 ### v0.5.12:
 	- Correcting serious error-handling bug which would cause an
       endless, log-filling loop when encountering unexpected
