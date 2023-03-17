@@ -154,6 +154,7 @@ class CHAPPSConfig:
             "listen_port": 10227,
             "whitelist": [],
             "null_sender_ok": False,
+            "spf_query_timeout": 20,
         }
         cp["PostfixSPFActions"] = {
             "passing": "prepend",

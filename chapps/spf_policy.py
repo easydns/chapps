@@ -218,7 +218,12 @@ class SPFEnforcementPolicy(InboundPolicy):
             return "DUNNO"
         # First, check the HELO name
         helo_sender = "postmaster@" + ppr.helo_name
-        query = spf.query(ppr.client_address, helo_sender, ppr.helo_name)
+        query = spf.query(
+            ppr.client_address,
+            helo_sender,
+            ppr.helo_name,
+            querytime=self.params.spf_query_timeout,
+        )
         result, _, message = query.check()
         if result in [
             "fail"
