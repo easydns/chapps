@@ -1,2 +1,2 @@
-__version__ = "0.5.13"
+__version__ = "0.5.14"
 f"""Current CHAPPS version is {__version__}"""
