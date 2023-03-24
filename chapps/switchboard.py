@@ -145,8 +145,8 @@ class CascadingPolicyHandler:
                 except asyncio.IncompleteReadError as e:
                     logger.debug(
                         "Postfix hung up before a read could be completed."
-                        + f"\n  Got: {e.partial}\n"
-                        + "Terminating this thread."
+                        f"\n  Got: {e.partial}\n"
+                        "Terminating this thread."
                     )
                     return
                 except CallableExhausted as e:
@@ -430,7 +430,8 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                 except asyncio.IncompleteReadError as e:
                     logger.debug(
                         "Postfix hung up before a read could be completed."
-                        " Terminating this thread."
+                        f"\n  Got: {e.partial}\n"
+                        "Terminating this thread."
                     )
                     return
                 except (CallableExhausted, InterruptedError) as e:
