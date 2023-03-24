@@ -2,6 +2,13 @@
 
 ## Beta Releases
 
+### v0.5.15:
+
+- Adding same debug information to
+  `CascadingMultiresultPolicyHandler`, which is the one of interest to
+  the strange interaction with Postfix under high load, and possibly
+  with high DNS-resolution latency.
+
 ### v0.5.14:
 
 - Adding debug information regarding obtained contents of incomplete
