@@ -113,6 +113,7 @@ class CHAPPSConfig:
                 "effda33d276c1d5649f3933a6d6b286e"
                 "d7eaaede0b944221e7699553ce0558e2"
             ),
+            "listener_backlog": 100,
         }
         cp["PolicyConfigAdapter"] = {
             "adapter": "mariadb",

@@ -10,6 +10,11 @@ SLEEPTIME = 0.5
 # cannot be run at the same time since they both launch
 # CHAPPS but with different configurations.
 
+# also noted: the `easydns.net` entry was missing from the testing
+# DB instance which isn't usually the case; restored by hand, the test
+# passes.  But perhaps additional logic is needed to ensure that the DB
+# has its expected state.
+
 
 class Test_IBM_Greylisting:
     def test_first_attempt_denied(

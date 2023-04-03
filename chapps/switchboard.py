@@ -77,6 +77,8 @@ class CascadingPolicyHandler:
 
       :listen_port: the port to listen on; see :meth:`.listen_port`
 
+      :listener_backlog: how many connections may be pending (default: 100)
+
     """
 
     def __init__(
@@ -110,6 +112,16 @@ class CascadingPolicyHandler:
     def listen_port(self):
         return next(
             (getattr(p.params, "listen_port", None) for p in self.policies),
+            None,
+        )
+
+    @cached_property
+    def listener_backlog(self):
+        return next(
+            (
+                getattr(p.config.chapps, "listener_backlog", None)
+                for p in self.policies
+            ),
             None,
         )
 

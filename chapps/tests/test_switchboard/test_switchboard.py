@@ -35,6 +35,14 @@ pytestmark = pytest.mark.order(-2)
 class Test_OutboundQuotaHandler:
     """Tests for the OQP switchboard"""
 
+    async def test_listener_backlog_setting(self, caplog, testing_policy):
+        """
+        Verify that ``listener_backlog`` attribute is available
+        """
+        caplog.set_level(logging.DEBUG)
+        handler = OutboundQuotaHandler(testing_policy)
+        assert handler.listener_backlog == 100
+
     async def test_exception_handling(
         self,
         caplog,
