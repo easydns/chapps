@@ -31,6 +31,7 @@ class Test_Config:
         assert (
             cp["CHAPPS"]["user_key"] == "sasl_username"
         )  # we assume this elsewhere
+        assert cp["CHAPPS"]["listener_backlog"] == "100"
         assert cp["PolicyConfigAdapter"]["adapter"] == "mariadb"
         assert cp["GreylistingPolicy"]["acceptance_message"] == "DUNNO"
         assert cp["Redis"]["server"] == "localhost"
@@ -68,6 +69,7 @@ class Test_Config:
         config = CHAPPSConfig()
         chapps_config = config.chapps
         assert chapps_config.payload_encoding == "utf-8"
+        assert chapps_config.listener_backlog == 100
 
     def test_policy_config_adapter_defaults(self, chapps_test_env):
         config = CHAPPSConfig()
@@ -149,6 +151,7 @@ class Test_Config:
         )
         assert redis_config.server == "127.0.0.1"
         assert redis_config.port == 6379
+        assert chapps_config.listener_backlog == 100
 
     def test_get_block(
         self,

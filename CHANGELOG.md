@@ -2,6 +2,12 @@
 
 ## Beta Releases
 
+### v0.5.16:
+
+- Adding the `[CHAPPS]` config parameter `listener_backlog` which is
+  passed as the `backlog` argument to `asyncio.start_server()` when
+  creating a new CHAPPS server.
+
 ### v0.5.15:
 
 - Adding same debug information to

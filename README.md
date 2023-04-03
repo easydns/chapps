@@ -42,6 +42,15 @@ the time of writing, each script runs its own type of policy handler,
 so only the settings for the policies of that handler will be needed,
 plus the general CHAPPS settings and the Redis settings.
 
+It is possible to adjust the number of connections allowed to be
+waiting on the CHAPPS server to answer them.  The default used by
+`asyncio` when none is provided is 100, so that is also the default
+value used by CHAPPS.  It may be adjusted in the config file under
+`[CHAPPS]`, and is called `listener_backlog`.  In some cases it may be
+desirable to increase that number, so that exceptionally busy mailers
+do not run into the problem of having their connection attempts
+rejected.
+
 Policies may each specify separate listening addresses and ports, so
 that they may run simultaneously on the same server.  For multi-policy
 handlers, the first handler specified will be the one whose network
