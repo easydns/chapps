@@ -38,6 +38,7 @@ async def main():
                 handle_policy_request,
                 handler.listen_address,
                 handler.listen_port,
+                backlog=handler.listener_backlog,
                 start_serving=False,
             )
             await srv.serve_forever()
