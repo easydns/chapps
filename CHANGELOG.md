@@ -2,6 +2,23 @@
 
 ## Beta Releases
 
+### v0.5.17:
+
+- Adding explicit calls to drain and close the writer filehandle(s)
+  which are passed to the client-connection-callback handler.  I had
+  been under the impression that these streams were closed by the
+  caller after the handler returned.  It may be, however, that
+  operating that way relies on garbage collection.  That might explain
+  why it works well as long as the load stays under a certain (rather
+  high) level.
+
+  After looking at some additional examples of asyncio servers, I
+  think I'd like to introduce a little further complexity by
+  registering the client and then handing off performing the actual
+  work to a sub-task.  This will position things a little better for
+  introducing parallel-processing thread pools, which may also be
+  required in order to handle truly large amounts of request traffic.
+
 ### v0.5.16:
 
 - Adding the `[CHAPPS]` config parameter `listener_backlog` which is
