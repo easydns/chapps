@@ -151,14 +151,14 @@ class CascadingPolicyHandler:
                     policy_payload = await reader.readuntil(b"\n\n")
                 except ConnectionError:
                     logger.debug(
-                        "Postfix said goodbye. Terminating this thread."
+                        "Postfix said goodbye. Terminating this task."
                     )
                     return
                 except asyncio.IncompleteReadError as e:
                     logger.debug(
                         "Postfix hung up before a read could be completed."
                         f"\n  Got: {e.partial}\n"
-                        "Terminating this thread."
+                        "Terminating this task."
                     )
                     return
                 except CallableExhausted as e:
@@ -167,7 +167,7 @@ class CascadingPolicyHandler:
                     if reader.at_eof():
                         logger.debug(
                             "Postfix said goodbye oddly. "
-                            + "Terminating this thread."
+                            + "Terminating this task."
                         )
                         return
                     else:
@@ -431,32 +431,39 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
 
         async def handle_policy_request(reader, writer):
             """Handles reading and writing the streams around policy approval messages"""
+
+            async def close_streams():
+                writer.close()
+                await writer.wait_closed()
+
             while True:
                 try:
                     policy_payload = await reader.readuntil(b"\n\n")
                 except ConnectionError:
                     logger.debug(
-                        "Postfix said goodbye. Terminating this thread."
+                        "Postfix said goodbye. Terminating this task."
                     )
+                    close_streams()
                     return
                 except asyncio.IncompleteReadError as e:
                     logger.debug(
                         "Postfix hung up before a read could be completed."
                         f"\n  Got: {e.partial}\n"
-                        "Terminating this thread."
+                        "Terminating this task."
                     )
+                    close_streams()
                     return
                 except (CallableExhausted, InterruptedError) as e:
                     raise e
-                except Exception:
+                except Exception as e:
                     if reader.at_eof():
                         logger.debug(
-                            "Postfix said goodbye oddly."
-                            " Terminating this thread."
+                            "Postfix said goodbye oddly: {e}"
+                            " Terminating this task."
                         )
-                        return
                     else:
                         logger.exception("UNEXPECTED ")
+                    close_streams()
                     return  # prev: continue
                 logger.debug(
                     f"Payload received: {policy_payload.decode(encoding)}"
@@ -493,7 +500,10 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                     logger.exception(
                         f"Exception raised trying to send {action}"
                     )
+                    close_streams()
                     return
+                else:
+                    await writer.drain()
 
         return handle_policy_request
 
