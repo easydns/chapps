@@ -2,6 +2,17 @@
 
 ## Beta Releases
 
+### v0.5.18:
+
+- Correcting errors introduced in last version which might not perhaps
+  impact effectiveness but were, nonetheless, wrong.
+- Introducing code to register new socket connections and spin off a
+  handler for them, attaching a `done_callback` to them to allow them
+  to be closed automatically once the handler routine returns.  This
+  allows us to log specifically when sockets are opened and closed.
+  And it ensures that sockets get an explicit close executed on them
+  before we abandon them.
+
 ### v0.5.17:
 
 - Adding explicit calls to drain and close the writer filehandle(s)
