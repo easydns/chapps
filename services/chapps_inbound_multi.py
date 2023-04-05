@@ -7,7 +7,7 @@ import asyncio
 import pidfile
 import signal
 import functools
-from chapps.switchboard import InboundMultipolicyHandler
+from chapps.switchboard import CHAPPSServer, InboundMultipolicyHandler
 from chapps.signals import SignalHandlerFactory
 from pathlib import Path
 import logging
@@ -34,9 +34,11 @@ async def main():
             logger.debug(f"{APPNAME} service started.")
             handler = InboundMultipolicyHandler()
             handle_policy_request = handler.async_policy_handler()
+            chapps_server = CHAPPSServer(handle_policy_request)
+            main_loop = chapps_server.main_loop()
             install_asyncio_signal_handlers(asyncio.get_running_loop())
             srv = await asyncio.start_server(
-                handle_policy_request,
+                main_loop,
                 handler.listen_address,
                 handler.listen_port,
                 backlog=handler.listener_backlog,
