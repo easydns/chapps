@@ -50,6 +50,48 @@ else:
 logger = logging.getLogger(__name__)  # pragma: no cover
 
 
+class CHAPPSServer:
+    """Return the handler wrapped with connection-tracking"""
+
+    def __init__(self, request_handler):
+        """Pass in the policy request handler coroutine"""
+        self.request_handler = request_handler
+        self.connections = dict()
+
+    def main_loop(self):
+        """Main server loop coroutine factory"""
+        request_handler = self.request_handler
+        connections = self.connections
+        logger.debug("Setting up main loop coroutine.")
+
+        async def _ml(reader, writer):
+            """Main loop callback which registers handler tasks"""
+            peername = writer.get_extra_info("peername")
+
+            def connection_cleanup(fu: asyncio.Future) -> None:
+                """Cleanup callback for handler tasks"""
+                logger.debug(f"Cleaning up closed socket {peername}")
+                try:  # harvest any result and ignore errors
+                    # the result will contain the return value if any
+                    # could return the number of bytes read,
+                    # or a tuple of (read, written)
+                    fu.result()
+                except asyncio.exceptions.CancelledError:
+                    pass
+                try:
+                    writer.close()
+                except Exception:
+                    pass
+                del connections[peername]
+
+            logger.debug(f"Setting up socket {peername}")
+            task = asyncio.create_task(request_handler(reader, writer))
+            task.add_done_callback(connection_cleanup)
+            connections[peername] = task
+
+        return _ml
+
+
 class CascadingPolicyHandler:
     """Second-generation handler class which cascades multiple yes/no policies
 
@@ -432,10 +474,6 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
         async def handle_policy_request(reader, writer):
             """Handles reading and writing the streams around policy approval messages"""
 
-            async def close_streams():
-                writer.close()
-                await writer.wait_closed()
-
             while True:
                 try:
                     policy_payload = await reader.readuntil(b"\n\n")
@@ -443,7 +481,6 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                     logger.debug(
                         "Postfix said goodbye. Terminating this task."
                     )
-                    close_streams()
                     return
                 except asyncio.IncompleteReadError as e:
                     logger.debug(
@@ -451,19 +488,17 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                         f"\n  Got: {e.partial}\n"
                         "Terminating this task."
                     )
-                    close_streams()
                     return
                 except (CallableExhausted, InterruptedError) as e:
                     raise e
                 except Exception as e:
                     if reader.at_eof():
                         logger.debug(
-                            "Postfix said goodbye oddly: {e}"
+                            f"Postfix said goodbye oddly: {e}"
                             " Terminating this task."
                         )
                     else:
                         logger.exception("UNEXPECTED ")
-                    close_streams()
                     return  # prev: continue
                 logger.debug(
                     f"Payload received: {policy_payload.decode(encoding)}"
@@ -500,7 +535,6 @@ class CascadingMultiresultPolicyHandler(CascadingPolicyHandler):
                     logger.exception(
                         f"Exception raised trying to send {action}"
                     )
-                    close_streams()
                     return
                 else:
                     await writer.drain()
