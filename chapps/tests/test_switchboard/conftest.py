@@ -234,6 +234,8 @@ def mock_reader_factory(unique_instance, postfix_policy_request_payload):
 def mock_writer():
     mock = Mock()
     mock.write = Mock(return_value=None)
+    mock.wait_closed = AsyncMock()
+    mock.drain = AsyncMock()
     return mock
 
 
